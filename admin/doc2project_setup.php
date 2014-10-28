@@ -95,29 +95,80 @@ dol_fiche_head(
     "project"
 );
 
-// Setup page goes here
-$form=new Form($db);
-$var=false;
-print '<table class="noborder" width="100%">';
-print '<tr class="liste_titre">';
-print '<td>'.$langs->trans("Parameters").'</td>'."\n";
-print '<td align="center" width="20">&nbsp;</td>';
-print '<td align="center" width="100">'.$langs->trans("Value").'</td>'."\n";
+$ok = $conf->propal->enabled || $conf->commande->enabled;
 
+if($ok) {
+	// Setup page goes here
+	$form=new Form($db);
+	$var=false;
+	print '<table class="noborder" width="100%">';
+	print '<tr class="liste_titre">';
+	print '<td>'.$langs->trans("Parameters").'</td>'."\n";
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="center" width="100">'.$langs->trans("Value").'</td>'."\n";
+	
+	// Display convert button on proposal
+	if($conf->propal->enabled) {
+		$var=!$var;
+		print '<tr '.$bc[$var].'>';
+		print '<td>'.$langs->trans("DisplayOnProposal").'</td>';
+		print '<td align="center" width="20">&nbsp;</td>';
+		print '<td align="right" width="300">';
+		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="set_DOC2PROJECT_DISPLAY_ON_PROPOSAL">';
+		print $form->selectyesno("DOC2PROJECT_DISPLAY_ON_PROPOSAL",$conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL,1);
+		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+		print '</form>';
+		print '</td></tr>';
+	}
+	
+	// Display convert button on order
+	if($conf->commande->enabled) {
+		$var=!$var;
+		print '<tr '.$bc[$var].'>';
+		print '<td>'.$langs->trans("DisplayOnOrder").'</td>';
+		print '<td align="center" width="20">&nbsp;</td>';
+		print '<td align="right" width="300">';
+		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="set_DOC2PROJECT_DISPLAY_ON_ORDER">';
+		print $form->selectyesno("DOC2PROJECT_DISPLAY_ON_ORDER",$conf->global->DOC2PROJECT_DISPLAY_ON_ORDER,1);
+		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+		print '</form>';
+		print '</td></tr>';
+	}
 
-// Example with a yes / no select
-$var=!$var;
-print '<tr '.$bc[$var].'>';
-print '<td>'.$langs->trans("ParamLabel").'</td>';
-print '<td align="center" width="20">&nbsp;</td>';
-print '<td align="right" width="300">';
-print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-print '<input type="hidden" name="action" value="set_CONSTNAME">';
-print $form->selectyesno("CONSTNAME",$conf->global->CONSTNAME,1);
-print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-print '</form>';
-print '</td></tr>';
+	// Task prefix
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("TaskRefPrefix").'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="set_DOC2PROJECT_TASK_REF_PREFIX">';
+	print '<input type="text" class="flat" name="DOC2PROJECT_TASK_REF_PREFIX" value="'.$conf->global->DOC2PROJECT_TASK_REF_PREFIX.'">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print '</td></tr>';
+	
+	// Nb hour a day
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("NbHoursPerDay").'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="set_DOC2PROJECT_NB_HOURS_PER_DAY">';
+	print '<input type="text" size="3" class="flat" name="DOC2PROJECT_NB_HOURS_PER_DAY" value="'.$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY.'">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print '</td></tr>';
+} else {
+	print $langs->trans('ModuleNeedProposalOrOrderModule');
+}
 
 print '</table>';
 

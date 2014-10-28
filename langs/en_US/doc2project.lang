@@ -8,4 +8,11 @@ Doc2ProjectAbout = About Doc2Project
 
 CreateProjectAndTasks = Create project and tasks
 CreateTasksInProject = Create task in associated project
-DocConverted=converted
+DocConverted = converted
+
+# SETUP
+DisplayOnProposal = Display conversion button on proposal card
+DisplayOnOrder = Display conversion button on order card
+TaskRefPrefix = Prefix for task reference
+NbHoursPerDay = # of hours per day
+ModuleNeedProposalOrOrderModule = The proposal or customer order module must be activated in order to use this module

@@ -8,4 +8,11 @@ Doc2ProjectAbout = A propos du module Doc2Project
 
 CreateProjectAndTasks = Créer projet et tâches
 CreateTasksInProject = Créer les tâches dans le projet associé
-DocConverted=convertie
+DocConverted = convertie
+
+# SETUP
+DisplayOnProposal = Afficher le bouton de conversion sur la fiche proposition
+DisplayOnOrder = Afficher le bouton de conversion sur la fiche commande client
+TaskRefPrefix = Préfixe pour la référence des tâches
+NbHoursPerDay = Nombre d'heure journalier
+ModuleNeedProposalOrOrderModule = Le module proposition commerciale ou commande client doit être activé pour pouvoir utiliser ce module
