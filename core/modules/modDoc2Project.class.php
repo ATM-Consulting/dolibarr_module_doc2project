@@ -264,7 +264,11 @@ class modDoc2Project extends DolibarrModules
 		dol_include_once('/core/class/extrafields.class.php');
         $extrafields=new ExtraFields($this->db);
 		//$res = $extrafields->addExtraField('thm', $langs->trans('THM'), 'double', 0, '', 'user'); // existe déjà dans la base rajouté par MKO (même si moisi)
-		//$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
+		
+		if((float)DOL_VERSION<=3.5) {
+			$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'user ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
+	     	$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
+		}
      	
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet');
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
