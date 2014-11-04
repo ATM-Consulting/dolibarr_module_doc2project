@@ -43,9 +43,9 @@ class InterfaceDoc2Projecttrigger
      *
      * 	@param		DoliDB		$db		Database handler
      */
-    public function __construct($db)
+    public function __construct(&$db)
     {
-        $this->db = $db;
+        $this->db = &$db;
 
         $this->name = preg_replace('/^Interface/i', '', get_class($this));
         $this->family = "demo";
@@ -121,19 +121,33 @@ class InterfaceDoc2Projecttrigger
         
         if ($action === 'TASK_TIMESPENT_CREATE') {
         	
-			$ttId = $this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
+			if((float)DOL_VERSION<=3.5) {
+				$ttId = (int)$this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
+				
+				$u=new User($this->db);
+				$u->fetch($object->timespent_fk_user);
+				$thm = $u->thm;
 			
-			$u=new User($this->db);
-			$u->fetch($object->timespent_fk_user);
-			$thm = (double)$u->array_options['options_thm'];
-			if(empty($thm))$thm=$conf->global->DOC2PROJECT_DEFAULT_THM;
+				$this->db->commit();
+				
+				$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
+				$this->db->query($sql);
+				
+				dol_syslog(
+	                "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
+	            );
+				
+				
+			}
 			
-			$this->db->query("UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".$thm."  WHERE rowid=".$ttId);
-			dol_syslog(
-                "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
-            );
+			
         } 
-		
+		else if($action==='USER_MODIFY') {
+			
+			$object->thm = price2num( GETPOST('thm') );
+			$object->update($user,1);
+				
+		}
 		
         return 0;
     }

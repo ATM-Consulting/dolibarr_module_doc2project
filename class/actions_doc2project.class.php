@@ -20,6 +20,54 @@ class ActionsDoc2Project
 		return 0;
 	}
 	
+	function formObjectOptions($parameters, &$object, &$action, $hookmanager) {
+		
+		global $langs,$db;
+		
+		if(in_array('projecttaskcard',explode(':',$parameters['context']))) {
+		
+			//$object->duration_effective souvent faux :-/ recalcule en requête
+			
+			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
+			$obj=$db->fetch_object($resultset);
+		
+			?>
+			<tr>
+				<td><?php echo $langs->trans('DurationEffective'); ?></td>
+				<td><?php echo convertSecondToTime($obj->duration_effective) ?></td>
+				
+			</tr>
+			<tr>
+				<td><?php echo $langs->trans('CostEffective'); ?></td>
+				<td><?php echo convertSecondToTime($obj->costprice) ?></td>
+				
+			</tr>
+			
+			<?php
+			
+		}
+		else if(in_array('usercard',explode(':',$parameters['context']))) {
+					
+			?>
+			<tr>
+				<td><?php echo $langs->trans('THM'); ?></td>
+				<td><?php 
+				
+					if($action=='edit') {
+						echo '<input id="thm" type="text" value="'.$object->thm.'" maxlength="11" size="9" name="thm">';
+					}
+					else{
+						echo price($object->thm);	
+					}
+
+				?></td>
+				
+			</tr>
+			<?
+		}
+
+	}
+	
 	function doActions($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf,$langs,$db,$user;
@@ -84,6 +132,8 @@ class ActionsDoc2Project
 						$t->date_end = $end;
 						$t->fk_task_parent = 0;
 						$t->planned_workload = $durationInSec;
+						
+						$t->array_options['options_soldprice'] = $line->total_ht;
 						
 						$t->create($user);
 					}
