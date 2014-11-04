@@ -86,7 +86,7 @@ class modDoc2Project extends DolibarrModules
 		//							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@doc2project')) // Set here all workflow context managed by module
 		//                        );
 		$this->module_parts = array(
-			//'triggers' => 1,
+			'triggers' => 1,
 			'hooks' => array('propalcard','ordercard')
 		);
 
@@ -112,12 +112,13 @@ class modDoc2Project extends DolibarrModules
 		//                             1=>array('MYMODULE_MYNEWCONST2','chaine','myvalue','This is another constant to add',0, 'current', 1)
 		// );
 		$this->const = array(
-			0=>array('DOC2PROJECT_DISPLAY_ON_PROPOSAL','chaine','0','Display function on proposal card',1),
-			1=>array('DOC2PROJECT_DISPLAY_ON_ORDER','chaine','0','Display function on order card',1),
-			2=>array('DOC2PROJECT_AUTO_ON_PROPOSAL_CLOSE','chaine','0','Launch function when proposal is closed signed',1),
-			3=>array('DOC2PROJECT_AUTO_ON_ORDER_VALIDATE','chaine','0','Launch function when order is validated',1),
-			4=>array('DOC2PROJECT_NB_HOURS_PER_DAY','chaine','7','Used to convert service duration in hours',1),
-			5=>array('DOC2PROJECT_TASK_REF_PREFIX','chaine','TA','Prefix for task reference, will be used with proposal or order line ID to be unique',1)
+			array('DOC2PROJECT_DISPLAY_ON_PROPOSAL','chaine','0','Display function on proposal card',1),
+			array('DOC2PROJECT_DISPLAY_ON_ORDER','chaine','0','Display function on order card',1),
+			array('DOC2PROJECT_AUTO_ON_PROPOSAL_CLOSE','chaine','0','Launch function when proposal is closed signed',1),
+			array('DOC2PROJECT_AUTO_ON_ORDER_VALIDATE','chaine','0','Launch function when order is validated',1),
+			array('DOC2PROJECT_NB_HOURS_PER_DAY','chaine','7','Used to convert service duration in hours',1),
+			array('DOC2PROJECT_TASK_REF_PREFIX','chaine','TA','Prefix for task reference, will be used with proposal or order line ID to be unique',1),
+			array('DOC2PROJECT_DEFAULT_THM','chaine','0','Default THM',1)
 		);
 
 		// Array to add new pages in new tabs
@@ -254,10 +255,20 @@ class modDoc2Project extends DolibarrModules
 	 */
 	function init($options='')
 	{
+		global $langs;
+		
 		$sql = array();
 
 		$result=$this->_load_tables('/doc2project/sql/');
 
+		dol_include_once('/core/class/extrafields.class.php');
+        $extrafields=new ExtraFields($this->db);
+		$res = $extrafields->addExtraField('thm', $langs->trans('THM'), 'double', 0, '', 'user');
+		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet');
+		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
+		
+		$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
+     	
 		return $this->_init($sql, $options);
 	}
 
