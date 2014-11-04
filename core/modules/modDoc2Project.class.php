@@ -87,7 +87,7 @@ class modDoc2Project extends DolibarrModules
 		//                        );
 		$this->module_parts = array(
 			'triggers' => 1,
-			'hooks' => array('propalcard','ordercard','projecttaskcard','usercard')
+			'hooks' => array('propalcard','ordercard','projecttaskcard','projectcard','usercard')
 		);
 
 		// Data directories to create when module is enabled.
@@ -270,7 +270,6 @@ class modDoc2Project extends DolibarrModules
 	     	$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
 		}
      	
-		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet');
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
 		
 		return $this->_init($sql, $options);

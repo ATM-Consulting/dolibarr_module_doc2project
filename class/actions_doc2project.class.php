@@ -24,8 +24,79 @@ class ActionsDoc2Project
 		
 		global $langs,$db;
 		
-		if(in_array('projecttaskcard',explode(':',$parameters['context']))) {
-		
+		if(in_array('projectcard',explode(':',$parameters['context']))) {
+			$langs->load('doc2project@doc2project');
+			
+			dol_include_once('/comm/propal/class/propal.class.php');
+			dol_include_once('/fourn/class/fournisseur.facture.class.php');
+			dol_include_once('/core/lib/date.lib.php');
+			
+			$propalTotal=$otherExpenses=0;
+			$Tab = $object->get_element_list('propal', 'propal');
+			foreach($Tab as $id) {
+				$propal=new Propal($db);
+				$propal->fetch($id);
+				
+				if($propal->statut == 2 || $propal->statut == 4) $propalTotal+=$propal->total_ht;
+			}
+			
+			$Tab = $object->get_element_list('facturefourn', 'facture_fourn');
+			foreach($Tab as $id) {
+			
+				$f=new FactureFournisseur($db);
+				$f->fetch($id);
+				
+				$otherExpenses+=$f->total;
+				
+			}
+			
+			$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
+			$res=$db->query($sql);
+			while($obj=$db->fetch_object($res)) {
+				$otherExpenses+=$obj->total_ht;				
+			}			
+			
+			
+			$resultset = $db->query("SELECT SUM(tt.task_duration) as duration_effective, SUM(tt.thm * tt.task_duration/3600) as costprice  
+			FROM ".MAIN_DB_PREFIX."projet_task_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_task)
+			WHERE t.fk_projet=".$object->id);
+			$obj=$db->fetch_object($resultset);
+			
+			
+			$marge = $propalTotal - $obj->costprice - $otherExpenses;
+			
+			?>
+			<tr>
+				<td><?php echo $langs->trans('DurationEffective'); ?></td>
+				<td><?php echo convertSecondToTime($obj->duration_effective) ?></td>
+				
+			</tr>
+			<tr>
+				<td><?php echo $langs->trans('CostEffective'); ?></td>
+				<td><?php echo price($obj->costprice) ?></td>
+			</tr>
+			<tr>
+				<td><?php echo $langs->trans('OtherExpenses'); ?></td>
+				<td><?php echo price($otherExpenses) ?></td>
+			</tr>
+			<tr>
+				<td><?php echo $langs->trans('TotalPropal'); ?></td>
+				<td><?php echo price($propalTotal) ?></td>
+			</tr>
+			<!-- <tr>
+				<td><?php echo $langs->trans('TotalBill'); ?></td>
+				<td><?php echo price($billsTotal) ?></td>
+			</tr>-->
+			<tr>
+				<td><?php echo $langs->trans('Margin'); ?></td>
+				<td><?php echo price($marge) ?></td>
+			</tr>
+			
+			<?php
+			
+		}
+		else if(in_array('projecttaskcard',explode(':',$parameters['context']))) {
+			$langs->load('doc2project@doc2project');
 			//$object->duration_effective souvent faux :-/ recalcule en requête
 			
 			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
@@ -39,7 +110,7 @@ class ActionsDoc2Project
 			</tr>
 			<tr>
 				<td><?php echo $langs->trans('CostEffective'); ?></td>
-				<td><?php echo convertSecondToTime($obj->costprice) ?></td>
+				<td><?php echo price($obj->costprice) ?></td>
 				
 			</tr>
 			
