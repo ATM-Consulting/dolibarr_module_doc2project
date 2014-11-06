@@ -140,9 +140,14 @@ class ActionsDoc2Project
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
 			
-			$resql = $db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->id);
-			$res = $db->fetch_object($resql);
-			$thm = $res->thm;
+			if((float)DOL_VERSION>=3.6) {
+				$thm = $object->thm;
+			}
+			else{
+				$resql = $db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->id);
+				$res = $db->fetch_object($resql);
+				$thm = $res->thm;
+			}
 			?>
 			<tr>
 				<td><?php echo $langs->trans('THM'); ?></td>

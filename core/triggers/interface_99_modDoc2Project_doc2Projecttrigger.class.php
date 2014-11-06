@@ -127,25 +127,33 @@ class InterfaceDoc2Projecttrigger
 				$resql = $this->db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->timespent_fk_user);
 				$res =  $this->db->fetch_object($resql);
 				$thm = $res->thm;
-			
-				$this->db->commit();
-				
-				$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
-				$this->db->query($sql);
-				
-				dol_syslog(
-	                "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
-	            );
-				
-				
+			}
+			else{
+				$u=new User($this->db);
+                $u->fetch($object->timespent_fk_user);
+                $thm = $u->thm;
 			}
 			
+			$this->db->commit();
+
+			$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
+			$this->db->query($sql);
+			
+			dol_syslog(
+                "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
+            );
 			
         } 
 		else if($action==='USER_MODIFY') {
 			
-			$thm = price2num( GETPOST('thm') );
-			$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
+			if((float)DOL_VERSION>=3.6) {
+				$object->thm = price2num( GETPOST('thm') );
+	           	$object->update($user,1);
+			}
+			else{
+				$thm = price2num( GETPOST('thm') );
+				$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
+			}
 		}
 		
         return 0;
