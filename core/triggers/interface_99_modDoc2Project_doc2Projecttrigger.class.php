@@ -124,9 +124,9 @@ class InterfaceDoc2Projecttrigger
 			if((float)DOL_VERSION<=3.5) {
 				$ttId = (int)$this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
 				
-				$u=new User($this->db);
-				$u->fetch($object->timespent_fk_user);
-				$thm = $u->thm;
+				$resql = $this->db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->timespent_fk_user);
+				$res =  $this->db->fetch_object($resql);
+				$thm = $res->thm;
 			
 				$this->db->commit();
 				
@@ -144,9 +144,8 @@ class InterfaceDoc2Projecttrigger
         } 
 		else if($action==='USER_MODIFY') {
 			
-			$object->thm = price2num( GETPOST('thm') );
-			$object->update($user,1);
-				
+			$thm = price2num( GETPOST('thm') );
+			$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
 		}
 		
         return 0;

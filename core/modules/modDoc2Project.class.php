@@ -103,7 +103,7 @@ class modDoc2Project extends DolibarrModules
 		$this->requiredby = array();	// List of modules id to disable if this one is disabled
 		$this->conflictwith = array();	// List of modules id this module is in conflict with
 		$this->phpmin = array(5,0);					// Minimum version of PHP required by module
-		$this->need_dolibarr_version = array(3,6);	// Minimum version of Dolibarr required by module
+		$this->need_dolibarr_version = array(3,5);	// Minimum version of Dolibarr required by module
 		$this->langfiles = array("doc2project@doc2project");
 
 		// Constants
@@ -260,7 +260,9 @@ class modDoc2Project extends DolibarrModules
 		$sql = array();
 
 		$result=$this->_load_tables('/doc2project/sql/');
-
+		
+		$langs->load('doc2project@doc2prtoject');
+		
 		dol_include_once('/core/class/extrafields.class.php');
         $extrafields=new ExtraFields($this->db);
 		//$res = $extrafields->addExtraField('thm', $langs->trans('THM'), 'double', 0, '', 'user'); // existe déjà dans la base rajouté par MKO (même si moisi)

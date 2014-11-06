@@ -1,7 +1,7 @@
 <?php
 class ActionsDoc2Project
 {
-	// Affichage du bouton d'action
+	// Affichage du bouton d'action => 3.6 uniquement.....
 	function addMoreActionsButtons($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf,$langs,$db,$user;
@@ -11,10 +11,12 @@ class ActionsDoc2Project
 			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1)
 		)
 		{
-			$langs->load('doc2project@doc2project');
-			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project';
-			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
-			print '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>';
+			if((float)DOL_VERSION>=3.6) {
+				$langs->load('doc2project@doc2project');
+				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project';
+				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
+				print '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>';
+			}
 		}
 		
 		return 0;
@@ -22,7 +24,24 @@ class ActionsDoc2Project
 	
 	function formObjectOptions($parameters, &$object, &$action, $hookmanager) {
 		
-		global $langs,$db;
+		global $langs,$db,$user,$conf;
+		
+		if($user->rights->projet->all->creer &&
+			(in_array('propalcard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL && $object->statut == 2)
+			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1)
+		)
+		{
+			$langs->load('doc2project@doc2project');
+			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project';
+			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
+			?>
+			<script type="text/javascript">
+				$(document).ready(function(){
+					$('.tabsAction').append('<?php echo '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>'; ?>');
+				});
+			</script>
+			<?php
+		}
 		
 		if(in_array('projectcard',explode(':',$parameters['context']))) {
 			$langs->load('doc2project@doc2project');
@@ -41,13 +60,15 @@ class ActionsDoc2Project
 			}
 			
 			$Tab = $object->get_element_list('facturefourn', 'facture_fourn');
-			foreach($Tab as $id) {
-			
-				$f=new FactureFournisseur($db);
-				$f->fetch($id);
+			if(is_array($Tab)){
+				foreach($Tab as $id) {
 				
-				$otherExpenses+=$f->total;
-				
+					$f=new FactureFournisseur($db);
+					$f->fetch($id);
+					
+					$otherExpenses+=$f->total;
+					
+				}
 			}
 			
 			$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
@@ -118,17 +139,20 @@ class ActionsDoc2Project
 			
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
-					
+			
+			$resql = $db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->id);
+			$res = $db->fetch_object($resql);
+			$thm = $res->thm;
 			?>
 			<tr>
 				<td><?php echo $langs->trans('THM'); ?></td>
 				<td><?php 
 				
 					if($action=='edit') {
-						echo '<input id="thm" type="text" value="'.$object->thm.'" maxlength="11" size="9" name="thm">';
+						echo '<input id="thm" type="text" value="'.$thm.'" maxlength="11" size="9" name="thm">';
 					}
 					else{
-						echo price($object->thm);	
+						echo price($thm);
 					}
 
 				?></td>
