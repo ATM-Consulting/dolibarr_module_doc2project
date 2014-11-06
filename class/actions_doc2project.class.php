@@ -52,11 +52,13 @@ class ActionsDoc2Project
 			
 			$propalTotal=$otherExpenses=0;
 			$Tab = $object->get_element_list('propal', 'propal');
-			foreach($Tab as $id) {
-				$propal=new Propal($db);
-				$propal->fetch($id);
-				
-				if($propal->statut == 2 || $propal->statut == 4) $propalTotal+=$propal->total_ht;
+			if(is_array($Tab)){
+				foreach($Tab as $id) {
+					$propal=new Propal($db);
+					$propal->fetch($id);
+					
+					if($propal->statut == 2 || $propal->statut == 4) $propalTotal+=$propal->total_ht;
+				}
 			}
 			
 			$Tab = $object->get_element_list('facturefourn', 'facture_fourn');
@@ -88,8 +90,8 @@ class ActionsDoc2Project
 			
 			?>
 			<tr>
-				<td><?php echo $langs->trans('DurationEffective'); ?></td>
-				<td><?php echo convertSecondToTime($obj->duration_effective) ?></td>
+				<td><?php echo $langs->trans('DurationEffective'); ?> (Jours Homme)</td>
+				<td><?php echo convertSecondToTime( $obj->duration_effective,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 				
 			</tr>
 			<tr>
