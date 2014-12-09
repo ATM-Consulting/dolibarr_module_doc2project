@@ -7,11 +7,11 @@ llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
 print_fiche_titre($langs->trans("Report"));
 ?>
-<script type="text/javascript" src="<?=COREHTTP?>includes/js/dataTable/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="<?=COREHTTP?>includes/js/dataTable/js/dataTables.tableTools.min.js"></script>
+<script type="text/javascript" src="<?php echo COREHTTP?>includes/js/dataTable/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="<?php echo COREHTTP?>includes/js/dataTable/js/dataTables.tableTools.min.js"></script>
 
-<link rel="stylesheet" href="<?=COREHTTP?>includes/js/dataTable/css/jquery.dataTables.css" type="text/css" />
-<link rel="stylesheet" href="<?=COREHTTP?>includes/js/dataTable/css/dataTables.tableTools.css" type="text/css" />
+<link rel="stylesheet" href="<?php echo COREHTTP?>includes/js/dataTable/css/jquery.dataTables.css" type="text/css" />
+<link rel="stylesheet" href="<?php echo COREHTTP?>includes/js/dataTable/css/dataTables.tableTools.css" type="text/css" />
 <?php
 
 $PDOdb=new TPDOdb;
@@ -47,7 +47,7 @@ function _action(&$PDOdb) {
 		$('#statistiques_projet').dataTable({
 			"sDom": 'T<"clear">lfrtip',
 	        "oTableTools": {
-	            "sSwfPath": "<?=COREHTTP?>includes/js/dataTable/swf/copy_csv_xls_pdf.swf"
+	            "sSwfPath": "<?php echo COREHTTP?>includes/js/dataTable/swf/copy_csv_xls_pdf.swf"
 	        },
 	        "bSort": false,
 	        "iDisplayLength": 100,
