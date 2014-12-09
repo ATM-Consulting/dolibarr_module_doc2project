@@ -145,16 +145,22 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$idprojet = GETPOST('id_projet');
 
-	$sql = "SELECT p.ref, p.title, SUM(pp.total) as total_vente, SUM(ff.total_ht) as total_achat, SUM(ndfp.total_ht) as total_ndf, SUM(tt.task_duration) as total_temps, SUM(tt.thm * tt.task_duration/3600) as total_cout_homme
+	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
+	, (SELECT SUM(pp.total) FROM ".MAIN_DB_PREFIX."propal as pp WHERE pp.fk_projet = p.rowid AND pp.fk_statut >= 2) as total_vente
+	, (SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1 ) as total_achat
+	, (SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  ) as total_ndf
+	, (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
+			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
+	) as total_temps
+	,(SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
+			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
+	) as total_cout_homme
+	
+	
 			FROM ".MAIN_DB_PREFIX."projet as p 
-				LEFT JOIN ".MAIN_DB_PREFIX."propal as pp ON (pp.fk_projet = p.rowid AND pp.fk_statut >= 2)
-				LEFT JOIN ".MAIN_DB_PREFIX."facture_fourn as ff ON (ff.fk_projet = p.rowid AND ff.fk_statut >= 1)
-				LEFT JOIN ".MAIN_DB_PREFIX."ndfp as ndfp ON (ndfp.fk_project = p.rowid AND ndfp.statut >= 1)
-				LEFT JOIN ".MAIN_DB_PREFIX."projet_task as t ON (t.fk_projet = p.rowid)
-				LEFT JOIN ".MAIN_DB_PREFIX."projet_task_time as tt ON (tt.fk_task = t.rowid)";
+	 ";
 
 	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
-	else $sql.= " GROUP BY p.rowid";
 	
 	//echo $sql.'<br>';
 	
@@ -167,7 +173,7 @@ function _get_statistiques_projet(&$PDOdb){
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		$TRapport[]= array(
-			"ref" => $PDOdb->Get_field('ref')." - ".$PDOdb->Get_field('title'),
+			"IdProject" => $PDOdb->Get_field('IdProject'),
 			"total_vente" => $PDOdb->Get_field('total_vente'),
 			"total_achat" => $PDOdb->Get_field('total_achat'),
 			"total_ndf" => $PDOdb->Get_field('total_ndf'),
@@ -184,8 +190,12 @@ function _get_statistiques_projet(&$PDOdb){
 }
 
 function _print_statistiques_projet(&$TRapport){
-	global $conf;
+	global $conf, $db;
+	
 	dol_include_once('/core/lib/date.lib.php');
+	dol_include_once('/projet/class/project.class.php');
+	
+	
 	?>
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
@@ -204,15 +214,19 @@ function _print_statistiques_projet(&$TRapport){
 				<?php
 				
 				foreach($TRapport as $line){
+					
+					$project=new Project($db);
+					$project->fetch($line['IdProject']);
+					
 					?>
 					<tr>
-						<td><?php echo $line['ref'] ?></td>
-						<td><?php echo price($line['total_vente']) ?></td>
-						<td><?php echo price($line['total_achat']) ?></td>
-						<td><?php echo price($line['total_ndf']) ?></td>
-						<td><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-						<td><?php echo price($line['total_cout_homme']) ?></td>
-						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo price($line['marge']) ?></td>
+						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
+						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
+						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
+						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
+						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
+						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
 					<?
 					$total_vente += $line['total_vente'];
