@@ -1,7 +1,7 @@
 <?php
 require('config.php');
-dol_include_once("/report/lib/report.lib.php");
-dol_include_once("/report/filtres.php");
+dol_include_once("/doc2project/lib/report.lib.php");
+dol_include_once("/doc2project/filtres.php");
 
 llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
