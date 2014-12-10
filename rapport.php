@@ -128,6 +128,7 @@ function _get_filtre($report,$PDOdb,$form){
 	switch ($report) {
 		case 'statistiques_projet':
 			_print_filtre_liste_projet($form,$PDOdb);
+			_print_filtre_plage_date($form);
 			break;
 		
 		default:
@@ -145,15 +146,32 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$idprojet = GETPOST('id_projet');
 
+	$date_deb = GETPOST('date_deb');
+	$t_deb = !$date_deb ? 0 : Tools::get_time($date_deb);
+
+	$date_fin = GETPOST('date_fin');
+	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
+
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
-	, (SELECT SUM(pp.total) FROM ".MAIN_DB_PREFIX."propal as pp WHERE pp.fk_projet = p.rowid AND pp.fk_statut >= 2) as total_vente
-	, (SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1 ) as total_achat
-	, (SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  ) as total_ndf
+	, (
+		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
+		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+		) as total_vente
+	, (
+		SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1 
+		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+	) as total_achat
+	, (
+		SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
+		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+	) as total_ndf
 	, (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
+		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_temps
 	,(SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
+		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_cout_homme
 	
 	
@@ -162,7 +180,8 @@ function _get_statistiques_projet(&$PDOdb){
 
 	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
 	
-	//echo $sql.'<br>';
+	$sql.=" ORDER BY p.title";
+	
 	
 	$PDOdb->Execute($sql);
 
