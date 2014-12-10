@@ -191,15 +191,21 @@ function _get_statistiques_projet(&$PDOdb){
 	while ($PDOdb->Get_line()) {
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
-		$TRapport[]= array(
-			"IdProject" => $PDOdb->Get_field('IdProject'),
-			"total_vente" => $PDOdb->Get_field('total_vente'),
-			"total_achat" => $PDOdb->Get_field('total_achat'),
-			"total_ndf" => $PDOdb->Get_field('total_ndf'),
-			"total_temps" => $PDOdb->Get_field('total_temps'),
-			"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-			"marge" => $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme')
-		);
+		
+		$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
+		if($marge!=0) {
+			$TRapport[]= array(
+				"IdProject" => $PDOdb->Get_field('IdProject'),
+				"total_vente" => $PDOdb->Get_field('total_vente'),
+				"total_achat" => $PDOdb->Get_field('total_achat'),
+				"total_ndf" => $PDOdb->Get_field('total_ndf'),
+				"total_temps" => $PDOdb->Get_field('total_temps'),
+				"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
+				"marge" => $marge
+			);
+			
+			
+		}
 	}
 	
 	//pre($TRapport,true);
