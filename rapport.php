@@ -169,6 +169,11 @@ function _get_statistiques_projet(&$PDOdb){
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.label!='Tickets')
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_temps
+
+	, (SELECT SUM(t.planned_workload) FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.label!='Tickets'
+                ".($t_deb>0 && $t_fin>0 ? " AND t.datee BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+        ) as total_temps_plannif
+
 	,(SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.label!='Tickets')
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -182,7 +187,7 @@ function _get_statistiques_projet(&$PDOdb){
 	
 	$sql.=" ORDER BY p.title";
 	
-	
+//	$PDOdb->debug=true;
 	$PDOdb->Execute($sql);
 
 	$TRapport = array();
@@ -201,6 +206,8 @@ function _get_statistiques_projet(&$PDOdb){
 				"total_ndf" => $PDOdb->Get_field('total_ndf'),
 				"total_temps" => $PDOdb->Get_field('total_temps'),
 				"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
+				'total_temps_plannif'=>$PDOdb->Get_field('total_temps_plannif'),
+
 				"marge" => $marge
 			);
 			
@@ -231,6 +238,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td>Total achat (€)</td>
 					<td>Total Note de frais (€)</td>
 					<td>Total temps passé (JH)</td>
+					<td>Total temps prévu (JH)</td>
 					<td>Total coût MO (€)</td>
 					<td>Rentabilité</td>
 				</tr>
@@ -250,6 +258,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td<?php echo ($line['total_temps']>$line['total_temps_plannif']) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps_plannif'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
