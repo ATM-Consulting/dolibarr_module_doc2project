@@ -267,6 +267,7 @@ function _print_statistiques_projet(&$TRapport){
 					$total_achat += $line['total_achat'];
 					$total_ndf += $line['total_ndf'];
 					$total_temps += $line['total_temps'];
+					$total_temps_plannif+=$line['total_temps_plannif'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
 				}
@@ -279,6 +280,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td><?php echo price($total_achat) ?></td>
 					<td><?php echo price($total_ndf) ?></td>
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td><?php echo convertSecondToTime($total_temps_plannif,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
 				</tr>
