@@ -152,6 +152,11 @@ function _get_statistiques_projet(&$PDOdb){
 	$date_fin = GETPOST('date_fin');
 	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
 
+	// Sous requête parce que : si pas de thm sur le temps saisie, alors prendre celui actuellement sur la fiche user (Ticket 1504)
+	$sql_thm_fiche_user = "SELECT u.thm 
+						   FROM ".MAIN_DB_PREFIX."user u
+						   WHERE u.rowid = tt.fk_user";
+
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
 	, (
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
@@ -169,7 +174,7 @@ function _get_statistiques_projet(&$PDOdb){
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_temps
-	,(SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
+	,(SELECT SUM(IFNULL(tt.thm, ($sql_thm_fiche_user)) * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_cout_homme
