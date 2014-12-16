@@ -180,6 +180,14 @@ class modDoc2Project extends DolibarrModules
 		$this->rights = array();		// Permission array used by this module
 		$r=0;
 
+
+		$r++;
+		$this->rights[$r][0] = 104252;
+		$this->rights[$r][1] = $langs->trans('ReadRapportDoc2Project');
+		$this->rights[$r][3] = 1;
+		$this->rights[$r][4] = 'user';
+		$this->rights[$r][5] = 'read';
+
 		// Add here list of permission defined by an id, a label, a boolean and two constant strings.
 		// Example:
 		// $this->rights[$r][0] = $this->numero + $r;	// Permission id (must not be already used)
@@ -206,7 +214,7 @@ class modDoc2Project extends DolibarrModules
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>166,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
-								'perms'=>'1',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'perms'=>'$user->rights->doc2project->user->read',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
@@ -220,7 +228,7 @@ class modDoc2Project extends DolibarrModules
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>167,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
-								'perms'=>'1',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'perms'=>'$user->rights->doc2project->user->read',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
