@@ -227,11 +227,11 @@ function _print_statistiques_projet(&$TRapport){
 			<thead>
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<td>Réf. Projet</td>
-					<td>Total vente (€)</td>
-					<td>Total achat (€)</td>
+					<td>Total vente HT (€)</td>
+					<td>Total achat HT (€)</td>
 					<td>Total Note de frais (€)</td>
 					<td>Total temps passé (JH)</td>
-					<td>Total coût MO (€)</td>
+					<td>Total coût MO HT (€)</td>
 					<td>Rentabilité</td>
 				</tr>
 			</thead>
