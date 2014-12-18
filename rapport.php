@@ -185,7 +185,7 @@ function _get_statistiques_projet(&$PDOdb){
 
 	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
 	
-	$sql.=" ORDER BY p.title";
+	$sql.=" ORDER BY p.ref";
 	
 	
 	$PDOdb->Execute($sql);
