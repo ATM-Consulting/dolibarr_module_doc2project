@@ -207,7 +207,7 @@ class modDoc2Project extends DolibarrModules
 		// Example to declare a new Top Menu entry and its Left menu entry:
 		 $this->menu[$r]=array(	'fk_menu'=>"fk_mainmenu=project",			                // Put 0 if this is a top menu
 								'type'=>'left',			                // This is a Top menu entry
-								'titre'=>'Doc2Project',
+								'titre'=>'Suivi Analytique',
 								'mainmenu'=>'project',
 								'leftmenu'=>'doc2project',
 								'url'=>'/doc2project/rapport.php',
