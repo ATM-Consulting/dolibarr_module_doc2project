@@ -76,7 +76,7 @@ class ActionsDoc2Project
 			$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
 			$res=$db->query($sql);
 			while($obj=$db->fetch_object($res)) {
-				$otherExpenses+=$obj->total_ht;				
+				$otherExpenses+=$obj->total_ht;
 			}			
 			
 			
@@ -96,15 +96,15 @@ class ActionsDoc2Project
 			</tr>
 			<tr>
 				<td><?php echo $langs->trans('CostEffective'); ?></td>
-				<td><?php echo price($obj->costprice) ?></td>
+				<td><?php echo price(round($obj->costprice,2)) ?></td>
 			</tr>
 			<tr>
 				<td><?php echo $langs->trans('OtherExpenses'); ?></td>
-				<td><?php echo price($otherExpenses) ?></td>
+				<td><?php echo price(round($otherExpenses,2)) ?></td>
 			</tr>
 			<tr>
 				<td><?php echo $langs->trans('TotalPropal'); ?></td>
-				<td><?php echo price($propalTotal) ?></td>
+				<td><?php echo price(round($propalTotal,2)) ?></td>
 			</tr>
 			<!-- <tr>
 				<td><?php echo $langs->trans('TotalBill'); ?></td>
@@ -112,7 +112,7 @@ class ActionsDoc2Project
 			</tr>-->
 			<tr>
 				<td><?php echo $langs->trans('Margin'); ?></td>
-				<td><?php echo price($marge) ?></td>
+				<td><?php echo price(round($marge,2)) ?></td>
 			</tr>
 			
 			<?php

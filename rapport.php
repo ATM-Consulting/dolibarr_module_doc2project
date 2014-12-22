@@ -275,8 +275,8 @@ function _print_statistiques_projet(&$TRapport){
 					<td><?php echo price($total_achat) ?></td>
 					<td><?php echo price($total_ndf) ?></td>
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-					<td><?php echo price($total_cout_homme) ?></td>
-					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
+					<td><?php echo price(round($total_cout_homme,2)) ?></td>
+					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge,2)) ?></td>
 				</tr>
 			</tfoot>
 		</table>
