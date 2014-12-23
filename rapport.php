@@ -174,6 +174,8 @@ function _get_statistiques_projet(&$PDOdb){
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_temps
+	, (SELECT SUM(pt.planned_workload) FROM ".MAIN_DB_PREFIX."projet_task as pt WHERE pt.fk_projet = p.rowid
+	) as total_temps_prevu
 	,(SELECT SUM(IFNULL(tt.thm, ($sql_thm_fiche_user)) * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -198,6 +200,7 @@ function _get_statistiques_projet(&$PDOdb){
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		
 		$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
+		$kv = $PDOdb->Get_field('total_vente') / ($PDOdb->Get_field('total_achat') + $PDOdb->Get_field('total_ndf') + $PDOdb->Get_field('total_cout_homme'));
 		if($marge!=0) {
 			$TRapport[]= array(
 				"IdProject" => $PDOdb->Get_field('IdProject'),
@@ -205,8 +208,11 @@ function _get_statistiques_projet(&$PDOdb){
 				"total_achat" => $PDOdb->Get_field('total_achat'),
 				"total_ndf" => $PDOdb->Get_field('total_ndf'),
 				"total_temps" => $PDOdb->Get_field('total_temps'),
+				"total_temps_prevu" => $PDOdb->Get_field('total_temps_prevu'),
+				"total_diff_temps" => abs($PDOdb->Get_field('total_temps_prevu')-$PDOdb->Get_field('total_temps')),
 				"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-				"marge" => $marge
+				"marge" => $marge,
+				"kv"=>$kv
 			);
 			
 			
@@ -235,9 +241,12 @@ function _print_statistiques_projet(&$TRapport){
 					<td>Total vente HT (€)</td>
 					<td>Total achat HT (€)</td>
 					<td>Total Note de frais (€)</td>
+					<td>Total temps prévu (JH)</td>
 					<td>Total temps passé (JH)</td>
+					<td>Ecart temps prévu/passé (JH)</td>
 					<td>Total coût MO HT (€)</td>
 					<td>Rentabilité</td>
+					<td>kv</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -254,15 +263,19 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
+						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps_prevu'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td<?php echo ($line['total_temps_prevu'] < $line['total_temps']) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime($line['total_diff_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
+						<td><?php echo round($line['kv'],2); ?> </td>
 					</tr>
 					<?
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
 					$total_ndf += $line['total_ndf'];
 					$total_temps += $line['total_temps'];
+					$total_temps_prevu += $line['total_temps_prevu'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
 				}
@@ -274,9 +287,12 @@ function _print_statistiques_projet(&$TRapport){
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
 					<td><?php echo price($total_ndf) ?></td>
+					<td><?php echo convertSecondToTime($total_temps_prevu,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td></td>
 					<td><?php echo price(round($total_cout_homme,2)) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge,2)) ?></td>
+					<td></td>
 				</tr>
 			</tfoot>
 		</table>
