@@ -47,10 +47,11 @@ class ActionsDoc2Project
 			$langs->load('doc2project@doc2project');
 			
 			dol_include_once('/comm/propal/class/propal.class.php');
+			dol_include_once('/compta/facture/class/facture.class.php');
 			dol_include_once('/fourn/class/fournisseur.facture.class.php');
 			dol_include_once('/core/lib/date.lib.php');
 			
-			$propalTotal=$otherExpenses=0;
+			$propalTotal=$billsTotal=$otherExpenses=0;
 			$Tab = $object->get_element_list('propal', 'propal');
 			if(is_array($Tab)){
 				foreach($Tab as $id) {
@@ -61,18 +62,28 @@ class ActionsDoc2Project
 				}
 			}
 			
-			$Tab = $object->get_element_list('facturefourn', 'facture_fourn');
+			$Tab = $object->get_element_list('invoice', 'invoice');
+			if(is_array($Tab)){
+				foreach($Tab as $id) {
+					$facture=new Facture($db);
+					$facture->fetch($id);
+					
+					if($facture->statut >= 1) $billsTotal+=$facture->total_ht;
+				}
+			}
+			
+			$Tab = $object->get_element_list('invoice_supplier', 'invoice_supplier');
 			if(is_array($Tab)){
 				foreach($Tab as $id) {
 				
 					$f=new FactureFournisseur($db);
 					$f->fetch($id);
 					
-					$otherExpenses+=$f->total;
+					$otherExpenses+=$f->total_ht;
 					
 				}
 			}
-			
+			echo $otherExpenses;
 			$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
 			$res=$db->query($sql);
 			while($obj=$db->fetch_object($res)) {
@@ -86,7 +97,7 @@ class ActionsDoc2Project
 			$obj=$db->fetch_object($resultset);
 			
 			
-			$marge = $propalTotal - $obj->costprice - $otherExpenses;
+			$marge = $billsTotal - $obj->costprice - $otherExpenses;
 			
 			?>
 			<tr>
@@ -106,10 +117,10 @@ class ActionsDoc2Project
 				<td><?php echo $langs->trans('TotalPropal'); ?></td>
 				<td><?php echo price(round($propalTotal,2)) ?></td>
 			</tr>
-			<!-- <tr>
+			<tr>
 				<td><?php echo $langs->trans('TotalBill'); ?></td>
-				<td><?php echo price($billsTotal) ?></td>
-			</tr>-->
+				<td><?php echo price(round($billsTotal,2)) ?></td>
+			</tr>
 			<tr>
 				<td><?php echo $langs->trans('Margin'); ?></td>
 				<td><?php echo price(round($marge,2)) ?></td>
