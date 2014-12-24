@@ -268,7 +268,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td<?php echo ($line['total_temps_prevu'] < $line['total_temps']) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime($line['total_diff_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
-						<td><?php echo round($line['kv'],2); ?> </td>
+						<td<?php echo (round($line['kv'],2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round($line['kv'],2); ?> </td>
 					</tr>
 					<?
 					$total_vente += $line['total_vente'];
