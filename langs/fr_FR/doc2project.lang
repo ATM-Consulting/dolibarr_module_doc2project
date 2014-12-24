@@ -23,6 +23,7 @@ SoldPrice=Montant vendu
 TotalBill=Montant total des factures clients émises
 OtherExpenses=Autres dépenses (Achat, NdF, ...)
 TotalPropal=Montant total des propositions signées
+Margin=Marge
 
 #RIGHTS
 ReadRapportDoc2Project=Accéder au rapport du module
