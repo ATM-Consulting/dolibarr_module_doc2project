@@ -1,4 +1,4 @@
-<?php
+ <?php
 require('config.php');
 dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");
@@ -238,15 +238,15 @@ function _print_statistiques_projet(&$TRapport){
 			<thead>
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<td>Réf. Projet</td>
-					<td>Total vente HT (€)</td>
-					<td>Total achat HT (€)</td>
-					<td>Total Note de frais (€)</td>
-					<td>Total temps prévu (JH)</td>
-					<td>Total temps passé (JH)</td>
-					<td>Ecart temps prévu/passé (JH)</td>
-					<td>Total coût MO HT (€)</td>
-					<td>Rentabilité</td>
-					<td>kv</td>
+					<td><img src="./img/info.png" title="Total HT des factures clients émises (à la date de saisie)"> Ventes € HT</td>
+					<td><img src="./img/info.png" title="Total HT des factures fournisseurs et sous-traitants enregistrées (à la date de saisie)"> Achats € HT</td>
+					<td><img src="./img/info.png" title="Total HT des notes de frais enregistrées (à la date de saisie)"> Notes de frais € HT</td>
+					<td><img src="./img/info.png" title="Total heures prévues (lors de la création des tâches)"> Temps prévu</td>
+					<td><img src="./img/info.png" title="Total heures passées (lors de la saisie des temps consommés)"> Temps passé</td>
+					<td><img src="./img/info.png" title="Temps prévu - temps passé"> Ecart temps</td>
+					<td><img src="./img/info.png" title="Valorisation HT du total temps consommé (H) x Taux Horaire Moyen de chaque intervenant"> Total MO € HT</td>
+					<td><img src="./img/info.png" title="Total HT (factures clients émises - (achats + notes de frais + coût main d'oeuvre)) HORS IMPUTATION FRAIS GENERAUX (00_37)"> Marge brute € HT</td>
+					<td><img src="./img/info.png" title="Coefficient de vente (ou marge)"> KV</td>
 				</tr>
 			</thead>
 			<tbody>

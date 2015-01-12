@@ -18,12 +18,12 @@ NbHoursPerDay = Nombre d'heure journalier
 ModuleNeedProposalOrOrderModule = Le module proposition commerciale ou commande client doit être activé pour pouvoir utiliser ce module
 
 SoldPrice=Prix vendu
-CostEffective=Coût effectif (temps consommé)
+CostEffective=Montant total € HT temps consommé
 SoldPrice=Montant vendu
-TotalBill=Montant total des factures clients émises
-OtherExpenses=Autres dépenses (Achat, NdF, ...)
-TotalPropal=Montant total des propositions signées
-Margin=Marge
+TotalBill=Montant total € HT factures clients émises
+OtherExpenses=Montant total € HT achats, locations diverses, notes de frais
+TotalPropal=Montant total € HT devis ou appels d'offres signés
+Margin=Marge brute sans affectation des frais généraux
 
 #RIGHTS
 ReadRapportDoc2Project=Accéder au rapport du module

@@ -137,7 +137,7 @@ class ActionsDoc2Project
 			$obj=$db->fetch_object($resultset);
 		
 			?>
-			<tr>
+			<!--<tr>
 				<td><?php echo $langs->trans('DurationEffective'); ?></td>
 				<td><?php echo convertSecondToTime($obj->duration_effective) ?></td>
 				
@@ -146,7 +146,7 @@ class ActionsDoc2Project
 				<td><?php echo $langs->trans('CostEffective'); ?></td>
 				<td><?php echo price($obj->costprice) ?></td>
 				
-			</tr>
+			</tr>-->
 			
 			<?php
 			
