@@ -121,6 +121,7 @@ class ActionsDoc2Project
 		else if(in_array('projecttaskcard',explode(':',$parameters['context']))) {
 			$langs->load('doc2project@doc2project');
 			//$object->duration_effective souvent faux :-/ recalcule en requête
+			dol_include_once('/product/class/product.class.php');
 			
 			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
 			$obj=$db->fetch_object($resultset);
@@ -138,6 +139,16 @@ class ActionsDoc2Project
 			</tr>
 			
 			<?php
+			if($object->array_options['options_linkservice'] > 0){
+				$product_static=new Product($db);
+				$product_static->fetch($object->array_options['options_linkservice']);
+				?>
+				<tr>
+					<td><?php echo $langs->trans('LinkService'); ?></td>
+					<td><?php print $product_static->getNomUrl(1,'',24); ?></td>
+				</tr>
+			<?php
+			}
 			
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
@@ -173,6 +184,7 @@ class ActionsDoc2Project
 	function doActions($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf,$langs,$db,$user;
+		$langs->load('doc2project@doc2project');
 		
 		if($user->rights->projet->all->creer && $action == 'create_project' &&
 			((in_array('propalcard',explode(':',$parameters['context'])) && $object->statut == 2)
