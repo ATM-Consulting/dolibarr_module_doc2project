@@ -275,7 +275,7 @@ class modDoc2Project extends DolibarrModules
 
 		$result=$this->_load_tables('/doc2project/sql/');
 		
-		$langs->load('doc2project@doc2prtoject');
+		$langs->load('doc2project@doc2project');
 		
 		dol_include_once('/core/class/extrafields.class.php');
         $extrafields=new ExtraFields($this->db);
