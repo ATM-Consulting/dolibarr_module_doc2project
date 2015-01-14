@@ -288,6 +288,12 @@ class modDoc2Project extends DolibarrModules
      	
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
 		
+		//Ajout extrafields spécifique GPC sur tâches projet
+		$res = $extrafields->addExtraField('wordnumber', $langs->trans('WordNumber'), 'int', 0, '', 'projet_task');
+		
+		$param = array('options'=>array("product:label:rowid::fk_product_type=1"=>""));
+		$res = $extrafields->addExtraField('linkservice', $langs->trans('LinkService'), 'sellist', 0, 255, 'projet_task',0,0,'',$param);
+		
 		return $this->_init($sql, $options);
 	}
 
