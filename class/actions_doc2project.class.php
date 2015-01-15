@@ -258,7 +258,7 @@ class ActionsDoc2Project
 						
 						//Gestion spécifique GPC => calcul de la charge de travail prévue
 						// temps prévisionnel = qty ligne (nb de mot) / mph tâche (extrafield tâche)
-						$t->planned_workload = convertTime2Seconds($line->qty / $s->array_options['options_mph']);
+						$t->planned_workload = convertTime2Seconds($line->qty / $s->array_options['options_wph']);
 						
 						$t->array_options['options_soldprice'] = $line->total_ht;
 						
@@ -269,7 +269,7 @@ class ActionsDoc2Project
 						$t->create($user);
 
 						//Gestion spécifique GPC => création tâche relecture
-						if($s->array_options['options_relecture'] == 2){
+						if($s->array_options['options_proofread'] == 2){
 							$relecture = new Task($db);
 							$relecture = clone $t;
 							
@@ -279,7 +279,7 @@ class ActionsDoc2Project
 							$relecture->ref = $defaultref2;
 							
 							$relecture->label = "Relecture - ".$relecture->label;
-							$relecture->planned_workload = convertTime2Seconds(($line->qty / $s->array_options['options_mph']) / 4);
+							$relecture->planned_workload = convertTime2Seconds(($line->qty / $s->array_options['options_wph']) / 4);
 							
 							$relecture->create($user);
 						}
