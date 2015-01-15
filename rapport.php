@@ -159,6 +159,10 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
 	, (
+		SELECT SUM(pp.total) FROM ".MAIN_DB_PREFIX."propale as pp WHERE pp.fk_projet = p.rowid AND pp.fk_statut IN(1, 2)
+		".($t_deb>0 && $t_fin>0 ? " AND datep BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+		) as total_devis
+	,(
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_vente
@@ -204,6 +208,7 @@ function _get_statistiques_projet(&$PDOdb){
 		if($marge!=0) {
 			$TRapport[]= array(
 				"IdProject" => $PDOdb->Get_field('IdProject'),
+				"total_devis" => $PDOdb->Get_field('total_devis'),
 				"total_vente" => $PDOdb->Get_field('total_vente'),
 				"total_achat" => $PDOdb->Get_field('total_achat'),
 				"total_ndf" => $PDOdb->Get_field('total_ndf'),
@@ -238,6 +243,7 @@ function _print_statistiques_projet(&$TRapport){
 			<thead>
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<td>Réf. Projet</td>
+					<td><img src="./img/info.png" title="Total HT des propositions commerciales émises (à la date de saisie)"> Devis € HT</td>
 					<td><img src="./img/info.png" title="Total HT des factures clients émises (à la date de saisie)"> Ventes € HT</td>
 					<td><img src="./img/info.png" title="Total HT des factures fournisseurs et sous-traitants enregistrées (à la date de saisie)"> Achats € HT</td>
 					<td><img src="./img/info.png" title="Total HT des notes de frais enregistrées (à la date de saisie)"> Notes de frais € HT</td>
@@ -260,6 +266,7 @@ function _print_statistiques_projet(&$TRapport){
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
+						<td nowrap="nowrap"><?php echo price(round($line['total_devis'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
