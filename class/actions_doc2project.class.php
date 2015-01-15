@@ -269,7 +269,7 @@ class ActionsDoc2Project
 						$t->create($user);
 
 						//Gestion spécifique GPC => création tâche relecture
-						if($s->array_options['options_proofread'] == 2){
+						if($s->array_options['options_proofread']){
 							$relecture = new Task($db);
 							$relecture = clone $t;
 							
