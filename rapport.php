@@ -159,7 +159,7 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
 	, (
-		SELECT SUM(pp.total_ht) FROM ".MAIN_DB_PREFIX."propal as pp WHERE pp.fk_projet = p.rowid AND pp.fk_statut IN(1, 2)
+		SELECT SUM(pp.total_ht) FROM ".MAIN_DB_PREFIX."propal as pp WHERE pp.fk_projet = p.rowid AND pp.fk_statut IN(2, 4)
 		".($t_deb>0 && $t_fin>0 ? " AND datep BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_devis
 	,(
@@ -175,14 +175,14 @@ function _get_statistiques_projet(&$PDOdb){
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_ndf
 	, (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
-			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.rowid NOT IN (174,175,177)
+			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.rowid NOT IN (175)
 			)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_temps
 	, (SELECT SUM(pt.planned_workload) FROM ".MAIN_DB_PREFIX."projet_task as pt WHERE pt.fk_projet = p.rowid
 	) as total_temps_prevu
 	,(SELECT SUM(IFNULL(tt.thm, ($sql_thm_fiche_user)) * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
-			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.rowid NOT IN (174,175,177))
+			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid AND t.rowid NOT IN (175))
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_cout_homme
 	
@@ -190,7 +190,7 @@ function _get_statistiques_projet(&$PDOdb){
 			FROM ".MAIN_DB_PREFIX."projet as p 
 	 ";
 
-	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
+	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet." OR p.ref = '00_37'";
 	
 	$sql.=" ORDER BY p.ref";
 	
@@ -237,7 +237,7 @@ function _print_statistiques_projet(&$TRapport){
 	dol_include_once('/core/lib/date.lib.php');
 	dol_include_once('/projet/class/project.class.php');
 	
-	
+	$idprojet = GETPOST('id_projet');
 	?>
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
@@ -264,16 +264,22 @@ function _print_statistiques_projet(&$TRapport){
 				foreach($TRapport as $line){
 					$total_vente += $line['total_vente'];
 					if($line['IdProject'] == 5){
-						$margeBruteFraisGeneraux = $line['marge'];
+						$margeBruteFraisGeneraux = round($line['marge'],2);
+						if($idprojet > 0) $total_vente -= $line['total_vente'];
 					}
 				}
+				
+				if($idprojet > 0) unset($TRapport[0]);
+				
+				//pre($TRapport,true);
 				
 				foreach($TRapport as $line){
 					
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
 					
-					$affectationFrais = round((($line['total_vente'] / abs($total_vente)) * abs($margeBruteFraisGeneraux)),2);
+					$affectationFrais = (round($line['total_vente'],2) / abs(round($total_vente,2))) * abs(round($margeBruteFraisGeneraux,2));
+					$marge_net = ($project->ref == "00_37") ? 0 : $line['marge'] - $affectationFrais;
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
@@ -287,8 +293,8 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 						
-						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price($affectationFrais); ?></td>
-						<td<?php echo (round($line['marge'] - $affectationFrais,2) < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($line['marge'] - $affectationFrais,2)); ?></td>
+						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($affectationFrais,2)); ?></td>
+						<td<?php echo ( $marge_net < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($marge_net,2)); ?></td>
 												
 						<td<?php echo (round($line['kv'],2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round($line['kv'],2); ?> </td>
 						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($line['total_devis'] - $line['total_vente'],2)); ?></td>
@@ -301,6 +307,8 @@ function _print_statistiques_projet(&$TRapport){
 					$total_temps_prevu += $line['total_temps_prevu'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
+					$total_frais_generaux += $affectationFrais;
+					$total_marge_net += $marge_net;
 				}
 
 				?>
@@ -314,11 +322,11 @@ function _print_statistiques_projet(&$TRapport){
 					<td><?php echo price($total_ndf) ?></td>
 					<td><?php echo convertSecondToTime($total_temps_prevu,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-					<td></td>
+					<td<?php echo ($total_temps_prevu < $total_temps) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime(abs($total_temps_prevu - $total_temps),'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo price(round($total_cout_homme,2)) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge,2)) ?></td>
-					<td></td>
-					<td></td>
+					<td><?php echo price(round($total_frais_generaux,2)); ?></td>
+					<td<?php echo ($total_marge_net < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge_net,2)) ?></td>
 					<td<?php echo (round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme)),2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme)),2); ?> </td>
 					<td><?php echo price(round($total_devis - $total_vente,2)) ?></td>
 				</tr>
