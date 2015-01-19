@@ -144,8 +144,6 @@ function _get_filtre($report,$PDOdb,$form){
 function _get_statistiques_projet(&$PDOdb){
 	global $db,$conf;
 
-	$idprojet = GETPOST('id_projet');
-
 	$date_deb = GETPOST('date_deb');
 	$t_deb = !$date_deb ? 0 : Tools::get_time($date_deb);
 
@@ -189,11 +187,8 @@ function _get_statistiques_projet(&$PDOdb){
 	
 			FROM ".MAIN_DB_PREFIX."projet as p 
 	 ";
-
-	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet." OR p.ref = '00_37'";
 	
 	$sql.=" ORDER BY p.ref";
-	
 	
 	$PDOdb->Execute($sql);
 
@@ -261,18 +256,20 @@ function _print_statistiques_projet(&$TRapport){
 			</thead>
 			<tbody>
 				<?php
-				foreach($TRapport as $line){
+				foreach($TRapport as $k => $line){
 					$total_vente += $line['total_vente'];
 					if($line['IdProject'] == 5){
 						$margeBruteFraisGeneraux = round($line['marge'],2);
-						if($idprojet > 0) $total_vente -= $line['total_vente'];
+					}
+					
+					if($idprojet > 0 && $idprojet != $line['IdProject']){
+						unset($TRapport[$k]);
+					}
+					else{
+						$kprojet = $k;
 					}
 				}
-				
-				if($idprojet > 0) unset($TRapport[0]);
-				
-				//pre($TRapport,true);
-				
+
 				foreach($TRapport as $line){
 					
 					$project=new Project($db);
@@ -310,7 +307,11 @@ function _print_statistiques_projet(&$TRapport){
 					$total_frais_generaux += $affectationFrais;
 					$total_marge_net += $marge_net;
 				}
-
+				
+				if($idprojet > 0){
+					$total_vente = $TRapport[$kprojet]['total_vente'];
+				}
+				
 				?>
 			</tbody>
 			<tfoot>
