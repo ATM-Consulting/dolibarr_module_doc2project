@@ -188,6 +188,7 @@ function _get_statistiques_projet(&$PDOdb){
 	$PDOdb->Execute($sql);
 
 	$TRapport = array();
+	// FIXME: $PDOdb2 is unused
 	$PDOdb2 = new TPDOdb;
 	
 	while ($PDOdb->Get_line()) {
@@ -256,6 +257,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
 					<?php
+					// FIXME: all the following variables are undefined
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
 					$total_ndf += $line['total_ndf'];
