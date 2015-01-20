@@ -104,7 +104,7 @@ function _fiche(&$PDOdb,$report=''){
 			echo $form->btsubmit('Afficher', 'afficher');
 		}
 
-		echo $form->end();
+		$form->end();
 
 		switch ($report) {
 			case 'statistiques_projet':
