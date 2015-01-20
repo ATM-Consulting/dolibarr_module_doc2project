@@ -270,7 +270,6 @@ class ActionsDoc2Project
 
 						//Gestion spécifique GPC => création tâche relecture
 						if($s->array_options['options_proofread']){
-							$relecture = new Task($db);
 							$relecture = clone $t;
 							
 							$modTask2 = new $obj;
