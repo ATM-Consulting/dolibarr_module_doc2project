@@ -3,6 +3,8 @@ require('config.php');
 dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");
 
+global $langs;
+
 llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
 print_fiche_titre($langs->trans("Report"));
