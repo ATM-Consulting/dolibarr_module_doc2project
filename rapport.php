@@ -199,8 +199,7 @@ function _get_statistiques_projet(&$PDOdb){
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		
-		$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
-		$kv = $PDOdb->Get_field('total_vente') / ($PDOdb->Get_field('total_achat') + $PDOdb->Get_field('total_ndf') + $PDOdb->Get_field('total_cout_homme'));
+		$marge = $PDOdb->Get_field('total_vente') - ($PDOdb->Get_field('total_achat') + $PDOdb->Get_field('total_ndf') + $PDOdb->Get_field('total_cout_homme'));
 		if($marge!=0) {
 			$TRapport[]= array(
 				"IdProject" => $PDOdb->Get_field('IdProject'),
@@ -212,8 +211,7 @@ function _get_statistiques_projet(&$PDOdb){
 				"total_temps_prevu" => $PDOdb->Get_field('total_temps_prevu'),
 				"total_diff_temps" => abs($PDOdb->Get_field('total_temps_prevu')-$PDOdb->Get_field('total_temps')),
 				"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-				"marge" => $marge,
-				"kv"=>$kv
+				"marge" => $marge
 			);
 			
 			
@@ -269,14 +267,18 @@ function _print_statistiques_projet(&$TRapport){
 						$kprojet = $k;
 					}
 				}
-
+				
+				//pre($TRapport,true);exit;
+				
 				foreach($TRapport as $line){
 					
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
 					
-					$affectationFrais = (round($line['total_vente'],2) / abs(round($total_vente,2))) * abs(round($margeBruteFraisGeneraux,2));
-					$marge_net = ($project->ref == "00_37") ? 0 : $line['marge'] - $affectationFrais;
+					$affectationFrais = $line['total_vente'] / abs($total_vente) * abs($margeBruteFraisGeneraux);
+					$marge_net = $line['marge'] - $affectationFrais;
+					//echo $marge_net." -------- ".($line['marge'] - $affectationFrais).'<br>';
+					$kv = $line['total_vente'] / ($line['total_achat'] + $line['total_ndf'] + $line['total_cout_homme'] + $affectationFrais);
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
@@ -293,7 +295,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($affectationFrais,2)); ?></td>
 						<td<?php echo ( $marge_net < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($marge_net,2)); ?></td>
 												
-						<td<?php echo (round($line['kv'],2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round($line['kv'],2); ?> </td>
+						<td<?php echo (round($kv,2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round($kv,2); ?> </td>
 						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($line['total_devis'] - $line['total_vente'],2)); ?></td>
 					</tr>
 					<?
@@ -307,9 +309,12 @@ function _print_statistiques_projet(&$TRapport){
 					$total_frais_generaux += $affectationFrais;
 					$total_marge_net += $marge_net;
 				}
-				
+				//echo " **** ".$total_marge_net." ------- ".$total_marge.'<br>';
 				if($idprojet > 0){
 					$total_vente = $TRapport[$kprojet]['total_vente'];
+				}
+				else{
+					$total_marge_net = $total_marge_net - $margeBruteFraisGeneraux;
 				}
 				
 				?>
