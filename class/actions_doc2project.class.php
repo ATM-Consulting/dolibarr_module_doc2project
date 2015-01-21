@@ -235,7 +235,7 @@ class ActionsDoc2Project
 					
 					$t = new Task($db);
 					$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-					echo $ref.'<br>';
+					//echo $ref.'<br>';
 					/*echo '<pre>';
 					print_r($s);exit;*/
 					$t->fetch(0, $t);
