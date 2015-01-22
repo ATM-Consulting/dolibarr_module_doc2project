@@ -32,6 +32,8 @@ if (! $res) {
 require_once DOL_DOCUMENT_ROOT . "/core/lib/admin.lib.php";
 require_once '../lib/doc2project.lib.php';
 
+global $bc, $conf, $db, $langs, $user;
+
 // Translations
 $langs->load("doc2project@doc2project");
 

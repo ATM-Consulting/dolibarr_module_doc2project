@@ -108,6 +108,7 @@ class ActionsDoc2Project
 			</tr>
 			<!-- <tr>
 				<td><?php echo $langs->trans('TotalBill'); ?></td>
+				// FIXME: $billsTotal is undefined
 				<td><?php echo price($billsTotal) ?></td>
 			</tr>-->
 			<tr>
@@ -225,6 +226,7 @@ class ActionsDoc2Project
 					$durationInSec = $line->qty * $s->duration_value * 3600;
 					$nbDays = 0;
 					if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+						// FIXME: $durationInSec is unused
 						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
 						$nbDays = $line->qty * $s->duration_value;
 					} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
@@ -246,6 +248,7 @@ class ActionsDoc2Project
 						$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
 						require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
 						$modTask = new $obj;
+						// FIXME: $soc is undefined
 						$defaultref = $modTask->getNextValue($soc,$object);
 						
 						$t->ref = $defaultref;
@@ -270,7 +273,6 @@ class ActionsDoc2Project
 
 						//Gestion spécifique GPC => création tâche relecture
 						if($s->array_options['options_proofread']){
-							$relecture = new Task($db);
 							$relecture = clone $t;
 							
 							$modTask2 = new $obj;

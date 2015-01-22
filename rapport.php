@@ -3,6 +3,8 @@ require('config.php');
 dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");
 
+global $langs;
+
 llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
 print_fiche_titre($langs->trans("Report"));
@@ -104,7 +106,7 @@ function _fiche(&$PDOdb,$report=''){
 			echo $form->btsubmit('Afficher', 'afficher');
 		}
 
-		echo $form->end();
+		$form->end();
 
 		switch ($report) {
 			case 'statistiques_projet':
@@ -186,6 +188,7 @@ function _get_statistiques_projet(&$PDOdb){
 	$PDOdb->Execute($sql);
 
 	$TRapport = array();
+	// FIXME: $PDOdb2 is unused
 	$PDOdb2 = new TPDOdb;
 	
 	while ($PDOdb->Get_line()) {
@@ -254,6 +257,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
 					<?php
+					// FIXME: all the following variables are undefined
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
 					$total_ndf += $line['total_ndf'];

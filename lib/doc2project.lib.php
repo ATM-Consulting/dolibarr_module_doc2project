@@ -49,6 +49,7 @@ function doc2projectAdminPrepareHead()
     //$this->tabs = array(
     //	'entity:-tabname:Title:@doc2project:/doc2project/mypage.php?id=__ID__'
     //); // to remove a tab
+    // FIXME: $object is undefined
     complete_head_from_modules($conf, $langs, $object, $head, $h, 'doc2project');
 
     return $head;
