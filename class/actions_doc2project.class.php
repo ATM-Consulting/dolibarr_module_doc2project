@@ -121,6 +121,7 @@ class ActionsDoc2Project
 		else if(in_array('projecttaskcard',explode(':',$parameters['context']))) {
 			$langs->load('doc2project@doc2project');
 			//$object->duration_effective souvent faux :-/ recalcule en requête
+			dol_include_once('/product/class/product.class.php');
 			
 			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
 			$obj=$db->fetch_object($resultset);
@@ -138,6 +139,16 @@ class ActionsDoc2Project
 			</tr>
 			
 			<?php
+			if($object->array_options['options_linkservice'] > 0){
+				$product_static=new Product($db);
+				$product_static->fetch($object->array_options['options_linkservice']);
+				?>
+				<tr>
+					<td><?php echo $langs->trans('LinkService'); ?></td>
+					<td><?php print $product_static->getNomUrl(1,'',24); ?></td>
+				</tr>
+			<?php
+			}
 			
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
@@ -173,6 +184,7 @@ class ActionsDoc2Project
 	function doActions($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf,$langs,$db,$user;
+		$langs->load('doc2project@doc2project');
 		
 		if($user->rights->projet->all->creer && $action == 'create_project' &&
 			((in_array('propalcard',explode(':',$parameters['context'])) && $object->statut == 2)
@@ -183,7 +195,7 @@ class ActionsDoc2Project
 			dol_include_once('/projet/class/task.class.php');
 			
 			$p = new Project($db);
-			
+
 			// CREATION OU CHARGEMENT DU PROJET
 			if(empty($object->fk_project)) {
 				
@@ -192,7 +204,10 @@ class ActionsDoc2Project
 				$p->socid			= $object->socid;
 				$p->statut			= 0;
 				$p->date_start		= dol_now();
+				$p->date_end		= $object->date_livraison;
 				$p->ref				= $this->_get_project_ref($p);
+				/*echo '<pre>';
+				print_r($p);exit;*/
 				$p->create($user);
 			} else {
 				$p->fetch($object->fk_project);
@@ -221,23 +236,53 @@ class ActionsDoc2Project
 					$t = new Task($db);
 					$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 					echo $ref.'<br>';
-					
-					$t->fetch(0, $ref);
+					/*echo '<pre>';
+					print_r($s);exit;*/
+					$t->fetch(0, $t);
 					if($t->id==0) {
 						
 						$t->fk_project = $p->id;
-						$t->ref = $ref;
+						
+						$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
+						require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
+						$modTask = new $obj;
+						$defaultref = $modTask->getNextValue($soc,$object);
+						
+						$t->ref = $defaultref;
 						$t->label = $line->product_label;
-						$t->description = $line->desc;
+						$t->description = $line->product_desc;
 						
 						$t->date_start = $start;
 						$t->date_end = $end;
 						$t->fk_task_parent = 0;
-						$t->planned_workload = $durationInSec;
+						
+						//Gestion spécifique GPC => calcul de la charge de travail prévue
+						// temps prévisionnel = qty ligne (nb de mot) / mph tâche (extrafield tâche)
+						$t->planned_workload = convertTime2Seconds($line->qty / $s->array_options['options_wph']);
 						
 						$t->array_options['options_soldprice'] = $line->total_ht;
 						
+						//Gestion spécifique GPC => extrafields
+						$t->array_options['options_wordnumber'] = $line->qty;
+						$t->array_options['options_linkservice'] = $line->fk_product;
+
 						$t->create($user);
+
+						//Gestion spécifique GPC => création tâche relecture
+						if($s->array_options['options_proofread']){
+							$relecture = new Task($db);
+							$relecture = clone $t;
+							
+							$modTask2 = new $obj;
+							$defaultref2 = $modTask2->getNextValue($soc,$object);
+
+							$relecture->ref = $defaultref2;
+							
+							$relecture->label = "Relecture - ".$relecture->label;
+							$relecture->planned_workload = convertTime2Seconds(($line->qty / $s->array_options['options_wph']) / 4);
+							
+							$relecture->create($user);
+						}
 					}
 					
 					$start = strtotime('+1 weekday', $end);
@@ -245,10 +290,10 @@ class ActionsDoc2Project
 			}
 			
 			// LIEN OBJECT / PROJECT
-			$p->date_end = $end;
+			/*$p->date_end = $end;
 			if($resetProjet) $p->statut = 0;
 			$p->update($user);
-			$object->setProject($p->id);
+			$object->setProject($p->id);*/
 			
 			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$p->id,2));
 		}
