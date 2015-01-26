@@ -106,11 +106,6 @@ class ActionsDoc2Project
 				<td><?php echo $langs->trans('TotalPropal'); ?></td>
 				<td><?php echo price($propalTotal) ?></td>
 			</tr>
-			<!-- <tr>
-				<td><?php echo $langs->trans('TotalBill'); ?></td>
-				// FIXME: $billsTotal is undefined
-				<td><?php echo price($billsTotal) ?></td>
-			</tr>-->
 			<tr>
 				<td><?php echo $langs->trans('Margin'); ?></td>
 				<td><?php echo price($marge) ?></td>
@@ -223,11 +218,8 @@ class ActionsDoc2Project
 					$s->fetch($line->fk_product);
 					
 					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-					$durationInSec = $line->qty * $s->duration_value * 3600;
 					$nbDays = 0;
 					if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-						// FIXME: $durationInSec is unused
-						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
 						$nbDays = $line->qty * $s->duration_value;
 					} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 						$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
@@ -248,8 +240,7 @@ class ActionsDoc2Project
 						$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
 						require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
 						$modTask = new $obj;
-						// FIXME: $soc is undefined
-						$defaultref = $modTask->getNextValue($soc,$object);
+						$defaultref = $modTask->getNextValue($object->thirdparty,$object);
 						
 						$t->ref = $defaultref;
 						$t->label = $line->product_label;
@@ -276,7 +267,7 @@ class ActionsDoc2Project
 							$relecture = clone $t;
 							
 							$modTask2 = new $obj;
-							$defaultref2 = $modTask2->getNextValue($soc,$object);
+							$defaultref2 = $modTask2->getNextValue($object->thirdparty,$object);
 
 							$relecture->ref = $defaultref2;
 							
