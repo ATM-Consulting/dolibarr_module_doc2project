@@ -236,10 +236,8 @@ class ActionsDoc2Project
 					
 					$t = new Task($db);
 					$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-					//echo $ref.'<br>';
-					/*echo '<pre>';
-					print_r($s);exit;*/
-					$t->fetch(0, $t);
+
+					$t->fetch(0, $ref);
 					if($t->id==0) {
 						
 						$t->fk_project = $p->id;
@@ -259,7 +257,9 @@ class ActionsDoc2Project
 						
 						//Gestion spécifique GPC => calcul de la charge de travail prévue
 						// temps prévisionnel = qty ligne (nb de mot) / mph tâche (extrafield tâche)
-						$t->planned_workload = convertTime2Seconds($line->qty / $s->array_options['options_wph']);
+						$planned_workload = ($s->array_options['options_wph']) ?  $line->qty / $s->array_options['options_wph'] :  $line->qty;
+						
+						$t->planned_workload = convertTime2Seconds($planned_workload);
 						
 						$t->array_options['options_soldprice'] = $line->total_ht;
 						
@@ -279,12 +279,15 @@ class ActionsDoc2Project
 							$relecture->ref = $defaultref2;
 							
 							$relecture->label = "Relecture - ".$relecture->label;
-							$relecture->planned_workload = convertTime2Seconds(($line->qty / $s->array_options['options_wph']) / 4);
+							
+							$relecture_planned_workload = $planned_workload / 4;
+							
+							$relecture->planned_workload = convertTime2Seconds($relecture_planned_workload);
 							
 							$relecture->create($user);
 						}
 					}
-					
+
 					$start = strtotime('+1 weekday', $end);
 				}
 			}
