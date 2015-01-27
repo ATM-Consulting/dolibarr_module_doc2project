@@ -34,13 +34,16 @@ class ActionsDoc2Project
 			$langs->load('doc2project@doc2project');
 			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project';
 			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
-			?>
-			<script type="text/javascript">
-				$(document).ready(function(){
-					$('.tabsAction').append('<?php echo '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>'; ?>');
-				});
-			</script>
-			<?php
+			
+			if((float)DOL_VERSION<3.6) {
+				?>
+				<script type="text/javascript">
+					$(document).ready(function(){
+						$('.tabsAction').append('<?php echo '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>'; ?>');
+					});
+				</script>
+				<?php
+			}
 		}
 		
 		if(in_array('projectcard',explode(':',$parameters['context'])) && $object->id > 0) {
