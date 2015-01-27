@@ -76,11 +76,15 @@ class ActionsDoc2Project
 				}
 			}
 			
-			$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
-			$res=$db->query($sql);
-			while($obj=$db->fetch_object($res)) {
-				$otherExpenses+=$obj->total_ht;				
-			}			
+			if($conf->ndfp->enabled){
+				$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
+				$res=$db->query($sql);
+				if($res){
+					while($obj=$db->fetch_object($res)) {
+						$otherExpenses+=$obj->total_ht;				
+					}
+				}
+			}	
 			
 			
 			$resultset = $db->query("SELECT SUM(tt.task_duration) as duration_effective, SUM(tt.thm * tt.task_duration/3600) as costprice  
