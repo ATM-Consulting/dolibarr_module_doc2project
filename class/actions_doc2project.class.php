@@ -196,6 +196,7 @@ class ActionsDoc2Project
 		{
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
+			dol_include_once('/core/lib/date.lib.php');
 			
 			$p = new Project($db);
 
@@ -218,27 +219,37 @@ class ActionsDoc2Project
 			
 			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 			
+			/*echo '<pre>';
+			print_r($object);exit;*/
+			
 			// CREATION DES TACHES
 			foreach($object->lines as $line) {
-				if(!empty($line->fk_product) && $line->fk_product_type == 1) { // On ne créé que les tâches correspondant à des services
-					$s = new Product($db);
-					$s->fetch($line->fk_product);
+				
+				if($line->product_type == 1) { // On ne créé que les tâches correspondant à des services
 					
-					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-					$nbDays = 0;
-					if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-						$nbDays = $line->qty * $s->duration_value;
-					} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-						$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+					$nbDays = $line->qty;
+				
+					if(!empty($line->fk_product)){
+						$s = new Product($db);
+						$s->fetch($line->fk_product);
+						
+						// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
+						$nbDays = 0;
+						if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+							$nbDays = $line->qty * $s->duration_value;
+						} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+							$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+						}
 					}
 					
 					$end = strtotime('+'.$nbDays.' weekdays', $start);
-					
+
 					$t = new Task($db);
 					$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 
 					$t->fetch(0, $ref);
-					if($t->id==0) {
+					
+					if($t->id == 0) {
 						
 						$t->fk_project = $p->id;
 						
@@ -248,7 +259,7 @@ class ActionsDoc2Project
 						$defaultref = $modTask->getNextValue($object->thirdparty,$object);
 						
 						$t->ref = $defaultref;
-						$t->label = $line->product_label;
+						$t->label = ($line->product_label) ? $line->product_label : $line->desc ;
 						$t->description = $line->product_desc;
 						
 						$t->date_start = $start;
@@ -265,7 +276,7 @@ class ActionsDoc2Project
 						
 						//Gestion spécifique GPC => extrafields
 						$t->array_options['options_wordnumber'] = $line->qty;
-						$t->array_options['options_linkservice'] = $line->fk_product;
+						$t->array_options['options_linkservice'] = ($line->fk_product) ? $line->fk_product : 0;
 
 						$t->create($user);
 
@@ -293,10 +304,10 @@ class ActionsDoc2Project
 			}
 			
 			// LIEN OBJECT / PROJECT
-			/*$p->date_end = $end;
+			$p->date_end = $end;
 			if($resetProjet) $p->statut = 0;
 			$p->update($user);
-			$object->setProject($p->id);*/
+			$object->setProject($p->id);
 			
 			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$p->id,2));
 		}
