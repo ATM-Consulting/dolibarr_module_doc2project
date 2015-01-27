@@ -146,10 +146,17 @@ class ActionsDoc2Project
 				$product_static=new Product($db);
 				$product_static->fetch($object->array_options['options_linkservice']);
 				?>
-				<tr>
-					<td><?php echo $langs->trans('LinkService'); ?></td>
-					<td><?php print $product_static->getNomUrl(1,'',24); ?></td>
-				</tr>
+				<script type="text/javascript">
+					$(document).ready(function(){
+						$("table").each(function(){
+							$(this).find('tr > td').each(function(){
+								if($(this).html() == 'Service lié'){
+									$(this).next().html('').append('<?php print $product_static->getNomUrl(1,'',24)." - ".$product_static->label; ?>');
+								}
+							})
+						});
+					})
+				</script>
 			<?php
 			}
 			
