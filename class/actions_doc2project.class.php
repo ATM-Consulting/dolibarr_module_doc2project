@@ -206,7 +206,7 @@ class ActionsDoc2Project
 			dol_include_once('/core/lib/date.lib.php');
 			
 			$p = new Project($db);
-
+			
 			// CREATION OU CHARGEMENT DU PROJET
 			if(empty($object->fk_project)) {
 				
@@ -311,7 +311,6 @@ class ActionsDoc2Project
 			}
 			
 			// LIEN OBJECT / PROJECT
-			$p->date_end = $end;
 			if($resetProjet) $p->statut = 0;
 			$p->update($user);
 			$object->setProject($p->id);
