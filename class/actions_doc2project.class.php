@@ -267,7 +267,7 @@ class ActionsDoc2Project
 						
 						$t->ref = $defaultref;
 						$t->label = ($line->product_label) ? $line->product_label : $line->desc ;
-						$t->description = $line->product_desc;
+						$t->description = ($line->desc) ? $line->desc : $line->product_desc;
 						
 						$t->date_start = $start;
 						$t->date_end = $end;
