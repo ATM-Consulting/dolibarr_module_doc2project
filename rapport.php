@@ -333,7 +333,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge,2)) ?></td>
 					<td><?php echo price(round($total_frais_generaux,2)); ?></td>
 					<td<?php echo ($total_marge_net < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge_net,2)) ?></td>
-					<td<?php echo (round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme)),2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme)),2); ?> </td>
+					<td<?php echo (round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme + $total_frais_generaux)),2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" '; ?>><?php echo round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme + $total_frais_generaux)),2); ?> </td>
 					<td><?php echo price(round($total_devis - $total_vente,2)) ?></td>
 				</tr>
 			</tfoot>
