@@ -123,7 +123,7 @@ function _get_filtre($report,$PDOdb,$form){
 	
 	print_fiche_titre('Filtres');
 	echo '<div class="tabBar">';
-	echo '<table>';
+	echo '<table class="noborder">';
 	
 	switch ($report) {
 		case 'statistiques_projet':
@@ -135,7 +135,7 @@ function _get_filtre($report,$PDOdb,$form){
 			break;
 	}
 	
-	echo '<tr><td colspan="2" align="center">'.$form->btsubmit('Valider', 'valider').'</td></tr>';
+	echo '<tr><td colspan="2" align="left">'.$form->btsubmit('Valider', 'valider').'</td></tr>';
 	echo '</table>';
 	
 	echo '</div>';
@@ -232,27 +232,33 @@ function _print_statistiques_projet(&$TRapport){
 	
 	$idprojet = GETPOST('id_projet');
 	?>
-	<div class="tabBar" style="padding-bottom: 25px;">
-		<table id="statistiques_projet" class="noborder" width="100%">
+	<div class="tabBar" style="padding-bottom: 5px;">
+		<table class="noborder" width="100%">
 			<thead>
-				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
-					<td>Réf. Projet</td>
-					<td><img src="./img/info.png" title="Total HT des propositions commerciales émises (à la date de saisie)"> Devis € HT</td>
-					<td><img src="./img/info.png" title="Total HT des factures clients émises (à la date de saisie)"> Ventes € HT</td>
-					<td><img src="./img/info.png" title="Total HT des factures fournisseurs et sous-traitants enregistrées (à la date de saisie)"> Achats € HT</td>
-					<td><img src="./img/info.png" title="Total HT des notes de frais enregistrées (à la date de saisie)"> Notes de frais € HT</td>
-					<td><img src="./img/info.png" title="Total heures prévues (lors de la création des tâches)"> Temps prévu</td>
-					<td><img src="./img/info.png" title="Total heures passées (lors de la saisie des temps consommés)"> Temps passé</td>
-					<td><img src="./img/info.png" title="Temps prévu - temps passé"> Ecart temps</td>
-					<td><img src="./img/info.png" title="Valorisation HT du total temps consommé (H) x Taux Horaire Moyen de chaque intervenant"> Total MO € HT</td>
-					<td><img src="./img/info.png" title="Total HT (factures clients émises - (achats + notes de frais + coût main d'oeuvre)) HORS IMPUTATION FRAIS GENERAUX (00_37)"> Marge brute € HT</td>
-					<td><img src="./img/info.png" title="IMPUTATION FRAIS GENERAUX (00_37)"> Affectation<br>Frais généraux €</td>
-					<td><img src="./img/info.png" title="Total HT (factures clients émises - (achats + notes de frais + coût main d'oeuvre)) AVEC IMPUTATION FRAIS GENERAUX (00_37)"> Marge Net € HT</td>
-					<td><img src="./img/info.png" title="Coefficient de vente (ou marge)"> KV</td>
-					<td><img src="./img/info.png" title="Total HT des propositions commerciales émises non facturées"> Reste à facturer HT €</td>
+				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
+					<td width="138">Réf. affaire</td>
+					<td width="110"><img src="./img/info.png" title="Total HT des devis signés (à la date de saisie)"> Commandes HT</td>
+					<td width="110"><img src="./img/info.png" title="Total HT des factures clients émises (à la date de saisie)"> Factures HT</td>
+					<td width="110"><img src="./img/info.png" title="Total HT des factures fournisseurs et sous-traitants enregistrées (à la date de saisie)"> Achats HT</td>
+					<td width="110"><img src="./img/info.png" title="Total HT des notes de frais enregistrées (à la date de saisie)"> NdF HT</td>
+					<td width="110"><img src="./img/info.png" title="Total heures prévues (lors de la création des tâches)"> Tps prévu</td>
+					<td width="110"><img src="./img/info.png" title="Total heures passées (lors de la saisie des temps consommés)"> Tps passé</td>
+					<td width="110"><img src="./img/info.png" title="Temps prévu - temps passé"> Tps restant</td>
+					<td><img src="./img/info.png" title="Valorisation HT du total temps consommé (H) x Taux Horaire Moyen de chaque intervenant"> Total MO HT</td>
+					<td><img src="./img/info.png" title="Marge brute : total HT (factures clients émises - (achats + notes de frais + coût main d'oeuvre)) HORS IMPUTATION FRAIS GENERAUX (00_37)"> Marge brute HT</td>
+					<td><img src="./img/info.png" title="IMPUTATION FRAIS GENERAUX (00_37)"> FG € HT</td>
+					<td><img src="./img/info.png" title="Marge nette : total HT (factures clients émises - (achats + notes de frais + coût main d'oeuvre)) INCLUS IMPUTATION FRAIS GENERAUX (00_37)"> Marge nette HT</td>
+					<td><img src="./img/info.png" title="Coefficient de vente (ou marge)"> Kv</td>
+					<td><img src="./img/info.png" title="Total HT des devis signés restant à facturer"> Reste HT</td>
 				</tr>
 			</thead>
+		</table>
+	</div>
+	<div class="noborder" style="display:block; overflow:scroll; max-height:400px;">
+		<table id="statistiques_projet" class="noborder" width="100%">
+
 			<tbody>
+
 				<?php
 				foreach($TRapport as $k => $line){
 					$total_vente += $line['total_vente'];
@@ -280,23 +286,27 @@ function _print_statistiques_projet(&$TRapport){
 					//echo $marge_net." -------- ".($line['marge'] - $affectationFrais).'<br>';
 					$kv = $line['total_vente'] / ($line['total_achat'] + $line['total_ndf'] + $line['total_cout_homme'] + $affectationFrais);
 					?>
-					<tr>
-						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
-						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($line['total_devis'],2)) ?></td>
-						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
-						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
-						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
-						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : convertSecondToTime($line['total_temps_prevu'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-						<td<?php echo ($line['total_temps_prevu'] < $line['total_temps']) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : convertSecondToTime($line['total_diff_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
-						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
+					<tr style="text-align:left;">
+					<style>
+					tbody tr:nth-last-child(2n) { background-color: #EBEBEB; }
+					</style>
+						<td width="155"><?php echo $project->getNomUrl(1,'',1)  ?></td>
+						<td width="100"><?php echo ($project->ref == "00_37") ? "" : price(round($line['total_devis'],2)) ?></td>
+						<td width="97"><?php echo price(round($line['total_vente'],2)) ?></td>
+						<td width="96"><?php echo price(round($line['total_achat'],2)) ?></td>
+						<td width="96"><?php echo price(round($line['total_ndf'],2)) ?></td>
+						<td width="94"><?php echo ($project->ref == "00_37") ? "" : convertSecondToTime($line['total_temps_prevu'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td width="94"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td width="100"<?php echo ($line['total_temps_prevu'] < $line['total_temps']) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo ($project->ref == "00_37") ? "" : convertSecondToTime($line['total_diff_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td width="108"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
+						<td width="129"<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 						
-						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($affectationFrais,2)); ?></td>
-						<td<?php echo ( $marge_net < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($marge_net,2)); ?></td>
+						<td width="81"><?php echo ($project->ref == "00_37") ? "" : price(round($affectationFrais,2)); ?></td>
+						<td width="124"<?php echo ( $marge_net < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($marge_net,2)); ?></td>
 												
-						<td<?php echo (round($kv,2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round($kv,2); ?> </td>
+						<td width="37"<?php echo (round($kv,2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round($kv,2); ?> </td>
 						<td nowrap="nowrap"><?php echo ($project->ref == "00_37") ? "" : price(round($line['total_devis'] - $line['total_vente'],2)); ?></td>
+					
 					</tr>
 					<?
 					$total_devis += $line['total_devis'];
@@ -319,21 +329,26 @@ function _print_statistiques_projet(&$TRapport){
 				
 				?>
 			</tbody>
-			<tfoot>
-				<tr style="font-weight: bold;">
-					<td>Totaux</td>
-					<td><?php echo price($total_devis) ?></td>
-					<td><?php echo price($total_vente) ?></td>
-					<td><?php echo price($total_achat) ?></td>
-					<td><?php echo price($total_ndf) ?></td>
-					<td><?php echo convertSecondToTime($total_temps_prevu,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-					<td<?php echo ($total_temps_prevu < $total_temps) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime(abs($total_temps_prevu - $total_temps),'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-					<td><?php echo price(round($total_cout_homme,2)) ?></td>
-					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge,2)) ?></td>
-					<td><?php echo price(round($total_frais_generaux,2)); ?></td>
-					<td<?php echo ($total_marge_net < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge_net,2)) ?></td>
-					<td<?php echo (round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme + $total_frais_generaux)),2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" '; ?>><?php echo round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme + $total_frais_generaux)),2); ?> </td>
+
+		</table>
+	</div>
+	<div class="noborder" style="display:block;">
+		<table id="statistiques_projet" class="noborder" width="100%" style="background-color:#FFE1E1">
+				<tfoot>
+				<tr style="font-weight: bold;" style="text-align:left;">
+					<td width="167" style="text-transform: uppercase;">total activité</td>
+					<td width="115"><?php echo price($total_devis) ?></td>
+					<td width="108"><?php echo price($total_vente) ?></td>
+					<td width="111"><?php echo price($total_achat) ?></td>
+					<td width="110"><?php echo price($total_ndf) ?></td>
+					<td width="108"><?php echo convertSecondToTime($total_temps_prevu,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td width="110"><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td width="112"<?php echo ($total_temps_prevu < $total_temps) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime(abs($total_temps_prevu - $total_temps),'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td width="122"><?php echo price(round($total_cout_homme,2)) ?></td>
+					<td width="144"<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge,2)) ?></td>
+					<td width="92"><?php echo price(round($total_frais_generaux,2)); ?></td>
+					<td width="141"<?php echo ($total_marge_net < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge_net,2)) ?></td>
+					<td width="49"<?php echo (round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme + $total_frais_generaux)),2) < 1) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?>><?php echo round(($total_vente / ($total_achat + $total_ndf + $total_cout_homme + $total_frais_generaux)),2); ?> </td>
 					<td><?php echo price(round($total_devis - $total_vente,2)) ?></td>
 				</tr>
 			</tfoot>
