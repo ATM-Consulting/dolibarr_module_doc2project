@@ -195,18 +195,35 @@ function _get_statistiques_projet(&$PDOdb){
 	while ($PDOdb->Get_line()) {
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
+		if($conf->ndfp->enabled){
+			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
+		}
+		else{
+			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_cout_homme');
+		}
 		
-		$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
 		if($marge!=0) {
-			$TRapport[]= array(
-				"IdProject" => $PDOdb->Get_field('IdProject'),
-				"total_vente" => $PDOdb->Get_field('total_vente'),
-				"total_achat" => $PDOdb->Get_field('total_achat'),
-				"total_ndf" => $PDOdb->Get_field('total_ndf'),
-				"total_temps" => $PDOdb->Get_field('total_temps'),
-				"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-				"marge" => $marge
-			);
+			if($conf->ndfp->enabled){
+				$TRapport[]= array(
+					"IdProject" => $PDOdb->Get_field('IdProject'),
+					"total_vente" => $PDOdb->Get_field('total_vente'),
+					"total_achat" => $PDOdb->Get_field('total_achat'),
+					"total_ndf" => $PDOdb->Get_field('total_ndf'),
+					"total_temps" => $PDOdb->Get_field('total_temps'),
+					"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
+					"marge" => $marge
+				);
+			}
+			else{
+				$TRapport[]= array(
+					"IdProject" => $PDOdb->Get_field('IdProject'),
+					"total_vente" => $PDOdb->Get_field('total_vente'),
+					"total_achat" => $PDOdb->Get_field('total_achat'),
+					"total_temps" => $PDOdb->Get_field('total_temps'),
+					"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
+					"marge" => $marge
+				);
+			}
 			
 			
 		}
@@ -233,7 +250,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td>Réf. Projet</td>
 					<td>Total vente (€)</td>
 					<td>Total achat (€)</td>
-					<td>Total Note de frais (€)</td>
+					<?php if($conf->ndfp->enabled){ ?><td>Total Note de frais (€)</td><?php } ?> 
 					<td>Total temps passé (JH)</td>
 					<td>Total coût MO (€)</td>
 					<td>Rentabilité</td>
@@ -252,7 +269,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
-						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
+						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
@@ -260,7 +277,7 @@ function _print_statistiques_projet(&$TRapport){
 					<?
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
-					$total_ndf += $line['total_ndf'];
+					if($conf->ndfp->enabled)$total_ndf += $line['total_ndf'];
 					$total_temps += $line['total_temps'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
@@ -272,7 +289,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td>Totaux</td>
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
-					<td><?php echo price($total_ndf) ?></td>
+					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
