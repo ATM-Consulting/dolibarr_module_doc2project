@@ -202,7 +202,7 @@ function _get_statistiques_projet(&$PDOdb){
 			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_cout_homme');
 		}
 		
-		if($marge!=0) {
+		//if($marge!=0) {
 			if($conf->ndfp->enabled){
 				$TRapport[]= array(
 					"IdProject" => $PDOdb->Get_field('IdProject'),
@@ -226,7 +226,7 @@ function _get_statistiques_projet(&$PDOdb){
 			}
 			
 			
-		}
+		//}
 	}
 	
 	//pre($TRapport,true);
