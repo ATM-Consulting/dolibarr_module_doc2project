@@ -262,7 +262,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
-					<?
+					<?php
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
 					$total_ndf += $line['total_ndf'];

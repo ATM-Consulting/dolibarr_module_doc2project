@@ -43,7 +43,7 @@ class ActionsDoc2Project
 			<?php
 		}
 		
-		if(in_array('projectcard',explode(':',$parameters['context']))) {
+		if(in_array('projectcard',explode(':',$parameters['context'])) && $object->id > 0) {
 			$langs->load('doc2project@doc2project');
 			
 			dol_include_once('/comm/propal/class/propal.class.php');
@@ -165,7 +165,7 @@ class ActionsDoc2Project
 				?></td>
 				
 			</tr>
-			<?
+			<?php
 		}
 
 	}
