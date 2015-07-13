@@ -74,10 +74,14 @@ class ActionsDoc2Project
 				}
 			}
 			
-			$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
-			$res=$db->query($sql);
-			while($obj=$db->fetch_object($res)) {
-				$otherExpenses+=$obj->total_ht;				
+			if ($conf->ndfp->enabled)
+			{
+				$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
+				$res=$db->query($sql);
+				
+				while($obj=$db->fetch_object($res)) {
+					$otherExpenses+=$obj->total_ht;				
+				}	
 			}			
 			
 			
