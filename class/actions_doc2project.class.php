@@ -184,6 +184,8 @@ class ActionsDoc2Project
 			|| (in_array('ordercard',explode(':',$parameters['context'])) && $object->statut == 1))
 		)
 		{
+			$langs->load('doc2project@doc2project');
+			
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
 			

@@ -113,6 +113,7 @@ class InterfaceDoc2Projecttrigger
      */
     public function run_trigger($action, $object, $user, $langs, $conf)
     {
+    	global $db;
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
         // Users
@@ -155,7 +156,69 @@ class InterfaceDoc2Projecttrigger
 				$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
 			}
 		}
+		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
+		{
+			
+			//return 0;
+			//new project
+			if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
+			if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
+			
+			$defaultref='';
+    		$modele = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
+			
+			$file=''; $classname=''; $filefound=0;
+		    $dirmodels=array_merge(array('/'),(array) $conf->modules_parts['models']);
+		    foreach($dirmodels as $reldir)
+		    {
+		    	$file=dol_buildpath($reldir."core/modules/project/".$modele.'.php',0);
+		    	if (file_exists($file))
+		    	{
+		    		$filefound=1;
+		    		$classname = $modele;
+		    		break;
+		    	}
+		    }
+	
+			if ($filefound)
+		    {
+		    	$langs->load('doc2project@doc2project');
+				
+		    	$project = new Project($db);
+				$thirdparty=new Societe($db);
+				
+			    dol_include_once($reldir."core/modules/project/".$modele.'.php');
+			    $modProject = new $classname;
 		
+		    	$project->ref 			 = $modProject->getNextValue($thirdparty, $project);
+				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+				$project->title			 = $langs->trans('Doc2ProjectTitle', $title);
+				$project->socid          = $object->socid;
+		        $project->description    = '';
+		        $project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
+		        $project->datec			 = dol_now();
+		        $project->date_start	 = $object->date_livraison;
+		        $project->date_end		 = null;
+				
+				$r = $project->create($user);
+				if ($r > 0) 
+				{
+					$object->setProject($r);
+					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+				}
+				else 
+				{
+					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+				}
+				
+		    }
+			else
+			{
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorClassNotFoundProject', $file), 'errors');
+			}
+	
+		}
+
         return 0;
     }
 }
