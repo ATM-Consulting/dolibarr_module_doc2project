@@ -154,7 +154,7 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
 	, (
-                SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."propal as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(2)
+                SELECT SUM(f.total_ht) FROM ".MAIN_DB_PREFIX."propal as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(2)
                 ".($t_deb>0 && $t_fin>0 ? " AND date_valid BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
                 ) as total_propal
 	, (
