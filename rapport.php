@@ -154,18 +154,26 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
 	, (
+                SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."propal as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(2)
+                ".($t_deb>0 && $t_fin>0 ? " AND date_valid BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+                ) as total_propal
+	, (
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_vente
 	, (
 		SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1 
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-	) as total_achat
-	, (
-		SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
-		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-	) as total_ndf
-	, (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
+	) as total_achat";
+	
+	if($conf->ndfp->enabled){
+		$sql .=" , (
+			SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
+			".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
+		) as total_ndf ";
+	}
+	
+	$sql .= ", (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_temps
@@ -196,23 +204,42 @@ function _get_statistiques_projet(&$PDOdb){
 	while ($PDOdb->Get_line()) {
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
-		
-		$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
-		if($marge!=0) {
-			$TRapport[]= array(
-				"IdProject" => $PDOdb->Get_field('IdProject'),
-				"total_vente" => $PDOdb->Get_field('total_vente'),
-				"total_achat" => $PDOdb->Get_field('total_achat'),
-				"total_ndf" => $PDOdb->Get_field('total_ndf'),
-				"total_temps" => $PDOdb->Get_field('total_temps'),
-				"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-				'total_temps_plannif'=>$PDOdb->Get_field('total_temps_plannif'),
-
-				"marge" => $marge
-			);
-			
-			
+		if($conf->ndfp->enabled){
+			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
 		}
+		else{
+			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_cout_homme');
+		}
+		
+		//if($marge!=0) {
+			if($conf->ndfp->enabled){
+				$TRapport[]= array(
+					"IdProject" => $PDOdb->Get_field('IdProject'),
+					"total_propal" => $PDOdb->Get_field('total_propal'),
+					"total_vente" => $PDOdb->Get_field('total_vente'),
+					"total_achat" => $PDOdb->Get_field('total_achat'),
+					"total_ndf" => $PDOdb->Get_field('total_ndf'),
+					"total_temps" => $PDOdb->Get_field('total_temps'),
+					"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
+					'total_temps_plannif'=> $PDOdb->Get_field('total_temps_plannif'),
+					"marge" => $marge
+				);
+			}
+			else{
+				$TRapport[]= array(
+					"IdProject" => $PDOdb->Get_field('IdProject'),
+					"total_temps" => $PDOdb->Get_field('total_temps'),
+					"total_vente" => $PDOdb->Get_field('total_vente'),
+					"total_achat" => $PDOdb->Get_field('total_achat'),
+					'total_temps_plannif'=> $PDOdb->Get_field('total_temps_plannif'),
+					"total_propal" => $PDOdb->Get_field('total_propal'),
+					"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
+					"marge" => $marge
+				);
+			}
+			
+			
+		//}
 	}
 	
 	//pre($TRapport,true);
@@ -234,9 +261,10 @@ function _print_statistiques_projet(&$TRapport){
 			<thead>
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<td>Réf. Projet</td>
+					<td>Total propal (€)</td>
 					<td>Total vente (€)</td>
 					<td>Total achat (€)</td>
-					<td>Total Note de frais (€)</td>
+					<?php if($conf->ndfp->enabled){ ?><td>Total Note de frais (€)</td><?php } ?> 
 					<td>Total temps passé (JH)</td>
 					<td>Total temps prévu (JH)</td>
 					<td>Total coût MO (€)</td>
@@ -248,15 +276,18 @@ function _print_statistiques_projet(&$TRapport){
 				
 				foreach($TRapport as $line){
 					
+					if($line['total_temps_plannif'] == 0 && $line['total_temps'] == 0) continue;
+
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
 					
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
+						<td nowrap="nowrap"><?php echo price(round($line['total_propal'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
-						<td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td>
+						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td<?php echo ($line['total_temps']>$line['total_temps_plannif']) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps_plannif'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
@@ -265,7 +296,7 @@ function _print_statistiques_projet(&$TRapport){
 					<?php
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
-					$total_ndf += $line['total_ndf'];
+					if($conf->ndfp->enabled)$total_ndf += $line['total_ndf'];
 					$total_temps += $line['total_temps'];
 					$total_temps_plannif+=$line['total_temps_plannif'];
 					$total_cout_homme += $line['total_cout_homme'];
@@ -276,13 +307,14 @@ function _print_statistiques_projet(&$TRapport){
 			<tfoot>
 				<tr style="font-weight: bold;">
 					<td>Totaux</td>
+					<td><?php /*echo price($total_vente)*/ ?></td>
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
-					<td><?php echo price($total_ndf) ?></td>
+					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo convertSecondToTime($total_temps_plannif,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
-					<td><?php echo price($total_cout_homme) ?></td>
-					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
+					<td><?php echo price(round($total_cout_homme)) ?></td>
+					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price(round($total_marge)) ?></td>
 				</tr>
 			</tfoot>
 		</table>
