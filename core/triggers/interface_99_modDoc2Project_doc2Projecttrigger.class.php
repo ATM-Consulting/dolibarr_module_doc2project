@@ -158,11 +158,15 @@ class InterfaceDoc2Projecttrigger
 		}
 		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
 		{
-			
-			//return 0;
-			//new project
 			if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 			if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
+		
+			if (!empty($object->fk_project))
+			{
+				$project = new Project($db);
+				$r = $project->fetch($object->fk_project);
+				if ($r > 0) return 0;
+			}
 			
 			$defaultref='';
     		$modele = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
@@ -204,6 +208,7 @@ class InterfaceDoc2Projecttrigger
 				if ($r > 0) 
 				{
 					$object->setProject($r);
+					$this->_createTask($db, $object, $project, $user);
 					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
 				}
 				else 
@@ -218,7 +223,89 @@ class InterfaceDoc2Projecttrigger
 			}
 	
 		}
+		else if ($action == 'SHIPPING_VALIDATE' && !empty($conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION))
+		{
+			if ($object->origin == 'commande' && !empty($object->origin_id))
+			{
+				$langs->load('doc2project@doc2project');
+				
+				$commande = new Commande($db);
+				$r = $commande->fetch($object->origin_id);
+				
+				if ($r > 0)
+				{
+					dol_include_once('/projet/class/project.class.php');
+					$project = new Project($db);
+					$r = $project->fetch($commande->fk_project);
+					
+					if ($r > 0)
+					{
+						if ($project->statut == 0) setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorProjectCantBeClose', $project->ref), 'errors');
+						elseif ($project->statut == 2) setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectAlreadyClose', $project->ref));
+						else
+						{
+							$r = $project->setClose($user);
+							if ($r <= 0 || empty($r)) setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorProjectCantBeClose', $project->ref), 'errors');
+							else setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectAsBeenClose', $project->ref));
+						}
+					}
+					else setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorProjectNotFound'), 'errors');
+			
+				}
+				else setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCommandeNotFound'), 'errors');
+				
+			}
+			
+		}
 
         return 0;
     }
+
+	private function _createTask(&$db, &$object, &$project, &$user)
+	{
+		// CREATION DES TACHES
+		foreach($object->lines as $line) 
+		{
+			if(!empty($line->fk_product) && $line->fk_product_type == 1) 
+			{ // On ne créé que les tâches correspondant à des services
+				$product = new Product($db);
+				$product->fetch($line->fk_product);
+				
+				$durationInSec = $start = $end = '';
+				if (!empty(trim($product->duration_value)))
+				{
+					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
+					$durationInSec = $line->qty * $product->duration_value * 3600;
+					$nbDays = 0;
+					if($product->duration_unit == 'd') 
+					{ // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+						$nbDays = $line->qty * $product->duration_value;
+					} else if($product->duration_unit == 'h') 
+					{ // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+						$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+					}
+					
+					$end = strtotime('+'.$nbDays.' weekdays', $start);
+				}
+				
+				$task = new Task($db);
+				$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
+				
+				$task->fk_project = $project->id;
+				$task->ref = $ref;
+				$task->label = $line->product_label;
+				$task->description = $line->desc;
+				
+				$task->date_start = $start;
+				$task->date_end = $end;
+				$task->fk_task_parent = 0;
+				$task->planned_workload = $durationInSec;
+				
+				$task->array_options['options_soldprice'] = $line->total_ht;
+				
+				$task->create($user);
+			}
+		}
+	}
 }

@@ -23,6 +23,11 @@ Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
 Doc2ProjectErrorCreateProject=Impossible de créer un projet, code retour : %s
 Doc2ProjectErrorClassNotFoundProject=Impossible de créer un projet, class non trouvée : %s
+Doc2ProjectErrorCommandeNotFound=Impossible de clôturer le projet : commande non trouvée
+Doc2ProjectErrorProjectNotFound=Aucun projet lié
+Doc2ProjectErrorProjectCantBeClose=Impossible de clôturer le projet %s
+Doc2ProjectProjectAlreadyClose=Projet (%s) déjà clot
+Doc2ProjectProjectAsBeenClose=Le projet (%s) a était clôturé
 
 SoldPrice=Prix vendu
 CostEffective=Coût effectif (temps consommé)
