@@ -18,6 +18,7 @@ NbHoursPerDay = Nombre d'heure journalier
 ModuleNeedProposalOrOrderModule = Le module proposition commerciale ou commande client doit être activé pour pouvoir utiliser ce module
 Doc2ProjectValidateProjectOnValidateOrder=Créer et valider un projet sur la validation d'une commande client
 Doc2ProjectClotureProjectOnValidateExpedition=Clôturer le projet sur la validation d'une expédition
+Doc2ProjectCodeGroupe=Groupe de saisie des temps
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
