@@ -158,6 +158,8 @@ class InterfaceDoc2Projecttrigger
 		}
 		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
 		{
+			if (empty($conf->project->enabled)) return 0;
+
 			if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 			if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
 		
@@ -208,7 +210,7 @@ class InterfaceDoc2Projecttrigger
 				if ($r > 0) 
 				{
 					$object->setProject($r);
-					$this->_createTask($db, $object, $project, $user);
+					$this->_createTask($db, $object, $project, $user, $conf);
 					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
 				}
 				else 
@@ -261,51 +263,86 @@ class InterfaceDoc2Projecttrigger
         return 0;
     }
 
-	private function _createTask(&$db, &$object, &$project, &$user)
+	private function _createTask(&$db, &$object, &$project, &$user, &$conf)
 	{
+		$TServiceToTask = array(
+			1 => '1_SABLAGE'
+			,2 => '2_ANTICORROSION'
+			,3 => '3_PEINTURE'
+			,4 => '4_VERNIS'
+		);
+		
+		$TServiceLoaded = array();
+		$TTaskCreated = array();
+		$durationInSec = $start = $end = '';
+		
 		// CREATION DES TACHES
 		foreach($object->lines as $line) 
 		{
 			if(!empty($line->fk_product) && $line->fk_product_type == 1) 
 			{ // On ne créé que les tâches correspondant à des services
-				$product = new Product($db);
-				$product->fetch($line->fk_product);
+			
+				$ref_service = $line->product_ref;
+				$label = $line->product_label;
 				
-				$durationInSec = $start = $end = '';
-				if (!empty(trim($product->duration_value)))
+				$explodeRef = explode('_', $ref_service); //On doit avoir que des chiffres (exemple : 123 ou 12 ou 1234)
+				$explodeRef = $explodeRef[0];
+				
+				for ($i = 0; $i < strlen($explodeRef); $i++)
 				{
-					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-					$durationInSec = $line->qty * $product->duration_value * 3600;
-					$nbDays = 0;
-					if($product->duration_unit == 'd') 
-					{ // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-						$nbDays = $line->qty * $product->duration_value;
-					} else if($product->duration_unit == 'h') 
-					{ // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-						$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+				 	$num = $explodeRef[$i];
+					
+					if (!isset($TServiceToTask[$num])) continue;
+					
+					$ref = $TServiceToTask[$num];
+					
+					if (!isset($TServiceLoaded[$ref]))
+					{
+						$service = new Product($db); //Un service est un objet Product
+						$s = $service->fetch(null, $ref);
+						if ($s > 0) $TServiceLoaded[$ref] = $service;
+					}
+					else {
+						$service = &$TServiceLoaded[$ref];
+						$s = 1;
 					}
 					
-					$end = strtotime('+'.$nbDays.' weekdays', $start);
+					if ($s > 0)
+					{
+						if (!isset($TTaskCreated[$ref]))
+						{ 	//Nouvelle tâche
+							$task = new Task($db);
+							
+							$task->fk_project = $project->id;
+							$task->ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
+							$task->label = $ref;
+							$task->description = $label;
+							
+							$task->date_start = $start;
+							$task->date_end = $end;
+							$task->fk_task_parent = 0;
+							$task->planned_workload = $durationInSec;
+							
+							$task->create($user);
+						
+							$TTaskCreated[$ref] = $task;	
+						}
+						else 
+						{	//Update tâche
+							$task = &$TTaskCreated[$ref];
+							$task->description .= "\n".$label;
+							$task->planned_workload = 'null';
+							$task->date_start = $start;
+							$task->date_end = $end;
+							$task->progress = 0;
+							$task->update($user);
+						}
+						
+					}
 				}
-				
-				$task = new Task($db);
-				$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-				
-				$task->fk_project = $project->id;
-				$task->ref = $ref;
-				$task->label = $line->product_label;
-				$task->description = $line->desc;
-				
-				$task->date_start = $start;
-				$task->date_end = $end;
-				$task->fk_task_parent = 0;
-				$task->planned_workload = $durationInSec;
-				
-				$task->array_options['options_soldprice'] = $line->total_ht;
-				
-				$task->create($user);
+			
 			}
 		}
+
 	}
 }
