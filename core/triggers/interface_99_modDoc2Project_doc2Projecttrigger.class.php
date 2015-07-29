@@ -158,7 +158,7 @@ class InterfaceDoc2Projecttrigger
 		}
 		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
 		{
-			if (empty($conf->project->enabled)) return 0;
+			if (empty($conf->projet->enabled)) return 0;
 
 			if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 			if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
