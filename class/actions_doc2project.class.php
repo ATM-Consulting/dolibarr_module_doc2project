@@ -127,7 +127,8 @@ class ActionsDoc2Project
 			$langs->load('doc2project@doc2project');
 			//$object->duration_effective souvent faux :-/ recalcule en requête
 			
-			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
+			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".(int) $object->id);
+			
 			$obj=$db->fetch_object($resultset);
 		
 			?>
