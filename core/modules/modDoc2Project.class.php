@@ -287,7 +287,6 @@ class modDoc2Project extends DolibarrModules
 		}
      	
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
-		$res = $extrafields->addExtraField('code_equipe', $langs->trans('Doc2ProjectCodeGroupe'), 'select', 0, '', 'user');
 		
 		$sql[] = 'ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD COLUMN (code_equipe VARCHAR(255) )';
 		
