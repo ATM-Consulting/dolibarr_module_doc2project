@@ -152,7 +152,7 @@ function _get_statistiques_projet(&$PDOdb){
 	$date_fin = GETPOST('date_fin');
 	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
 
-	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, p.dateo, p.datee
+	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, pe.datevent, pe.datefin
 	, (
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -179,7 +179,8 @@ function _get_statistiques_projet(&$PDOdb){
 	) as total_cout_homme
 	
 	
-			FROM ".MAIN_DB_PREFIX."projet as p 
+			FROM ".MAIN_DB_PREFIX."projet as p
+			INNER JOIN " . MAIN_DB_PREFIX . "projet_extrafields as pe ON pe.fk_object = p.rowid
 	 ";
 
 	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
@@ -192,9 +193,9 @@ function _get_statistiques_projet(&$PDOdb){
 	if (!empty($sortfield) && !empty($sortorder)) {
 		$sql .= $sortfield . ' ' . $sortorder;
 	} else {
-		$sql .= 'p.dateo';
+		$sql .= 'pe.datevent';
 	}
-	
+
 	$PDOdb->Execute($sql);
 
 	$TRapport = array();
@@ -214,8 +215,8 @@ function _get_statistiques_projet(&$PDOdb){
 			if($conf->ndfp->enabled){
 				$TRapport[]= array(
 					"IdProject" 		=> $PDOdb->Get_field('IdProject'),
-					"date_debut" 		=> $PDOdb->Get_field('dateo'),
-					"date_fin" 			=> $PDOdb->Get_field('datee'),
+					"datevent" 			=> $PDOdb->Get_field('datevent'),
+					"datefin" 			=> $PDOdb->Get_field('datefin'),
 					"total_vente" 		=> $PDOdb->Get_field('total_vente'),
 					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
 					"total_ndf" 		=> $PDOdb->Get_field('total_ndf'),
@@ -227,8 +228,8 @@ function _get_statistiques_projet(&$PDOdb){
 			else{
 				$TRapport[]= array(
 					"IdProject" 		=> $PDOdb->Get_field('IdProject'),
-					"date_debut" 		=> $PDOdb->Get_field('dateo'),
-					"date_fin" 			=> $PDOdb->Get_field('datee'),
+					"datevent" 			=> $PDOdb->Get_field('datevent'),
+					"datefin" 			=> $PDOdb->Get_field('datefin'),
 					"total_vente" 		=> $PDOdb->Get_field('total_vente'),
 					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
@@ -264,8 +265,8 @@ function _print_statistiques_projet(&$TRapport){
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Réf. Projet</th>
 					<?php 
-					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
-					print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
+					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "pe.datevent", "", $params, "", $sortfield, $sortorder);
+					print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "pe.datefin", "", $params, "", $sortfield, $sortorder);
 					?>
 					<th class="liste_titre">Total vente (€)</th>
 					<th class="liste_titre">Total achat (€)</th>
@@ -282,9 +283,8 @@ function _print_statistiques_projet(&$TRapport){
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
 
-					$date_debut = date('d/m/Y', strtotime($line['date_debut']));
-					$date_fin = date('d/m/Y', strtotime($line['date_fin']));
-					
+					$date_debut = ($line['datevent'] !== false ? date('d/m/Y', strtotime($line['datevent'])) : '');
+					$date_fin = ($line['datefin'] !== false ? date('d/m/Y', strtotime($line['datefin'])) : '');
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
