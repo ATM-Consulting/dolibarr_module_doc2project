@@ -136,11 +136,11 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	';
 	
 	$TValues = $PDOdb->ExecuteAsArray($sql);
-	
+		
 	$TProjets = array();
 	foreach ($TValues as $obj) {
 		$TProjets[] = array(
-			'label' => $obj->title,
+			'label' => utf8_encode($obj->title),
 			'value' => $obj->rowid
 		);
 		
@@ -148,7 +148,7 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 			$selected = $obj;
 		}
 	}
-	
+
 	?>
 	<tr>
 		<td><label for="id_projet">Projet : </label></td>
