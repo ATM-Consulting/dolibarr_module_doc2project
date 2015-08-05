@@ -82,7 +82,7 @@ function _fiche(&$PDOdb,$report=''){
 	
 	echo '<div>';
 	
-	$form = new TFormCore('auto','formReport');
+	$form = new TFormCore('auto','formReport', 'GET');
 	
 	echo $form->hidden('action', 'report');
 	
@@ -101,7 +101,7 @@ function _fiche(&$PDOdb,$report=''){
 			_get_filtre($report,$PDOdb,$form);
 		}
 		else{
-			echo $form->btsubmit('Afficher', 'afficher');
+			echo $form->btsubmit('Afficher', '');
 		}
 
 		echo $form->end();
@@ -113,7 +113,7 @@ function _fiche(&$PDOdb,$report=''){
 		}
 	}
 	else{
-		echo $form->btsubmit('Afficher', 'afficher');
+		echo $form->btsubmit('Afficher', '');
 	}
 	
 	echo '</div>';
@@ -135,7 +135,7 @@ function _get_filtre($report,$PDOdb,$form){
 			break;
 	}
 	
-	echo '<tr><td colspan="2" align="center">'.$form->btsubmit('Valider', 'valider').'</td></tr>';
+	echo '<tr><td colspan="2" align="center">'.$form->btsubmit('Valider', '').'</td></tr>';
 	echo '</table>';
 	
 	echo '</div>';
@@ -152,7 +152,7 @@ function _get_statistiques_projet(&$PDOdb){
 	$date_fin = GETPOST('date_fin');
 	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
 
-	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
+	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, p.dateo, p.datee
 	, (
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -184,8 +184,16 @@ function _get_statistiques_projet(&$PDOdb){
 
 	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
 	
-	$sql.=" ORDER BY p.title";
+	$sql.=" ORDER BY ";
 	
+	$sortfield = GETPOST('sortfield');
+	$sortorder = GETPOST('sortorder');
+	
+	if (!empty($sortfield) && !empty($sortorder)) {
+		$sql .= $sortfield . ' ' . $sortorder;
+	} else {
+		$sql .= 'p.dateo';
+	}
 	
 	$PDOdb->Execute($sql);
 
@@ -205,23 +213,27 @@ function _get_statistiques_projet(&$PDOdb){
 		//if($marge!=0) {
 			if($conf->ndfp->enabled){
 				$TRapport[]= array(
-					"IdProject" => $PDOdb->Get_field('IdProject'),
-					"total_vente" => $PDOdb->Get_field('total_vente'),
-					"total_achat" => $PDOdb->Get_field('total_achat'),
-					"total_ndf" => $PDOdb->Get_field('total_ndf'),
-					"total_temps" => $PDOdb->Get_field('total_temps'),
-					"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-					"marge" => $marge
+					"IdProject" 		=> $PDOdb->Get_field('IdProject'),
+					"date_debut" 		=> $PDOdb->Get_field('dateo'),
+					"date_fin" 			=> $PDOdb->Get_field('datee'),
+					"total_vente" 		=> $PDOdb->Get_field('total_vente'),
+					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
+					"total_ndf" 		=> $PDOdb->Get_field('total_ndf'),
+					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
+					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
+					"marge" 			=> $marge
 				);
 			}
 			else{
 				$TRapport[]= array(
-					"IdProject" => $PDOdb->Get_field('IdProject'),
-					"total_vente" => $PDOdb->Get_field('total_vente'),
-					"total_achat" => $PDOdb->Get_field('total_achat'),
-					"total_temps" => $PDOdb->Get_field('total_temps'),
-					"total_cout_homme" => $PDOdb->Get_field('total_cout_homme'),
-					"marge" => $marge
+					"IdProject" 		=> $PDOdb->Get_field('IdProject'),
+					"date_debut" 		=> $PDOdb->Get_field('dateo'),
+					"date_fin" 			=> $PDOdb->Get_field('datee'),
+					"total_vente" 		=> $PDOdb->Get_field('total_vente'),
+					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
+					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
+					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
+					"marge" 			=> $marge
 				);
 			}
 			
@@ -241,32 +253,43 @@ function _print_statistiques_projet(&$TRapport){
 	dol_include_once('/core/lib/date.lib.php');
 	dol_include_once('/projet/class/project.class.php');
 	
+	$id_projet = GETPOST('');
+	
+	$params = $_SERVER['QUERY_STRING'];
 	
 	?>
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
 			<thead>
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
-					<td>Réf. Projet</td>
-					<td>Total vente (€)</td>
-					<td>Total achat (€)</td>
-					<?php if($conf->ndfp->enabled){ ?><td>Total Note de frais (€)</td><?php } ?> 
-					<td>Total temps passé (JH)</td>
-					<td>Total coût MO (€)</td>
-					<td>Rentabilité</td>
+					<th class="liste_titre">Réf. Projet</th>
+					<?php 
+					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
+					print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
+					?>
+					<th class="liste_titre">Total vente (€)</th>
+					<th class="liste_titre">Total achat (€)</th>
+					<?php if($conf->ndfp->enabled){ ?><th class="liste_titre">Total Note de frais (€)</th><?php } ?> 
+					<th class="liste_titre">Total temps passé (JH)</th>
+					<th class="liste_titre">Total coût MO (€)</th>
+					<th class="liste_titre">Rentabilité</th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php
 				
 				foreach($TRapport as $line){
-					
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
+
+					$date_debut = date('d/m/Y', strtotime($line['date_debut']));
+					$date_fin = date('d/m/Y', strtotime($line['date_fin']));
 					
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
+						<td><?php echo $date_debut;  ?></td>
+						<td><?php echo $date_fin; ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
@@ -287,6 +310,8 @@ function _print_statistiques_projet(&$TRapport){
 			<tfoot>
 				<tr style="font-weight: bold;">
 					<td>Totaux</td>
+					<td></td>
+					<td></td>
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
 					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
