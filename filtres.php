@@ -170,6 +170,10 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	      	$(this).val(ui.item.label);
 	      }
 	    });
+	    
+	    $('#txt_id_projet').on('input', function() {
+	    	$('#id_projet').val('');
+	    });
 	</script>
 	<?php
 	
