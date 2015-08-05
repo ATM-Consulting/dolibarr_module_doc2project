@@ -127,10 +127,58 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	dol_include_once('/core/class/html.formprojet.class.php');
 	$formproject = new FormProjets($db);
 	
+	$id_projet = GETPOST('id_projet');
+	$selected = null;
+	
+	$sql = '
+		SELECT rowid, title
+		FROM ' . MAIN_DB_PREFIX . 'projet
+	';
+	
+	$TValues = $PDOdb->ExecuteAsArray($sql);
+	
+	$TProjets = array();
+	foreach ($TValues as $obj) {
+		$TProjets[] = array(
+			'label' => $obj->title,
+			'value' => $obj->rowid
+		);
+		
+		if ($obj->rowid == $id_projet) {
+			$selected = $obj;
+		}
+	}
+	
+	?>
+	<tr>
+		<td><label for="id_projet">Projet : </label></td>
+		<td>
+			<input type="hidden" id="id_projet" name="id_projet" value="<?php echo ($selected ? $selected->rowid : ''); ?>" />
+			<input type="text" id="txt_id_projet" value="<?php echo ($selected ? $selected->title : ''); ?>" />
+		</td>
+	</tr>
+	
+	<script>
+		var availableTags = <?php echo json_encode($TProjets); ?>;
+
+	    $( "#txt_id_projet" ).autocomplete({
+	      source: availableTags,
+	      select: function(event, ui) {
+	      	event.preventDefault();
+	      	
+	      	$('#id_projet').val(ui.item.value);
+	      	$(this).val(ui.item.label);
+	      }
+	    });
+	</script>
+	<?php
+	
+	/*
 	?>
 		<tr>
 			<td>Projet : </td>
 			<td><?php $formproject->select_projects(-1, $_REQUEST['id_projet'], 'id_projet', 0); ?></td>
 		</tr>
 	<?php
+	*/
 }
