@@ -177,7 +177,9 @@ function _get_statistiques_projet(&$PDOdb){
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_cout_homme
-	
+	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut <> 0 AND prop.fk_projet = p.rowid) as total_devis_previsionnel
+	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut = 2  AND prop.fk_projet = p.rowid) as total_devis_futur
+	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "commande_fournisseur as cmd WHERE cmd.fk_statut <> 0 AND cmd.fk_projet = p.rowid) as total_cmd_fournisseurs
 	
 			FROM ".MAIN_DB_PREFIX."projet as p
 			INNER JOIN " . MAIN_DB_PREFIX . "projet_extrafields as pe ON pe.fk_object = p.rowid
@@ -228,7 +230,11 @@ function _get_statistiques_projet(&$PDOdb){
 					"total_ndf" 		=> $PDOdb->Get_field('total_ndf'),
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
 					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
-					"marge" 			=> $marge
+					"marge" 			=> $marge,
+					
+					"total_devis_previsionnel" 	=> $PDOdb->Get_field('total_devis_previsionnel'),
+					"total_devis_futur" 		=> $PDOdb->Get_field('total_devis_futur'),
+					"total_cmd_fournisseurs" 	=> $PDOdb->Get_field('total_cmd_fournisseurs')
 				);
 			}
 			else{
@@ -240,7 +246,11 @@ function _get_statistiques_projet(&$PDOdb){
 					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
 					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
-					"marge" 			=> $marge
+					"marge" 			=> $marge,
+					
+					"total_devis_previsionnel" 	=> $PDOdb->Get_field('total_devis_previsionnel'),
+					"total_devis_futur" 		=> $PDOdb->Get_field('total_devis_futur'),
+					"total_cmd_fournisseurs" 	=> $PDOdb->Get_field('total_cmd_fournisseurs')
 				);
 			}
 			
@@ -297,6 +307,10 @@ function _print_statistiques_projet(&$TRapport){
 					<th class="liste_titre">Total temps passé (JH)</th>
 					<th class="liste_titre">Total coût MO (€)</th>
 					<th class="liste_titre">Rentabilité</th>
+					
+					<th class="liste_titre">Futur</th>
+					<th class="liste_titre">Prévisionnel</th>
+					<th class="liste_titre">Comm. fourn.</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -323,6 +337,10 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
+						
+						<td><?php echo price($line['total_devis_futur'], 2); ?></td>
+						<td><?php echo price($line['total_devis_previsionnel'], 2); ?></td>
+						<td><?php echo price($line['total_cmd_fournisseurs'], 2); ?></td>
 					</tr>
 					<?
 					$total_vente += $line['total_vente'];
@@ -331,6 +349,10 @@ function _print_statistiques_projet(&$TRapport){
 					$total_temps += $line['total_temps'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
+					
+					$total_devis_futur += $line['total_devis_futur'];
+					$total_devis_previsionnel += $line['total_devis_previsionnel'];
+					$total_cmd_fournisseurs += $line['total_cmd_fournisseurs'];
 				}
 				?>
 			</tbody>
@@ -346,6 +368,10 @@ function _print_statistiques_projet(&$TRapport){
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
+					
+					<td><?php echo $total_devis_futur; ?></td>
+					<td><?php echo $total_devis_previsionnel; ?></td>
+					<td><?php echo $total_cmd_fournisseurs; ?></td>
 				</tr>
 			</tfoot>
 		</table>
