@@ -152,7 +152,7 @@ function _get_statistiques_projet(&$PDOdb){
 	$date_fin = GETPOST('date_fin');
 	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
 
-	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, pe.datevent, pe.datefin
+	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, pe.datevent, pe.datefin, pe.typeevent
 	, (
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -181,9 +181,15 @@ function _get_statistiques_projet(&$PDOdb){
 	
 			FROM ".MAIN_DB_PREFIX."projet as p
 			INNER JOIN " . MAIN_DB_PREFIX . "projet_extrafields as pe ON pe.fk_object = p.rowid
+			WHERE 1 = 1
 	 ";
 
-	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
+	if($idprojet > 0) $sql.= " AND p.rowid = ".$idprojet;
+	
+	$type_event = GETPOST('type_event');
+	if (!empty($type_event)) {
+		$sql .= ' AND pe.typeevent = ' . $type_event;
+	}
 	
 	$sql.=" ORDER BY ";
 	
@@ -254,9 +260,15 @@ function _print_statistiques_projet(&$TRapport){
 	dol_include_once('/core/lib/date.lib.php');
 	dol_include_once('/projet/class/project.class.php');
 	
+	$selected_type = GETPOST('type_event');
 	$id_projet = GETPOST('');
 	
 	$params = $_SERVER['QUERY_STRING'];
+
+	$extrafields = new Extrafields($db);
+	$extrafields->fetch_name_optionals_label('projet');
+	
+	$TTypes = $extrafields->attribute_param['typeevent']['options'];
 	
 	?>
 	<div class="tabBar" style="padding-bottom: 25px;">
@@ -268,6 +280,17 @@ function _print_statistiques_projet(&$TRapport){
 					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "pe.datevent", "", $params, "", $sortfield, $sortorder);
 					print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "pe.datefin", "", $params, "", $sortfield, $sortorder);
 					?>
+					<th class="liste_titre">
+						Type
+						<select id="select_type_event" name="type_event">
+							<option value=""></option>
+							<?php
+							foreach ($TTypes as $id => $type) {
+								echo '<option value="' . $id . '" ' . ($selected_type == $id ? 'selected' : '') . '>' . $type . '</option>';
+							}
+							?>
+						</select>
+					</th>
 					<th class="liste_titre">Total vente (€)</th>
 					<th class="liste_titre">Total achat (€)</th>
 					<?php if($conf->ndfp->enabled){ ?><th class="liste_titre">Total Note de frais (€)</th><?php } ?> 
@@ -282,6 +305,9 @@ function _print_statistiques_projet(&$TRapport){
 				foreach($TRapport as $line){
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
+					$project->fetch_optionals();
+					
+					$type = $TTypes[$project->array_options['options_typeevent']];
 
 					$date_debut = ($line['datevent'] !== false ? date('d/m/Y', strtotime($line['datevent'])) : '');
 					$date_fin = ($line['datefin'] !== false ? date('d/m/Y', strtotime($line['datefin'])) : '');
@@ -290,6 +316,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
 						<td><?php echo $date_debut;  ?></td>
 						<td><?php echo $date_fin; ?></td>
+						<td><?php echo $type; ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
@@ -312,6 +339,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td>Totaux</td>
 					<td></td>
 					<td></td>
+					<td></td>
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
 					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
@@ -322,5 +350,25 @@ function _print_statistiques_projet(&$TRapport){
 			</tfoot>
 		</table>
 	</div>
+	
+	<script>
+		$(document).ready(function() {
+			$('#select_type_event').change(function() {
+				var url = '<?php echo $_SERVER['REQUEST_URI']; ?>';
+				var index = url.indexOf('type_event');
+				var val = $(this).val();
+				
+				if (index > -1) {
+					console.log(url);
+					url = url.replace(/(type_event=)\d*/, '$1' + val);
+					console.log(url);
+				} else {
+					url = url + '&type_event=' + val;
+				}
+				
+				window.location.replace(url);
+			});
+		});
+	</script>
 	<?php
 }
