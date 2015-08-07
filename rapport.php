@@ -158,10 +158,15 @@ function _get_statistiques_projet(&$PDOdb){
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_vente
+	,
+	(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut = 2  AND prop.fk_projet = p.rowid) as total_vente_futur
+	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut <> 0 AND prop.fk_projet = p.rowid) as total_vente_previsionnel
 	, (
 		SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-	) as total_achat";
+	) as total_achat
+	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "commande_fournisseur as cmd WHERE cmd.fk_statut <> 0 AND cmd.fk_projet = p.rowid) as total_achat_futur
+	";
 
 	if($conf->ndfp->enabled){
 		$sql .=" , (
@@ -178,9 +183,6 @@ function _get_statistiques_projet(&$PDOdb){
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_cout_homme
-	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut <> 0 AND prop.fk_projet = p.rowid) as total_devis_previsionnel
-	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut = 2  AND prop.fk_projet = p.rowid) as total_devis_futur
-	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "commande_fournisseur as cmd WHERE cmd.fk_statut <> 0 AND cmd.fk_projet = p.rowid) as total_cmd_fournisseurs
 
 			FROM ".MAIN_DB_PREFIX."projet as p
 			INNER JOIN " . MAIN_DB_PREFIX . "projet_extrafields as pe ON pe.fk_object = p.rowid
@@ -213,56 +215,49 @@ function _get_statistiques_projet(&$PDOdb){
 	while ($PDOdb->Get_line()) {
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
+		$id_projet 								= $PDOdb->Get_field('IdProject');
+		$date_event 							= $PDOdb->Get_field('datevent');
+		$date_fin_event 					= $PDOdb->Get_field('datefin');
+		$total_vente 							= $PDOdb->Get_field('total_vente');
+		$total_vente_futur 				= $total_vente + $PDOdb->Get_field('total_vente_futur');
+		$total_vente_previsionnel = $PDOdb->Get_field('total_vente_previsionnel');
+		$total_achat 							= $PDOdb->Get_field('total_achat');
+		$total_achat_futur 				= $total_achat + $PDOdb->Get_field('total_achat_futur');
+		$total_temps 							= $PDOdb->Get_field('total_temps');
+		$total_cout_homme 				= $PDOdb->Get_field('total_cout_homme');
+
 		if($conf->ndfp->enabled){
-			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_ndf') - $PDOdb->Get_field('total_cout_homme');
+			$marge 				= $total_vente - $total_achat - $PDOdb->Get_field('total_ndf') - $total_cout_homme;
+			$marge_futur 	= $total_vente_futur - $total_achat_futur - $PDOdb->Get_field('total_ndf') - $total_cout_homme;
+			$marge_prev 	= $total_vente_previsionnel - $total_achat_futur - $PDOdb->Get_field('total_ndf') - $total_cout_homme;
+		} else {
+			$marge 				= $total_vente - $total_achat - $total_cout_homme;
+			$marge_futur 	= $total_vente_futur - $total_achat_futur - $total_cout_homme;
+			$marge_prev 	= $total_vente_previsionnel - $total_achat_futur - $total_cout_homme;
 		}
-		else{
-			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_cout_homme');
-		}
 
-		//if($marge!=0) {
-			if($conf->ndfp->enabled){
-				$TRapport[]= array(
-					"IdProject" 		=> $PDOdb->Get_field('IdProject'),
-					"datevent" 			=> $PDOdb->Get_field('datevent'),
-					"datefin" 			=> $PDOdb->Get_field('datefin'),
-					"total_vente" 		=> $PDOdb->Get_field('total_vente'),
-					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
-					"total_ndf" 		=> $PDOdb->Get_field('total_ndf'),
-					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
-					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
-					"marge" 			=> $marge,
-
-					"total_devis_previsionnel" 	=> $PDOdb->Get_field('total_devis_previsionnel'),
-					"total_devis_futur" 		=> $PDOdb->Get_field('total_devis_futur'),
-					"total_cmd_fournisseurs" 	=> $PDOdb->Get_field('total_cmd_fournisseurs')
-				);
-			}
-			else{
-				$TRapport[]= array(
-					"IdProject" 		=> $PDOdb->Get_field('IdProject'),
-					"datevent" 			=> $PDOdb->Get_field('datevent'),
-					"datefin" 			=> $PDOdb->Get_field('datefin'),
-					"total_vente" 		=> $PDOdb->Get_field('total_vente'),
-					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
-					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
-					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
-					"marge" 			=> $marge,
-
-					"total_devis_previsionnel" 	=> $PDOdb->Get_field('total_devis_previsionnel'),
-					"total_devis_futur" 		=> $PDOdb->Get_field('total_devis_futur'),
-					"total_cmd_fournisseurs" 	=> $PDOdb->Get_field('total_cmd_fournisseurs')
-				);
-			}
-
-
-		//}
+		$TRapport[]= array(
+			"IdProject" 								=> $id_projet,
+			"datevent" 									=> $date_event,
+			"datefin" 									=> $date_fin_event,
+			"total_vente" 							=> $total_vente,
+			"total_vente_futur" 				=> $total_vente_futur,
+			"total_vente_previsionnel" 	=> $total_vente_previsionnel,
+			"total_achat" 							=> $total_achat,
+			"total_achat_futur" 				=> $total_achat_futur,
+			"total_temps" 							=> $total_temps,
+			"total_cout_homme" 					=> $total_cout_homme,
+			"marge" 										=> $marge,
+			"marge_futur"								=> $marge_futur,
+			"marge_prev"								=> $marge_prev
+		);
 	}
 
-	//pre($TRapport,true);
+	if ($conf->ndfp->enabled) {
+		$TRapport['total_ndf'] = $PDOdb->Get_field('total_ndf');
+	}
 
 	_print_statistiques_projet($TRapport);
-
 }
 
 function _print_statistiques_projet(&$TRapport){
@@ -293,15 +288,16 @@ function _print_statistiques_projet(&$TRapport){
 					?>
 					<th class="liste_titre">Type</th>
 					<th class="liste_titre">Total vente (€)</th>
+					<th class="liste_titre">Total vente futur (€)</th>
+					<th class="liste_titre">Total vente prévisionnel (€)</th>
 					<th class="liste_titre">Total achat (€)</th>
+					<th class="liste_titre">Total achat futur (€)</th>
 					<?php if($conf->ndfp->enabled){ ?><th class="liste_titre">Total Note de frais (€)</th><?php } ?>
 					<th class="liste_titre">Total temps passé (JH)</th>
 					<th class="liste_titre">Total coût MO (€)</th>
 					<th class="liste_titre">Rentabilité</th>
-
-					<th class="liste_titre">Futur</th>
-					<th class="liste_titre">Prévisionnel</th>
-					<th class="liste_titre">Comm. fourn.</th>
+					<th class="liste_titre">Rentabilité future</th>
+					<th class="liste_titre">Rentabilité prévisionnelle</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -326,15 +322,16 @@ function _print_statistiques_projet(&$TRapport){
 						<td><?php echo $date_fin; ?></td>
 						<td><?php echo $type; ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
+						<td><?php echo price($line['total_vente_futur'], 2); ?></td>
+						<td><?php echo price($line['total_vente_previsionnel'], 2); ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
+						<td><?php echo price($line['total_achat_futur'], 2); ?></td>
 						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?>
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
-
-						<td><?php echo price($line['total_devis_futur'], 2); ?></td>
-						<td><?php echo price($line['total_devis_previsionnel'], 2); ?></td>
-						<td><?php echo price($line['total_cmd_fournisseurs'], 2); ?></td>
+						<td<?php echo ($line['marge_futur'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge_futur'],2)) ?></td>
+						<td<?php echo ($line['marge_prev'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge_prev'],2)) ?></td>
 					</tr>
 					<?
 					$total_vente += $line['total_vente'];
@@ -343,10 +340,12 @@ function _print_statistiques_projet(&$TRapport){
 					$total_temps += $line['total_temps'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
+					$total_marge_futur += $line['marge_futur'];
+					$total_marge_prev += $line['marge_prev'];
 
-					$total_devis_futur += $line['total_devis_futur'];
-					$total_devis_previsionnel += $line['total_devis_previsionnel'];
-					$total_cmd_fournisseurs += $line['total_cmd_fournisseurs'];
+					$total_vente_futur				+= $line['total_vente_futur'];
+					$total_vente_previsionnel += $line['total_vente_previsionnel'];
+					$total_achat_futur 				+= $line['total_achat_futur'];
 				}
 				?>
 			</tbody>
@@ -357,15 +356,16 @@ function _print_statistiques_projet(&$TRapport){
 					<td></td>
 					<td></td>
 					<td><?php echo price($total_vente) ?></td>
+					<td><?php echo price($total_vente_futur); ?></td>
+					<td><?php echo price($total_vente_previsionnel); ?></td>
 					<td><?php echo price($total_achat) ?></td>
+					<td><?php echo price($total_achat_futur); ?></td>
 					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?>
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
-
-					<td><?php echo $total_devis_futur; ?></td>
-					<td><?php echo $total_devis_previsionnel; ?></td>
-					<td><?php echo $total_cmd_fournisseurs; ?></td>
+					<td<?php echo ($total_marge_futur < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge_futur) ?></td>
+					<td<?php echo ($total_marge_prev < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge_prev) ?></td>
 				</tr>
 			</tfoot>
 		</table>
