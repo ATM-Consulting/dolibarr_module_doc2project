@@ -312,13 +312,16 @@ function _print_statistiques_projet(&$TRapport){
 					$project->fetch($line['IdProject']);
 					$project->fetch_optionals();
 
+					$client = new Societe($db);
+					$client->fetch($project->socid);
+
 					$type = $TTypes[$project->array_options['options_typeevent']];
 
 					$date_debut = ($line['datevent'] !== false ? date('d/m/Y', strtotime($line['datevent'])) : '');
 					$date_fin = ($line['datefin'] !== false ? date('d/m/Y', strtotime($line['datefin'])) : '');
 					?>
 					<tr>
-						<td><?php echo $project->getNomUrl(1,'',1)  ?></td>
+						<td><?php echo $project->getNomUrl(1,'',1)  ?><br /><?php echo $client->getNomUrl(1); ?></td>
 						<td><?php echo $date_debut;  ?></td>
 						<td><?php echo $date_fin; ?></td>
 						<td><?php echo $type; ?></td>
