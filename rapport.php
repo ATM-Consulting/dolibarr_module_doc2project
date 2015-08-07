@@ -26,14 +26,14 @@ function _action(&$PDOdb) {
 
 	if(isset($_REQUEST['action'])) {
 		switch($_REQUEST['action']) {
-			
+
 			case 'report':
 				_fiche($PDOdb,$_REQUEST['report']);
-				break;			
+				break;
 			default :
 				_fiche($PDOdb);
 		}
-		
+
 	}
 	else{
 		_fiche($PDOdb);
@@ -79,23 +79,23 @@ function _action(&$PDOdb) {
 <?php
 
 function _fiche(&$PDOdb,$report=''){
-	
+
 	echo '<div>';
-	
+
 	$form = new TFormCore('auto','formReport', 'GET');
-	
+
 	echo $form->hidden('action', 'report');
-	
+
 	$TRapport = array(
 					'statistiques_projet'=>"Statistiques Projets",
 				);
-				
+
 	echo $form->combo('Rapport à afficher : ', 'report', $TRapport,($_REQUEST['report'])? $_REQUEST['report'] : '');
-	
+
 	$THide = array();
-	
+
 	if($report){
-		
+
 		if(!in_array($report,$THide)){
 			//Affichage des filtres
 			_get_filtre($report,$PDOdb,$form);
@@ -115,29 +115,30 @@ function _fiche(&$PDOdb,$report=''){
 	else{
 		echo $form->btsubmit('Afficher', '');
 	}
-	
+
 	echo '</div>';
 }
 
 function _get_filtre($report,$PDOdb,$form){
-	
+
 	print_fiche_titre('Filtres');
 	echo '<div class="tabBar">';
 	echo '<table>';
-	
+
 	switch ($report) {
 		case 'statistiques_projet':
 			_print_filtre_liste_projet($form,$PDOdb);
 			_print_filtre_plage_date($form);
+			_print_filtre_type_projet($form, $PDOdb);
 			break;
-		
+
 		default:
 			break;
 	}
-	
+
 	echo '<tr><td colspan="2" align="center">'.$form->btsubmit('Valider', '').'</td></tr>';
 	echo '</table>';
-	
+
 	echo '</div>';
 }
 
@@ -158,17 +159,17 @@ function _get_statistiques_projet(&$PDOdb){
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_vente
 	, (
-		SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1 
+		SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 	) as total_achat";
-	
+
 	if($conf->ndfp->enabled){
 		$sql .=" , (
-			SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
+			SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1
 			".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_ndf ";
 	}
-	
+
 	$sql .= ", (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
 			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
 		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -180,24 +181,24 @@ function _get_statistiques_projet(&$PDOdb){
 	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut <> 0 AND prop.fk_projet = p.rowid) as total_devis_previsionnel
 	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut = 2  AND prop.fk_projet = p.rowid) as total_devis_futur
 	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "commande_fournisseur as cmd WHERE cmd.fk_statut <> 0 AND cmd.fk_projet = p.rowid) as total_cmd_fournisseurs
-	
+
 			FROM ".MAIN_DB_PREFIX."projet as p
 			INNER JOIN " . MAIN_DB_PREFIX . "projet_extrafields as pe ON pe.fk_object = p.rowid
 			WHERE 1 = 1
 	 ";
 
 	if($idprojet > 0) $sql.= " AND p.rowid = ".$idprojet;
-	
+
 	$type_event = GETPOST('type_event');
 	if (!empty($type_event)) {
 		$sql .= ' AND pe.typeevent = ' . $type_event;
 	}
-	
+
 	$sql.=" ORDER BY ";
-	
+
 	$sortfield = GETPOST('sortfield');
 	$sortorder = GETPOST('sortorder');
-	
+
 	if (!empty($sortfield) && !empty($sortorder)) {
 		$sql .= $sortfield . ' ' . $sortorder;
 	} else {
@@ -208,7 +209,7 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$TRapport = array();
 	$PDOdb2 = new TPDOdb;
-	
+
 	while ($PDOdb->Get_line()) {
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
@@ -218,7 +219,7 @@ function _get_statistiques_projet(&$PDOdb){
 		else{
 			$marge = $PDOdb->Get_field('total_vente') - $PDOdb->Get_field('total_achat') - $PDOdb->Get_field('total_cout_homme');
 		}
-		
+
 		//if($marge!=0) {
 			if($conf->ndfp->enabled){
 				$TRapport[]= array(
@@ -231,7 +232,7 @@ function _get_statistiques_projet(&$PDOdb){
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
 					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
 					"marge" 			=> $marge,
-					
+
 					"total_devis_previsionnel" 	=> $PDOdb->Get_field('total_devis_previsionnel'),
 					"total_devis_futur" 		=> $PDOdb->Get_field('total_devis_futur'),
 					"total_cmd_fournisseurs" 	=> $PDOdb->Get_field('total_cmd_fournisseurs')
@@ -247,67 +248,57 @@ function _get_statistiques_projet(&$PDOdb){
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
 					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
 					"marge" 			=> $marge,
-					
+
 					"total_devis_previsionnel" 	=> $PDOdb->Get_field('total_devis_previsionnel'),
 					"total_devis_futur" 		=> $PDOdb->Get_field('total_devis_futur'),
 					"total_cmd_fournisseurs" 	=> $PDOdb->Get_field('total_cmd_fournisseurs')
 				);
 			}
-			
-			
+
+
 		//}
 	}
-	
+
 	//pre($TRapport,true);
-	
+
 	_print_statistiques_projet($TRapport);
 
 }
 
 function _print_statistiques_projet(&$TRapport){
 	global $conf, $db;
-	
+
 	dol_include_once('/core/lib/date.lib.php');
 	dol_include_once('/projet/class/project.class.php');
-	
+
 	$selected_type = GETPOST('type_event');
 	$id_projet = GETPOST('');
-	
+
 	$params = $_SERVER['QUERY_STRING'];
 
 	$extrafields = new Extrafields($db);
 	$extrafields->fetch_name_optionals_label('projet');
-	
+
 	$TTypes = $extrafields->attribute_param['typeevent']['options'];
-	
+
 	?>
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
 			<thead>
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Réf. Projet</th>
-					<?php 
+					<?php
 					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "pe.datevent", "", $params, "", $sortfield, $sortorder);
 					print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "pe.datefin", "", $params, "", $sortfield, $sortorder);
 					?>
-					<th class="liste_titre">
-						Type
-						<select id="select_type_event" name="type_event">
-							<option value=""></option>
-							<?php
-							foreach ($TTypes as $id => $type) {
-								echo '<option value="' . $id . '" ' . ($selected_type == $id ? 'selected' : '') . '>' . $type . '</option>';
-							}
-							?>
-						</select>
-					</th>
+					<th class="liste_titre">Type</th>
 					<th class="liste_titre">Total vente (€)</th>
 					<th class="liste_titre">Total achat (€)</th>
-					<?php if($conf->ndfp->enabled){ ?><th class="liste_titre">Total Note de frais (€)</th><?php } ?> 
+					<?php if($conf->ndfp->enabled){ ?><th class="liste_titre">Total Note de frais (€)</th><?php } ?>
 					<th class="liste_titre">Total temps passé (JH)</th>
 					<th class="liste_titre">Total coût MO (€)</th>
 					<th class="liste_titre">Rentabilité</th>
-					
+
 					<th class="liste_titre">Futur</th>
 					<th class="liste_titre">Prévisionnel</th>
 					<th class="liste_titre">Comm. fourn.</th>
@@ -315,12 +306,12 @@ function _print_statistiques_projet(&$TRapport){
 			</thead>
 			<tbody>
 				<?php
-				
+
 				foreach($TRapport as $line){
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
 					$project->fetch_optionals();
-					
+
 					$type = $TTypes[$project->array_options['options_typeevent']];
 
 					$date_debut = ($line['datevent'] !== false ? date('d/m/Y', strtotime($line['datevent'])) : '');
@@ -333,11 +324,11 @@ function _print_statistiques_projet(&$TRapport){
 						<td><?php echo $type; ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
-						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
+						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?>
 						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
-						
+
 						<td><?php echo price($line['total_devis_futur'], 2); ?></td>
 						<td><?php echo price($line['total_devis_previsionnel'], 2); ?></td>
 						<td><?php echo price($line['total_cmd_fournisseurs'], 2); ?></td>
@@ -349,7 +340,7 @@ function _print_statistiques_projet(&$TRapport){
 					$total_temps += $line['total_temps'];
 					$total_cout_homme += $line['total_cout_homme'];
 					$total_marge += $line['marge'];
-					
+
 					$total_devis_futur += $line['total_devis_futur'];
 					$total_devis_previsionnel += $line['total_devis_previsionnel'];
 					$total_cmd_fournisseurs += $line['total_cmd_fournisseurs'];
@@ -364,11 +355,11 @@ function _print_statistiques_projet(&$TRapport){
 					<td></td>
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
-					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
+					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?>
 					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
-					
+
 					<td><?php echo $total_devis_futur; ?></td>
 					<td><?php echo $total_devis_previsionnel; ?></td>
 					<td><?php echo $total_cmd_fournisseurs; ?></td>
@@ -376,25 +367,5 @@ function _print_statistiques_projet(&$TRapport){
 			</tfoot>
 		</table>
 	</div>
-	
-	<script>
-		$(document).ready(function() {
-			$('#select_type_event').change(function() {
-				var url = '<?php echo $_SERVER['REQUEST_URI']; ?>';
-				var index = url.indexOf('type_event');
-				var val = $(this).val();
-				
-				if (index > -1) {
-					console.log(url);
-					url = url.replace(/(type_event=)\d*/, '$1' + val);
-					console.log(url);
-				} else {
-					url = url + '&type_event=' + val;
-				}
-				
-				window.location.replace(url);
-			});
-		});
-	</script>
 	<?php
 }

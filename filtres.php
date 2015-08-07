@@ -1,6 +1,6 @@
 <?php
 function _print_filtre_fournisseur(&$form,&$PDOdb){
-	
+
 	$PDOdb->Execute("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe WHERE fournisseur = 1 ORDER BY nom");
 
 	$TFourn = array();
@@ -16,7 +16,7 @@ function _print_filtre_fournisseur(&$form,&$PDOdb){
 	<?php
 }
 function _print_filtre_societe(&$form,&$PDOdb){
-	
+
 	$PDOdb->Execute("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe WHERE 1 ORDER BY nom");
 
 	$TSoc = array(0=>'');
@@ -45,15 +45,15 @@ function _print_filtre_plage_date(&$form){
 }
 
 function _print_filtre_annee(&$form,&$PDOdb,$table,$champ){
-	
+
 	$sql = "SELECT YEAR(".$champ.") as annee FROM ".MAIN_DB_PREFIX.$table." GROUP BY YEAR(".$champ.") ORDER BY YEAR(".$champ.") DESC";
 	$PDOdb->Execute($sql);
-	
+
 	$Tfiltre = array();
 	while($PDOdb->Get_line()){
 		$Tfiltre[$PDOdb->Get_field('annee')] = $PDOdb->Get_field('annee');
 	}
-	
+
 	?>
 		<tr>
 			<td>Année : </td>
@@ -63,16 +63,16 @@ function _print_filtre_annee(&$form,&$PDOdb,$table,$champ){
 }
 
 function _print_filtre_categorie_product($form,$PDOdb,$TData=array()){
-	
+
 	$sql = "SELECT c.label as libelle FROM ".MAIN_DB_PREFIX."categorie as c WHERE type = 0";
-	
+
 	$PDOdb->Execute($sql);
 
 	$Tfiltre = array();
 	while($PDOdb->Get_line()){
 		$Tfiltre[$PDOdb->Get_field('libelle')] = $PDOdb->Get_field('libelle');
 	}
-	
+
 	?>
 		<tr>
 			<td>Catégorie : </td>
@@ -82,7 +82,7 @@ function _print_filtre_categorie_product($form,$PDOdb,$TData=array()){
 }
 
 function _print_filtre_categorie_produit(&$form,&$PDOdb){
-	
+
 	$PDOdb->Execute("SELECT c.rowid, c.label FROM ".MAIN_DB_PREFIX."categorie as c WHERE c.type = 0 "); //0 => produit
 
 	$TCategorie = array();
@@ -110,10 +110,10 @@ function _print_filtre_type_document(&$form,&$PDOdb){
 
 function _print_filtre_mois_annee(){
 	global $db;
-	
+
 	dol_include_once('/core/class/html.formother.class.php');
 	$form = new FormOther($db);
-	
+
 	?>
 		<tr>
 			<td>Mois : </td>
@@ -126,24 +126,24 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	global $db;
 	dol_include_once('/core/class/html.formprojet.class.php');
 	$formproject = new FormProjets($db);
-	
+
 	$id_projet = GETPOST('id_projet');
 	$selected = null;
-	
+
 	$sql = '
 		SELECT rowid, title
 		FROM ' . MAIN_DB_PREFIX . 'projet
 	';
-	
+
 	$TValues = $PDOdb->ExecuteAsArray($sql);
-		
+
 	$TProjets = array();
 	foreach ($TValues as $obj) {
 		$TProjets[] = array(
 			'label' => utf8_encode($obj->title),
 			'value' => $obj->rowid
 		);
-		
+
 		if ($obj->rowid == $id_projet) {
 			$selected = $obj;
 		}
@@ -157,7 +157,7 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 			<input type="text" id="txt_id_projet" value="<?php echo ($selected ? $selected->title : ''); ?>" />
 		</td>
 	</tr>
-	
+
 	<script>
 		var availableTags = <?php echo json_encode($TProjets); ?>;
 
@@ -165,18 +165,18 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	      source: availableTags,
 	      select: function(event, ui) {
 	      	event.preventDefault();
-	      	
+
 	      	$('#id_projet').val(ui.item.value);
 	      	$(this).val(ui.item.label);
 	      }
 	    });
-	    
+
 	    $('#txt_id_projet').on('input', function() {
 	    	$('#id_projet').val('');
 	    });
 	</script>
 	<?php
-	
+
 	/*
 	?>
 		<tr>
@@ -185,4 +185,31 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 		</tr>
 	<?php
 	*/
+}
+
+function _print_filtre_type_projet($form, &$PDOdb) {
+	global $db;
+
+	$selected_type = GETPOST('type_event');
+
+	$extrafields = new Extrafields($db);
+	$extrafields->fetch_name_optionals_label('projet');
+
+	$TTypes = $extrafields->attribute_param['typeevent']['options'];
+
+	?>
+	<tr>
+		<td>Type : </td>
+		<td>
+			<select id="select_type_event" name="type_event">
+				<option value=""></option>
+				<?php
+				foreach ($TTypes as $id => $type) {
+					echo '<option value="' . $id . '" ' . ($selected_type == $id ? 'selected' : '') . '>' . $type . '</option>';
+				}
+				?>
+			</select>
+		</td>
+	</tr>
+	<?php
 }
