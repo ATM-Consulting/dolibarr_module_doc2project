@@ -35,3 +35,5 @@ SoldPrice=Montant vendu
 TotalBill=Montant total des factures
 OtherExpenses=Autres dépenses (Achat, NdF, ...)
 TotalPropal=Montant total des propositions signées
+
+Doc2ProjectUseNomenclatureAndWorkstation=Coupler l'utilisation du module à "Nomenclature" et "Workstation"
