@@ -208,7 +208,7 @@ class InterfaceDoc2Projecttrigger
 				if ($r > 0) 
 				{
 					$object->setProject($r);
-					$this->_createTask($db, $object, $project, $user);
+					$this->_createTask($db, $object, $project, $user, $conf);
 					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
 				}
 				else 
@@ -257,19 +257,50 @@ class InterfaceDoc2Projecttrigger
 			}
 			
 		}
+		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande') 
+		{
+			$facture = new Facture($db);
+			$facture->fetch($object->fk_facture);
+				
+			$fk_commande = GETPOST('originid', 'int');
+			
+			$commande = new Commande($db);
+			$commande->fetch($fk_commande);
+			
+			//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
+			$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND label = "'.( !empty($object->label) ? $db->escape($object->label) : $db->escape($object->desc) ).'"';
+			$resql = $db->query($sql);
+			
+			//[PH] PUTAIN DE DOLISLIBARR - faire un updateline c'est bien, ça permet de recaller le prix de la facture mais ça marche pas dans le trigger
+			//J'ai essayé de forcer le updateline de toutes les lignes d'une facture en actualisant son affichage et ça marche mais là en direct ça donne un poney 
+			if ($resql && $db->num_rows($resql) > 0)
+			{
+				$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
+				$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+				
+			}
+			else
+			{
+				$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $object->situation_percent, $object->fk_unit);
+			}
+			
+		}
 
         return 0;
     }
 
-	private function _createTask(&$db, &$object, &$project, &$user)
+	private function _createTask(&$db, &$object, &$project, &$user, &$conf)
 	{
 		// CREATION DES TACHES
 		foreach($object->lines as $line) 
 		{
-			if(!empty($line->fk_product) && $line->fk_product_type == 1) 
+			if ($line->product_type == 9) continue;
+			
+			// => ligne de type service											=> ligne libre
+			if( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && $line->fk_product === null) ) 
 			{ // On ne créé que les tâches correspondant à des services
 				$product = new Product($db);
-				$product->fetch($line->fk_product);
+				if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 				
 				$durationInSec = $start = $end = '';
 				if (!empty(trim($product->duration_value)))
@@ -294,7 +325,7 @@ class InterfaceDoc2Projecttrigger
 				
 				$task->fk_project = $project->id;
 				$task->ref = $ref;
-				$task->label = $line->product_label;
+				$task->label = !empty($line->product_label) ? $line->product_label : $line->desc;
 				$task->description = $line->desc;
 				
 				$task->date_start = $start;

@@ -37,3 +37,4 @@ OtherExpenses=Autres dépenses (Achat, NdF, ...)
 TotalPropal=Montant total des propositions signées
 
 Doc2ProjectUseNomenclatureAndWorkstation=Coupler l'utilisation du module à "Nomenclature" et "Workstation"
+Doc2ProjectUpdateProgressOfSituationInvoice=Récupérer la progression des tâches pour les reporter dans les factures de situations
