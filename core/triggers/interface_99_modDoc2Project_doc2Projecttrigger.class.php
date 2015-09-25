@@ -271,17 +271,10 @@ class InterfaceDoc2Projecttrigger
 			$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND label = "'.( !empty($object->label) ? $db->escape($object->label) : $db->escape($object->desc) ).'"';
 			$resql = $db->query($sql);
 			
-			//[PH] PUTAIN DE DOLISLIBARR - faire un updateline c'est bien, ça permet de recaller le prix de la facture mais ça marche pas dans le trigger
-			//J'ai essayé de forcer le updateline de toutes les lignes d'une facture en actualisant son affichage et ça marche mais là en direct ça donne un poney 
 			if ($resql && $db->num_rows($resql) > 0)
 			{
 				$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
 				$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
-				
-			}
-			else
-			{
-				$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $object->situation_percent, $object->fk_unit);
 			}
 			
 		}
