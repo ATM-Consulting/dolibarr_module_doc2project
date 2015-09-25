@@ -259,6 +259,7 @@ class InterfaceDoc2Projecttrigger
 		}
 		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande') 
 		{
+			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
 				
