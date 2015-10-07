@@ -266,84 +266,58 @@ class InterfaceDoc2Projecttrigger
 
 	private function _createTask(&$db, &$object, &$project, &$user, &$conf)
 	{
-		$TServiceToTask = array(
-			1 => '1_SABLAGE'
-			,2 => '2_ANTICORROSION'
-			,3 => '3_PEINTURE'
-			,4 => '4_VERNIS'
-		);
-		
-		$TServiceLoaded = array();
-		$TTaskCreated = array();
-		$durationInSec = $start = $end = '';
-		
-		// CREATION DES TACHES
-		foreach($object->lines as $line) 
+		$TSubService = array(); //Tableau contenant les sous services différents
+		foreach ($object->lines as $line)
 		{
-			if(!empty($line->fk_product) && $line->fk_product_type == 1) 
-			{ // On ne créé que les tâches correspondant à des services
+			if (empty($line->fk_product)) continue;
 			
-				$ref_service = $line->product_ref;
-				$label = $line->product_label;
-				
-				$explodeRef = explode('_', $ref_service); //On doit avoir que des chiffres (exemple : 123 ou 12 ou 1234)
-				$explodeRef = $explodeRef[0];
-				
-				for ($i = 0; $i < strlen($explodeRef); $i++)
-				{
-				 	$num = $explodeRef[$i];
-					
-					if (!isset($TServiceToTask[$num])) continue;
-					
-					$ref = $TServiceToTask[$num];
-					
-					if (!isset($TServiceLoaded[$ref]))
-					{
-						$service = new Product($db); //Un service est un objet Product
-						$s = $service->fetch(null, $ref);
-						if ($s > 0) $TServiceLoaded[$ref] = $service;
-					}
-					else {
-						$service = &$TServiceLoaded[$ref];
-						$s = 1;
-					}
-					
-					if ($s > 0)
-					{
-						if (!isset($TTaskCreated[$ref]))
-						{ 	//Nouvelle tâche
-							$task = new Task($db);
-							
-							$task->fk_project = $project->id;
-							$task->ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-							$task->label = $ref;
-							$task->description = $label;
-							
-							$task->date_start = $start;
-							$task->date_end = $end;
-							$task->fk_task_parent = 0;
-							$task->planned_workload = $durationInSec;
-							
-							$task->create($user);
-						
-							$TTaskCreated[$ref] = $task;	
-						}
-						else 
-						{	//Update tâche
-							$task = &$TTaskCreated[$ref];
-							$task->description .= "\n".$label;
-							$task->planned_workload = 'null';
-							$task->date_start = $start;
-							$task->date_end = $end;
-							$task->progress = 0;
-							$task->update($user);
-						}
-						
-					}
-				}
+			$product = new Product($db);			
+			$children = $product->getChildsArbo($line->fk_product);
 			
+			foreach ($children as $fk_subservice => $child)
+			{
+				$subService = new Product($db);
+				$subService->fetch($fk_subservice);
+				
+				//Je veux que le numéro devant la ref (exemple avec 1_SABLAGE => je veux que le "1")
+				$num = explode('_', $subService->ref);
+				$num = $num[0];
+				
+				if (!isset($TSubService[$num])) $TSubService[$num] = $subService;
 			}
 		}
-
+		
+		$durationInSec = 0;
+		$start = $end = '';
+		foreach ($TSubService as $i => $subService)
+		{
+			$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->id.'-'.$i;
+			
+			//Nouvelle tâche
+			$task = new Task($db);
+			$task->fetch('', $ref);
+			
+			$task->ref = $ref;
+			
+			$task->fk_project = $project->id;
+			$task->ref = $ref;
+			$task->label = $subService->label;
+			$task->description = $subService->description;
+			
+			$task->date_start = $start;
+			$task->date_end = $end;
+			$task->fk_task_parent = 0;
+			$task->planned_workload = $durationInSec;
+		
+			if ($task->id == null) 
+			{
+				$task->progress = 0;
+				$task->create($user);
+			}
+			else $task->update($user);
+		
+			$TTaskCreated[$ref] = $task;
+		}
+	
 	}
 }
