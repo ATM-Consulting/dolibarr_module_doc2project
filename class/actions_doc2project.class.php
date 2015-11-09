@@ -210,44 +210,39 @@ class ActionsDoc2Project
 			// CREATION DES TACHES
 			foreach($object->lines as $line) {
 				if(!empty($line->fk_product) && $line->fk_product_type == 1) { // On ne créé que les tâches correspondant à des services
-					$s = new Product($db);
-					$s->fetch($line->fk_product);
-					
-					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-					$durationInSec = $line->qty * $s->duration_value * 3600;
-					$nbDays = 0;
-					if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-						$nbDays = $line->qty * $s->duration_value;
-					} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-						$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+				
+					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS){
+						
+						$s = new Product($db);
+						$s->fetch($line->fk_product);
+						$s->get_sousproduits_arbo();
+						$TProdArbo = $s->get_arbo_each_prod();
+						
+						/*echo '<pre>';
+						print_r($TProdArbo);exit;*/
+						
+						foreach($TProdArbo as $prod){
+
+							if($prod['type'] == 1){ //Uniquement les services
+
+								$ss = new Product($db);
+								$ss->fetch($prod['id']);
+								
+								/*echo '<pre>';
+								print_r($prod);exit;*/
+								$line->fk_product = $ss->id;
+								$line->qty = $prod['nb'];
+								$line->product_label = $prod['label'];
+								$line->desc = ($ss->description) ? $ss->description : '';
+								$line->total_ht = $ss->price;
+								
+								$this->create_task($line,$p,$start);
+							}
+						}
 					}
-					
-					$end = strtotime('+'.$nbDays.' weekdays', $start);
-					
-					$t = new Task($db);
-					$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-					echo $ref.'<br>';
-					
-					$t->fetch(0, $ref);
-					if($t->id==0) {
-						
-						$t->fk_project = $p->id;
-						$t->ref = $ref;
-						$t->label = $line->product_label;
-						$t->description = $line->desc;
-						
-						$t->date_start = $start;
-						$t->date_end = $end;
-						$t->fk_task_parent = 0;
-						$t->planned_workload = $durationInSec;
-						
-						$t->array_options['options_soldprice'] = $line->total_ht;
-						
-						$t->create($user);
-					}
-					
-					$start = strtotime('+1 weekday', $end);
+					else{
+						$this->create_task($line,$start);
+					}				
 				}
 			}
 			
@@ -256,11 +251,67 @@ class ActionsDoc2Project
 			if($resetProjet) $p->statut = 0;
 			$p->update($user);
 			$object->setProject($p->id);
-			
+			//exit;
 			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$p->id,2));
 		}
 		
 		return 0;
+	}
+
+	function create_task(&$line,&$p,&$start){
+		global $conf,$langs,$db,$user;
+		
+		$s = new Product($db);
+		$s->fetch($line->fk_product);
+		
+		// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
+		$durationInSec = $line->qty * $s->duration_value * 3600;
+		$nbDays = 0;
+		if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+			$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+			$nbDays = $line->qty * $s->duration_value;
+		} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+			$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+		}
+		
+		$end = strtotime('+'.$nbDays.' weekdays', $start);
+		
+		$t = new Task($db);
+		$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
+		//echo $ref.'<br>';
+		
+		$t->fetch(0, $ref);
+		if($t->id==0) {
+			
+			$t->fk_project = $p->id;
+			
+			$defaultref='';
+			$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
+			if (! empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.".php"))
+			{
+				$soc = new stdClass;
+				require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
+				$modTask = new $obj;
+				$defaultref = $modTask->getNextValue($soc,$p);
+			}
+			
+			//echo $defaultref.'<br>';
+			
+			$t->ref = $defaultref;
+			$t->label = $line->product_label;
+			$t->description = $line->desc;
+			
+			$t->date_start = $start;
+			$t->date_end = $end;
+			$t->fk_task_parent = 0;
+			$t->planned_workload = $durationInSec;
+			
+			$t->array_options['options_soldprice'] = $line->total_ht;
+			
+			$t->create($user);
+		}
+		
+		$start = strtotime('+1 weekday', $end);
 	}
 	
 	function _get_project_ref(&$project) {
