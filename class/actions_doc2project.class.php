@@ -221,23 +221,29 @@ class ActionsDoc2Project
 						/*echo '<pre>';
 						print_r($TProdArbo);exit;*/
 						
-						foreach($TProdArbo as $prod){
-
-							if($prod['type'] == 1){ //Uniquement les services
-
-								$ss = new Product($db);
-								$ss->fetch($prod['id']);
-								
-								/*echo '<pre>';
-								print_r($prod);exit;*/
-								$line->fk_product = $ss->id;
-								$line->qty = $prod['nb'];
-								$line->product_label = $prod['label'];
-								$line->desc = ($ss->description) ? $ss->description : '';
-								$line->total_ht = $ss->price;
-								
-								$this->create_task($line,$p,$start);
+						if(!empty($TProdArbo)){
+						
+							foreach($TProdArbo as $prod){
+	
+								if($prod['type'] == 1){ //Uniquement les services
+	
+									$ss = new Product($db);
+									$ss->fetch($prod['id']);
+									
+									/*echo '<pre>';
+									print_r($prod);exit;*/
+									$line->fk_product = $ss->id;
+									$line->qty = $prod['nb'];
+									$line->product_label = $prod['label'];
+									$line->desc = ($ss->description) ? $ss->description : '';
+									$line->total_ht = $ss->price;
+									
+									$this->create_task($line,$p,$start);
+								}
 							}
+						}
+						else {
+							$this->create_task($line,$start);
 						}
 					}
 					else{
