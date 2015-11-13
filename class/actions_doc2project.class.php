@@ -219,10 +219,12 @@ class ActionsDoc2Project
 						$s->fetch($line->fk_product);
 						$s->get_sousproduits_arbo();
 						$TProdArbo = $s->get_arbo_each_prod();
-												
+						
 						if(!empty($TProdArbo)){
+							
 							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)
-								$fk_parent = $this->create_task($line,$p,$start);
+								$fk_parent = $this->create_task($line,$p,$start,0,true);
+							
 							foreach($TProdArbo as $prod){
 	
 								if($prod['type'] == 1){ //Uniquement les services
@@ -230,7 +232,7 @@ class ActionsDoc2Project
 									$ss = new Product($db);
 									$ss->fetch($prod['id']);
 									$line->fk_product = $ss->id;
-									$line->qty = $prod['nb'];
+									$line->qty = $line->qty * $prod['nb'];
 									$line->product_label = $prod['label'];
 									$line->desc = ($ss->description) ? $ss->description : '';
 									$line->total_ht = $ss->price;
@@ -259,7 +261,7 @@ class ActionsDoc2Project
 		return 0;
 	}
 
-	function create_task(&$line,&$p,&$start,&$fk_parent=0){
+	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false){
 		global $conf,$langs,$db,$user;
 		
 		$s = new Product($db);
@@ -302,11 +304,18 @@ class ActionsDoc2Project
 			$t->label = $line->product_label;
 			$t->description = $line->desc;
 			
-			$t->date_start = $start;
-			$t->date_end = $end;
 			$t->fk_task_parent = $fk_parent;
-			$t->planned_workload = $durationInSec;
-			
+			$t->date_start = $start;
+			if($isParent)
+			{
+				$t->date_end = $start;
+				$t->planned_workload = 1;
+			}
+			else
+			{
+				$t->date_end = $end;
+				$t->planned_workload = $durationInSec;
+			}
 			$t->array_options['options_soldprice'] = $line->total_ht;
 			
 			$t->create($user);
