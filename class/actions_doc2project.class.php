@@ -209,31 +209,26 @@ class ActionsDoc2Project
 			
 			// CREATION DES TACHES
 			foreach($object->lines as $line) {
+				$fk_parent = 0;
 				if(!empty($line->fk_product) && $line->fk_product_type == 1) { // On ne créé que les tâches correspondant à des services
 				
-					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS){
+					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS)
+					{
 						
 						$s = new Product($db);
-						$s->fetch($line->fk_product);						
+						$s->fetch($line->fk_product);
 						$s->get_sousproduits_arbo();
 						$TProdArbo = $s->get_arbo_each_prod();
-						
-						/*echo '<pre>';
-						print_r($TProdArbo);exit;*/
-						
-						$fk_parent = $this->create_task($line,$p,$start);
-						
+												
 						if(!empty($TProdArbo)){
-						
+							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)
+								$fk_parent = $this->create_task($line,$p,$start);
 							foreach($TProdArbo as $prod){
 	
 								if($prod['type'] == 1){ //Uniquement les services
 	
 									$ss = new Product($db);
 									$ss->fetch($prod['id']);
-									
-									/*echo '<pre>';
-									print_r($prod);exit;*/
 									$line->fk_product = $ss->id;
 									$line->qty = $prod['nb'];
 									$line->product_label = $prod['label'];
@@ -243,14 +238,12 @@ class ActionsDoc2Project
 									$this->create_task($line,$p,$start,$fk_parent);
 								}
 							}
-						}
-						else {
+						}else{
 							$this->create_task($line,$p,$start);
 						}
-					}
-					else{
+					}else{
 						$this->create_task($line,$p,$start);
-					}				
+					}			
 				}
 			}
 			
@@ -311,7 +304,7 @@ class ActionsDoc2Project
 			
 			$t->date_start = $start;
 			$t->date_end = $end;
-			$t->fk_task_parent = 0;
+			$t->fk_task_parent = $fk_parent;
 			$t->planned_workload = $durationInSec;
 			
 			$t->array_options['options_soldprice'] = $line->total_ht;

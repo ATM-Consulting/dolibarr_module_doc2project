@@ -16,3 +16,4 @@ DisplayOnOrder = Display conversion button on order card
 TaskRefPrefix = Prefix for task reference
 NbHoursPerDay = # of hours per day
 ModuleNeedProposalOrOrderModule = The proposal or customer order module must be activated in order to use this module
+Doc2ProjectCreateTaskForParent = Create the initial service as a parent task  for all composed products
