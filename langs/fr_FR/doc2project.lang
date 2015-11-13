@@ -38,3 +38,8 @@ TotalPropal=Montant total des propositions signées
 
 Doc2ProjectUseNomenclatureAndWorkstation=Coupler l'utilisation du module à "Nomenclature" et "Workstation"
 Doc2ProjectUpdateProgressOfSituationInvoice=Récupérer la progression des tâches pour les reporter dans les factures de situations
+
+Doc2ProjectCreateGlobalTask=Créer une tâche global lors de la validation d'une commande
+Doc2ProjectGlobalTaskLabel=Tâche global
+Doc2ProjectGlobalTaskDesc=Utilisée pour la saisie de temps
+Doc2ProjectCreateTaskWithSubtotal=Créer des tâches correspondant aux titres afin de garder une hiérarchie (module "Subtotal" requis)

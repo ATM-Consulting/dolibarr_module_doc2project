@@ -285,13 +285,32 @@ class InterfaceDoc2Projecttrigger
 
 	private function _createTask(&$db, &$object, &$project, &$user, &$conf)
 	{
-		// CREATION DES TACHES
+		global $langs;
+		
+		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
+		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
+		{
+			$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'GLOBAL', $langs->trans('Doc2ProjectGlobalTaskLabel'), $langs->trans('Doc2ProjectGlobalTaskDesc'));
+		}
+		
+		$last_title_line = false;
+		$TTask_parent = array();
+		$fk_task_parent = 0;
+		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as $line) 
 		{
-			if ($line->product_type == 9) continue;
+			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9 && $line->qty >= 1 && $line->qty <= 10) null; // Si la conf
+			else if ($line->product_type == 9) continue;
 			
+			if ($line->product_type == 9)
+			{
+				$label = !empty($line->product_label) ? $line->product_label : $line->desc;
+				$fk_task_parent = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+				
+				$last_title_line = $line; // Problème sur la hiérarchie
+			}
 			// => ligne de type service											=> ligne libre
-			if( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && $line->fk_product === null) ) 
+			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && $line->fk_product === null) ) 
 			{ // On ne créé que les tâches correspondant à des services
 				$product = new Product($db);
 				if (!empty($line->fk_product)) $product->fetch($line->fk_product);
@@ -314,23 +333,31 @@ class InterfaceDoc2Projecttrigger
 					$end = strtotime('+'.$nbDays.' weekdays', $start);
 				}
 				
-				$task = new Task($db);
-				$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
+				$label = !empty($line->product_label) ? $line->product_label : $line->desc;
+				$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht);
 				
-				$task->fk_project = $project->id;
-				$task->ref = $ref;
-				$task->label = !empty($line->product_label) ? $line->product_label : $line->desc;
-				$task->description = $line->desc;
-				
-				$task->date_start = $start;
-				$task->date_end = $end;
-				$task->fk_task_parent = 0;
-				$task->planned_workload = $durationInSec;
-				
-				$task->array_options['options_soldprice'] = $line->total_ht;
-				
-				$task->create($user);
 			}
 		}
+	}
+
+	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='')
+	{
+		$task = new Task($db);
+		
+		$task->fk_project = $fk_project;
+		$task->ref = $ref;
+		$task->label = $label;
+		$task->description = $desc;
+		
+		$task->date_start = $start;
+		$task->date_end = $end;
+		$task->fk_task_parent = $fk_task_parent;
+		$task->planned_workload = $planned_workload;
+		
+		$task->array_options['options_soldprice'] = $total_ht;
+		
+		$r = $task->create($user);
+		if ($r > 0) return $r;
+		else return 0;
 	}
 }
