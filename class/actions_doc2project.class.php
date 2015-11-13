@@ -199,8 +199,8 @@ class ActionsDoc2Project
 				$p->socid			= $object->socid;
 				$p->statut			= 0;
 				$p->date_start		= dol_now();
-				/*$p->ref				= $this->_get_project_ref($p);
-				$p->create($user);*/
+				$p->ref				= $this->_get_project_ref($p);
+				$p->create($user);
 			} else {
 				$p->fetch($object->fk_project);
 			}
@@ -245,11 +245,11 @@ class ActionsDoc2Project
 							}
 						}
 						else {
-							$this->create_task($line,$start);
+							$this->create_task($line,$p,$start);
 						}
 					}
 					else{
-						$this->create_task($line,$start);
+						$this->create_task($line,$p,$start);
 					}				
 				}
 			}
