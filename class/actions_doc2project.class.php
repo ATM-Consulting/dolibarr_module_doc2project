@@ -199,8 +199,8 @@ class ActionsDoc2Project
 				$p->socid			= $object->socid;
 				$p->statut			= 0;
 				$p->date_start		= dol_now();
-				$p->ref				= $this->_get_project_ref($p);
-				$p->create($user);
+				/*$p->ref				= $this->_get_project_ref($p);
+				$p->create($user);*/
 			} else {
 				$p->fetch($object->fk_project);
 			}
@@ -214,12 +214,14 @@ class ActionsDoc2Project
 					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS){
 						
 						$s = new Product($db);
-						$s->fetch($line->fk_product);
+						$s->fetch($line->fk_product);						
 						$s->get_sousproduits_arbo();
 						$TProdArbo = $s->get_arbo_each_prod();
 						
 						/*echo '<pre>';
 						print_r($TProdArbo);exit;*/
+						
+						$fk_parent = $this->create_task($line,$p,$start);
 						
 						if(!empty($TProdArbo)){
 						
@@ -238,7 +240,7 @@ class ActionsDoc2Project
 									$line->desc = ($ss->description) ? $ss->description : '';
 									$line->total_ht = $ss->price;
 									
-									$this->create_task($line,$p,$start);
+									$this->create_task($line,$p,$start,$fk_parent);
 								}
 							}
 						}
@@ -264,7 +266,7 @@ class ActionsDoc2Project
 		return 0;
 	}
 
-	function create_task(&$line,&$p,&$start){
+	function create_task(&$line,&$p,&$start,&$fk_parent=0){
 		global $conf,$langs,$db,$user;
 		
 		$s = new Product($db);
@@ -318,6 +320,8 @@ class ActionsDoc2Project
 		}
 		
 		$start = strtotime('+1 weekday', $end);
+		
+		return $t->id;
 	}
 	
 	function _get_project_ref(&$project) {
