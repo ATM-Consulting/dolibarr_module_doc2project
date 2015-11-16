@@ -293,21 +293,36 @@ class InterfaceDoc2Projecttrigger
 			$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'GLOBAL', $langs->trans('Doc2ProjectGlobalTaskLabel'), $langs->trans('Doc2ProjectGlobalTaskDesc'));
 		}
 		
-		$last_title_line = false;
-		$TTask_parent = array();
+		// Tableau qui va contenir à chaque indice (niveau du titre) l'id de la dernier tache parent
+		// Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
+		$TTask_id_parent = array();
+		$index = 1;
+		
 		$fk_task_parent = 0;
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as $line) 
 		{
-			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9 && $line->qty >= 1 && $line->qty <= 10) null; // Si la conf
+			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
 			else if ($line->product_type == 9) continue;
 			
 			if ($line->product_type == 9)
 			{
-				$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-				$fk_task_parent = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
+				{
+					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
+					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
+					
+					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
+					$fk_task_parent = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+					
+					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
+				}
+				else // SOUS-TOTAL
+				{
+					$index = 100 - $line->qty - 1;
+					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
+				}
 				
-				$last_title_line = $line; // Problème sur la hiérarchie
 			}
 			// => ligne de type service											=> ligne libre
 			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && $line->fk_product === null) ) 
