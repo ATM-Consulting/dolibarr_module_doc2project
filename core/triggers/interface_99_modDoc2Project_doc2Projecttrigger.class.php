@@ -209,6 +209,7 @@ class InterfaceDoc2Projecttrigger
 				{
 					$object->setProject($r);
 					$this->_createTask($db, $object, $project, $user, $conf);
+					$project->setValid($user);
 					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
 				}
 				else 
