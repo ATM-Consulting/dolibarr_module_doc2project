@@ -269,8 +269,10 @@ class InterfaceDoc2Projecttrigger
 			$commande = new Commande($db);
 			$commande->fetch($fk_commande);
 			
+			$ref_task = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->origin_id;
+			
 			//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
-			$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND label = "'.( !empty($object->label) ? $db->escape($object->label) : $db->escape($object->desc) ).'"';
+			$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';
 			$resql = $db->query($sql);
 			
 			if ($resql && $db->num_rows($resql) > 0)
