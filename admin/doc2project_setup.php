@@ -235,7 +235,7 @@ if($ok) {
 	
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectCreateTaskWithSubtotal").'</td>';
+	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectCreateTaskWithSubtotal"), $langs->transnoentitiesnoconv("Doc2ProjectCreateTaskWithSubtotalTooltip")).'</td>';
 	print '<td align="center" width="20">&nbsp;</td>';
 	print '<td align="right" width="300">';
 	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
