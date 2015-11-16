@@ -331,7 +331,8 @@ class InterfaceDoc2Projecttrigger
 				if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 				
 				$durationInSec = $start = $end = '';
-				if (!empty($product->duration_value))
+				$duration = trim($product->duration_value);
+				if (!empty($duration))
 				{
 					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
 					$durationInSec = $line->qty * $product->duration_value * 3600;
