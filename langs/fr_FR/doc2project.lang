@@ -39,6 +39,7 @@ OtherExpenses=Autres dépenses (Achat, NdF, ...)
 TotalPropal=Montant total des propositions signées
 
 Doc2ProjectUseNomenclatureAndWorkstation=Coupler l'utilisation du module à "Nomenclature" et "Workstation"
+Doc2ProjectAllowFreeLine=Autoriser la création de tâche pour une ligne libre
 Doc2ProjectUpdateProgressOfSituationInvoice=Récupérer la progression des tâches pour les reporter dans les factures de situations
 
 Doc2ProjectCreateGlobalTask=Créer une tâche global lors de la validation d'une commande

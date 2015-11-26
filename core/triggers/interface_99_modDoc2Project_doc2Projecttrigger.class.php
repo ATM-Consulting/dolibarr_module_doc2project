@@ -327,8 +327,13 @@ class InterfaceDoc2Projecttrigger
 				}
 				
 			}
-			// => ligne de type service											=> ligne libre
-			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && $line->fk_product === null) ) 
+			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
+			{
+				//$this->_createOneTask(...); //Avec les postes de travails liés à la nomenclature 
+			}
+			
+			        // => ligne de type service										=> ligne libre
+			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) ) 
 			{ // On ne créé que les tâches correspondant à des services
 				$product = new Product($db);
 				if (!empty($line->fk_product)) $product->fetch($line->fk_product);
@@ -356,6 +361,7 @@ class InterfaceDoc2Projecttrigger
 				$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht);
 				
 			}
+			
 		}
 	}
 
