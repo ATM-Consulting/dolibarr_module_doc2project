@@ -186,11 +186,14 @@ class ActionsDoc2Project
 		{
 			$langs->load('doc2project@doc2project');
 			
+			define('INC_FROM_DOLIBARR', true);
+			dol_include_once('/doc2project/config.php');
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
 			
+
 			$PDOdb = new TPDOdb;
-			
+
 			$p = new Project($db);
 			
 			// CREATION OU CHARGEMENT DU PROJET
@@ -228,27 +231,27 @@ class ActionsDoc2Project
 								$fk_parent = $this->create_task($line,$p,$start,0,true);
 								
 								if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
-                                        dol_include_once('/workstation/class/workstation.class.php');
-
-                                        $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$s->id));
-
-                                        foreach ($Tids as $workstationProductid) {
-                                                $TWorkstationProduct = new TWorkstationProduct;
-                                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
-
-                                                $TWorkstation = new TWorkstation;
-                                                $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-
-                                                $line->fk_product = $s->id;
-                                                $line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-                                                $line->product_label = $TWorkstation->name;
-                                                $line->desc = '';
-                                                $line->total_ht = 0;
-
-                                                $this->create_task($line, $p, $start);
-                                        }
-                                }
-                            }
+									dol_include_once('/workstation/class/workstation.class.php');
+									
+									$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
+									
+									foreach ($Tids as $workstationProductid) {
+										$TWorkstationProduct = new TWorkstationProduct;
+										$TWorkstationProduct->load($PDOdb, $workstationProductid);
+										
+										$TWorkstation = new TWorkstation;
+										$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+										
+										$line->fk_product = $line->fk_product;
+										//$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+										$line->product_label = $TWorkstation->name;
+										$line->desc = '';
+										$line->total_ht = 0;
+										
+										$this->create_task($line, $p, $start,$fk_parent);
+									}
+								}
+							}
 							
 							foreach($TProdArbo as $prod){
 	
@@ -262,7 +265,7 @@ class ActionsDoc2Project
 									$line->desc = ($ss->description) ? $ss->description : '';
 									$line->total_ht = $ss->price;
 									
-									$this->create_task($line,$p,$start,$fk_parent);
+									$new_fk_parent = $this->create_task($line,$p,$start,$fk_parent);
 									
 									if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 										dol_include_once('/workstation/class/workstation.class.php');
@@ -282,7 +285,7 @@ class ActionsDoc2Project
 											$line->desc = '';
 											$line->total_ht = 0;
 											
-											$this->create_task($line, $p, $start);
+											$this->create_task($line, $p, $start,$new_fk_parent);
 										}
 									}
 								}
@@ -357,6 +360,7 @@ class ActionsDoc2Project
 			{
 				$t->date_end = $start;
 				$t->planned_workload = 1;
+				$t->progress = 100;
 			}
 			else
 			{
