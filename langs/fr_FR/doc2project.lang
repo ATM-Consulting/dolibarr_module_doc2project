@@ -20,6 +20,7 @@ Doc2ProjectValidateProjectOnValidateOrder=Créer et valider un projet sur la val
 Doc2ProjectClotureProjectOnValidateExpedition=Clôturer le projet sur la validation d'une expédition
 Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-services associés au service parent
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
+Doc2projectWithWorkstation=Créer autant de tâche qu'il y a de poste de travail associé au produit/service
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
