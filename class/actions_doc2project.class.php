@@ -189,6 +189,8 @@ class ActionsDoc2Project
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
 			
+			$PDOdb = new TPDOdb;
+			
 			$p = new Project($db);
 			
 			// CREATION OU CHARGEMENT DU PROJET
@@ -222,8 +224,31 @@ class ActionsDoc2Project
 						
 						if(!empty($TProdArbo)){
 							
-							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)
+							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT){
 								$fk_parent = $this->create_task($line,$p,$start,0,true);
+								
+								if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
+                                        dol_include_once('/workstation/class/workstation.class.php');
+
+                                        $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$s->id));
+
+                                        foreach ($Tids as $workstationProductid) {
+                                                $TWorkstationProduct = new TWorkstationProduct;
+                                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
+
+                                                $TWorkstation = new TWorkstation;
+                                                $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+
+                                                $line->fk_product = $s->id;
+                                                $line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+                                                $line->product_label = $TWorkstation->name;
+                                                $line->desc = '';
+                                                $line->total_ht = 0;
+
+                                                $this->create_task($line, $p, $start);
+                                        }
+                                }
+                            }
 							
 							foreach($TProdArbo as $prod){
 	
@@ -241,7 +266,7 @@ class ActionsDoc2Project
 									
 									if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 										dol_include_once('/workstation/class/workstation.class.php');
-										$PDOdb = new TPDOdb;
+
 										$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
 										
 										foreach ($Tids as $workstationProductid) {
