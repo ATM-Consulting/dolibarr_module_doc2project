@@ -248,7 +248,7 @@ class ActionsDoc2Project
 										$line->desc = '';
 										$line->total_ht = 0;
 										
-										$this->create_task($line, $p, $start,$fk_parent);
+										$this->create_task($line, $p, $start,$fk_parent,false,$TWorkstation->rowid);
 									}
 								}
 							}
@@ -285,7 +285,7 @@ class ActionsDoc2Project
 											$line->desc = '';
 											$line->total_ht = 0;
 											
-											$this->create_task($line, $p, $start,$new_fk_parent);
+											$this->create_task($line, $p, $start,$new_fk_parent,false,$TWorkstation->rowid);
 										}
 									}
 								}
@@ -311,7 +311,7 @@ class ActionsDoc2Project
 		return 0;
 	}
 
-	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false){
+	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){
 		global $conf,$langs,$db,$user;
 		
 		$s = new Product($db);
@@ -368,6 +368,10 @@ class ActionsDoc2Project
 				$t->planned_workload = $durationInSec;
 			}
 			$t->array_options['options_soldprice'] = $line->total_ht;
+			
+			if($fk_workstation){
+				$t->array_options['options_fk_workstation'] = $fk_workstation;
+			}
 			
 			$t->create($user);
 		}
