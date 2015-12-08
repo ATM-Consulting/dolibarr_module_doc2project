@@ -7,8 +7,8 @@ class ActionsDoc2Project
 		global $conf,$langs,$db,$user;
 		
 		if($user->rights->projet->all->creer &&
-			(in_array('propalcard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL && $object->statut == 2)
-			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1)
+			((in_array('propalcard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL && $object->statut == 2)
+			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1))
 		)
 		{
 			if((float)DOL_VERSION>=3.6) {
@@ -25,7 +25,6 @@ class ActionsDoc2Project
 	function formObjectOptions($parameters, &$object, &$action, $hookmanager) {
 		
 		global $langs,$db,$user,$conf;
-		
 		if($user->rights->projet->all->creer &&
 			((in_array('propalcard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL && $object->statut == 2)
 			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1))
