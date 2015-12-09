@@ -287,6 +287,10 @@ class modDoc2Project extends DolibarrModules
 		}
      	
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
+
+        $extrafields=new ExtraFields($this->db);
+        $param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
+        $res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
 		
 		return $this->_init($sql, $options);
 	}
