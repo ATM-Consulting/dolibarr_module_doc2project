@@ -272,7 +272,7 @@ function _print_statistiques_projet(&$TRapport){
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
 			<thead>
-				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
+				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Réf. Projet</th>
 					<?php 
 					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
@@ -346,7 +346,7 @@ function get_statistiques_categorie($PDOdb, $TRapport){
     
     $TCateg=array();
     $TRapportCategorie=array();
-    
+    //var_dump($TRapport);
     //pre($TRapport, true);
     foreach($TRapport as $TProjet) {
         //var_dump($projet);
@@ -367,6 +367,8 @@ function get_statistiques_categorie($PDOdb, $TRapport){
         
         $idCategorie=0;
         $categorie="";//Récupérer le label via array extrafield_options
+        $date_debut;
+        $date_fin;
         $total_vente=0;
         $total_achat=0;
         $total_ndf=0;
@@ -393,15 +395,21 @@ function get_statistiques_categorie($PDOdb, $TRapport){
             $total_cout_homme+=$projet['total_cout_homme'];
             $marge+=$projet['marge'];
             
+            /*Voir comment trier les dates
+            if ($projet['date_debut']<$TRapportCategorie[$idCategorie]['date_debut'])
+            */
             
             $TRapportCategorie[$idCategorie]=array(
                 'idCategorie' => $idCategorie,
+                'date_debut'  => $date_debut,
+                'date_fin'    => $date_fin,
                 'total_vente' => $total_vente,
                 'total_achat' => $total_achat,
                 'total_temps' => $total_temps,
                 'total_cout_homme' =>$total_cout_homme,
                 'marge' => $marge,
                 'categorie' => $TCategorie[$idCategorie]
+                
             );
         }
         /*
@@ -438,8 +446,8 @@ function _print_statistiques_categorie($PDOdb, &$TReport){
                 <tr style="text-align:left;" class="liste_titre nodrag nodrop">
                     <th class="liste_titre">Catégories</th>
                     <?php 
-                    //print_liste_field_titre('date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
-                    //print_liste_field_titre('date fin', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
+                    print_liste_field_titre('date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
+                    print_liste_field_titre('date fin', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
                     ?>
                     <th class="liste_titre">Total vente (€)</th>
                     <th class="liste_titre">Total achat (€)</th>
@@ -462,8 +470,8 @@ function _print_statistiques_categorie($PDOdb, &$TReport){
                     ?>
                     <tr>
                         <td><?php echo $line['categorie']?></td>
-                        <!--<td><?php echo $date_debut;  ?></td>
-                        <td><?php echo $date_fin; ?></td>-->
+                        <td><?php echo $date_debut;  ?></td>
+                        <td><?php echo $date_fin; ?></td>
                         <td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
                         <td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
                         <?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
@@ -484,8 +492,8 @@ function _print_statistiques_categorie($PDOdb, &$TReport){
             <tfoot>
                 <tr style="font-weight: bold;">
                     <td>Totaux</td>
-                    <!--<td></td>
-                    <td></td>-->
+                    <td></td>
+                    <td></td>
                     <td><?php echo price($total_vente) ?></td>
                     <td><?php echo price($total_achat) ?></td>
                     <?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
