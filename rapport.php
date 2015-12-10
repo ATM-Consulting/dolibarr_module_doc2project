@@ -88,13 +88,14 @@ function _fiche(&$PDOdb,$report=''){
 	
 	$TRapport = array(
 					'statistiques_projet'=>"Statistiques Projets",
+					'statistiques_categorie'=>'Statistiques Catégories',
 				);
 				
 	echo $form->combo('Rapport à afficher : ', 'report', $TRapport,($_REQUEST['report'])? $_REQUEST['report'] : '');
 	
 	$THide = array();
 	
-	if($report){
+	if(!empty($report)){
 		
 		if(!in_array($report,$THide)){
 			//Affichage des filtres
@@ -108,9 +109,19 @@ function _fiche(&$PDOdb,$report=''){
 
 		switch ($report) {
 			case 'statistiques_projet':
-				_get_statistiques_projet($PDOdb);
+				$TReport=_get_statistiques_projet($PDOdb);
+				_print_statistiques_projet($TReport);
 				break;
-		}
+		
+            case 'statistiques_categorie':
+                $TReport=_get_statistiques_projet($PDOdb);
+                _print_statistiques_categorie($PDOdb, $TReport);
+                break;
+            
+            default:
+                
+                break;
+        }
 	}
 	else{
 		echo $form->btsubmit('Afficher', '');
@@ -152,7 +163,7 @@ function _get_statistiques_projet(&$PDOdb){
 	$date_fin = GETPOST('date_fin');
 	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
 
-	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, p.dateo, p.datee
+	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, p.dateo, p.datee, pe.categorie as categorie
 	, (
 		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
 		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -179,7 +190,7 @@ function _get_statistiques_projet(&$PDOdb){
 	) as total_cout_homme
 	
 	
-			FROM ".MAIN_DB_PREFIX."projet as p 
+			FROM ".MAIN_DB_PREFIX."projet as p INNER JOIN ".MAIN_DB_PREFIX."projet_extrafields pe ON p.rowid = pe.fk_object
 	 ";
 
 	if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
@@ -196,7 +207,6 @@ function _get_statistiques_projet(&$PDOdb){
 	}
 	
 	$PDOdb->Execute($sql);
-
 	$TRapport = array();
 	$PDOdb2 = new TPDOdb;
 	
@@ -221,7 +231,8 @@ function _get_statistiques_projet(&$PDOdb){
 					"total_ndf" 		=> $PDOdb->Get_field('total_ndf'),
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
 					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
-					"marge" 			=> $marge
+					"marge" 			=> $marge,
+					"categorie"         => $PDOdb->Get_field('categorie')
 				);
 			}
 			else{
@@ -233,17 +244,17 @@ function _get_statistiques_projet(&$PDOdb){
 					"total_achat" 		=> $PDOdb->Get_field('total_achat'),
 					"total_temps" 		=> $PDOdb->Get_field('total_temps'),
 					"total_cout_homme" 	=> $PDOdb->Get_field('total_cout_homme'),
-					"marge" 			=> $marge
+					"marge" 			=> $marge,
+					"categorie"         =>$PDOdb->Get_field('categorie')
 				);
 			}
 			
 			
 		//}
 	}
-	
-	//pre($TRapport,true);
-	
-	_print_statistiques_projet($TRapport);
+	//pre($TRapport, true);
+	return $TRapport;
+	//_print_statistiques_projet($TRapport);
 
 }
 
@@ -261,7 +272,7 @@ function _print_statistiques_projet(&$TRapport){
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
 			<thead>
-				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
+				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Réf. Projet</th>
 					<?php 
 					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
@@ -323,4 +334,175 @@ function _print_statistiques_projet(&$TRapport){
 		</table>
 	</div>
 	<?php
+}
+
+//pour chaque catégorie additionne les infos de tous les projets appartenant à cette catégorie
+function get_statistiques_categorie($PDOdb, $TRapport){
+    global $db,$conf, $object;
+    
+    
+    //$extrafield = new ExtraFields($db);
+    //var_dump($extrafield);
+    
+    $TCateg=array();
+    $TRapportCategorie=array();
+    //var_dump($TRapport);
+    //pre($TRapport, true);
+    foreach($TRapport as $TProjet) {
+        //var_dump($projet);
+        if (!empty($TProjet['categorie']))
+        {
+            $TCateg[$TProjet['categorie']][]=$TProjet;
+        } else {
+            $TCateg[0][]=$TProjet;
+        }
+    }
+    $extrafield = new ExtraFields($db);
+    $extrafield->fetch_name_optionals_label('projet');
+    
+    $TCategorie = $extrafield->attribute_param['categorie']['options'];
+    
+    //svar_dump($TCateg);
+    foreach ($TCateg as $TProjets) {
+        
+        $idCategorie=0;
+        $categorie="";//Récupérer le label via array extrafield_options
+        $date_debut;
+        $date_fin;
+        $total_vente=0;
+        $total_achat=0;
+        $total_ndf=0;
+        $total_temps=0;
+        $total_cout_homme=0;
+        $marge=0;
+        
+        foreach ($TProjets as $projet) {
+            
+            $idCategorie=$projet['categorie'];
+            $categorie="";//Récupérer le label via array extrafield
+        
+            
+            // NOM A AFFICHER -> Chercher valeurs dans extrafield
+            /*$TRapportCategorie[$idCategorie]['categorie']=$idCategorie;
+            unset($TRapportCategorie[$idCategorie]['date_debut']);
+            unset($TRapportCategorie[$idCategorie]['date_fin']);
+            unset($TRapportCategorie[$idCategorie]['IdProject']);
+              */  
+            $total_vente+=$projet['total_vente'];
+            $total_achat+=$projet['total_achat'];
+            $total_ndf+=$projet['total_ndf'];
+            $total_temps+=$projet['total_temps'];
+            $total_cout_homme+=$projet['total_cout_homme'];
+            $marge+=$projet['marge'];
+            
+            /*Voir comment trier les dates
+            if ($projet['date_debut']<$TRapportCategorie[$idCategorie]['date_debut'])
+            */
+            
+            $TRapportCategorie[$idCategorie]=array(
+                'idCategorie' => $idCategorie,
+                'date_debut'  => $date_debut,
+                'date_fin'    => $date_fin,
+                'total_vente' => $total_vente,
+                'total_achat' => $total_achat,
+                'total_temps' => $total_temps,
+                'total_cout_homme' =>$total_cout_homme,
+                'marge' => $marge,
+                'categorie' => $TCategorie[$idCategorie]
+                
+            );
+        }
+        /*
+        $TRapportCategorie['idCategorie']=$idCategorie;
+        $TRapportCategorie['total_vente']=$total_vente;
+        $TRapportCategorie['total_achat']=$total_achat;
+        $TRapportCategorie['total_temps']=$total_temps;
+        $TRapportCategorie['total_cout_homme']=$total_cout_homme;
+        $TRapportCategorie['marge']=$marge;
+        $TRapportCategorie['categorie']=$categorie;
+*/
+    }
+    //var_dump($TRapportCategorie);
+        
+    return $TRapportCategorie;
+}
+
+
+function _print_statistiques_categorie($PDOdb, &$TReport){
+    global $conf, $db;
+    
+    dol_include_once('/core/lib/date.lib.php');
+    dol_include_once('/projet/class/project.class.php');
+    $TRapport = get_statistiques_categorie($PDOdb, $TReport);
+    
+    //$id_projet = GETPOST('');
+    
+    //$params = $_SERVER['QUERY_STRING'];
+    
+    ?>
+    <div class="tabBar" style="padding-bottom: 25px;">
+        <table id="statistiques_projet" class="noborder" width="100%">
+            <thead>
+                <tr style="text-align:left;" class="liste_titre nodrag nodrop">
+                    <th class="liste_titre">Catégories</th>
+                    <?php 
+                    print_liste_field_titre('date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
+                    print_liste_field_titre('date fin', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
+                    ?>
+                    <th class="liste_titre">Total vente (€)</th>
+                    <th class="liste_titre">Total achat (€)</th>
+                    <?php if($conf->ndfp->enabled){ ?><th class="liste_titre">Total Note de frais (€)</th><?php } ?> 
+                    <th class="liste_titre">Total temps passé (JH)</th>
+                    <th class="liste_titre">Total coût MO (€)</th>
+                    <th class="liste_titre">Rentabilité</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                foreach($TRapport as $line){
+                    
+                    $project=new Project($db);
+                    $project->fetch($line['IdProject']);
+
+                    $date_debut = date('d/m/Y', strtotime($line['date_debut']));
+                    $date_fin = date('d/m/Y', strtotime($line['date_fin']));
+                    
+                    ?>
+                    <tr>
+                        <td><?php echo $line['categorie']?></td>
+                        <td><?php echo $date_debut;  ?></td>
+                        <td><?php echo $date_fin; ?></td>
+                        <td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
+                        <td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
+                        <?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?> 
+                        <td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+                        <td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
+                        <td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
+                    </tr>
+                    <?
+                    $total_vente += $line['total_vente'];
+                    $total_achat += $line['total_achat'];
+                    if($conf->ndfp->enabled)$total_ndf += $line['total_ndf'];
+                    $total_temps += $line['total_temps'];
+                    $total_cout_homme += $line['total_cout_homme'];
+                    $total_marge += $line['marge'];
+                }
+                ?>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold;">
+                    <td>Totaux</td>
+                    <td></td>
+                    <td></td>
+                    <td><?php echo price($total_vente) ?></td>
+                    <td><?php echo price($total_achat) ?></td>
+                    <?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?> 
+                    <td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+                    <td><?php echo price($total_cout_homme) ?></td>
+                    <td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <?php
 }
