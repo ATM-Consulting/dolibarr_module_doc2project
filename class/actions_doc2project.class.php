@@ -125,23 +125,25 @@ class ActionsDoc2Project
 		else if(in_array('projecttaskcard',explode(':',$parameters['context']))) {
 			$langs->load('doc2project@doc2project');
 			//$object->duration_effective souvent faux :-/ recalcule en requête
-			
-			$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
-			$obj=$db->fetch_object($resultset);
-		
-			?>
-			<tr>
-				<td><?php echo $langs->trans('DurationEffective'); ?></td>
-				<td><?php echo convertSecondToTime($obj->duration_effective) ?></td>
+			if(!empty($object->id))
+			{
+				$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
+				$obj=$db->fetch_object($resultset);
 				
-			</tr>
-			<tr>
-				<td><?php echo $langs->trans('CostEffective'); ?></td>
-				<td><?php echo price($obj->costprice) ?></td>
+				?>
+				<tr>
+					<td><?php echo $langs->trans('DurationEffective'); ?></td>
+					<td><?php echo convertSecondToTime($obj->duration_effective) ?></td>
+					
+				</tr>
+				<tr>
+					<td><?php echo $langs->trans('CostEffective'); ?></td>
+					<td><?php echo price($obj->costprice) ?></td>
+					
+				</tr>
 				
-			</tr>
-			
-			<?php
+				<?php
+			}
 			
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
