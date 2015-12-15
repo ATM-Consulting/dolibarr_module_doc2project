@@ -507,7 +507,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
      }
     
 
-    var_dump($sqlAchat);
+    //var_dump($sqlAchat);
     return array(
         $vente
        ,$achat
