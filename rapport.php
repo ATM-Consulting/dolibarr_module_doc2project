@@ -312,7 +312,6 @@ function get_statistiques_categorie($PDOdb, $TRapport){
     //var_dump($TRapport);
     //pre($TRapport, true);
     foreach($TRapport as $TProjet) {
-        //var_dump($projet);
         if (!empty($TProjet['categorie']))
         {
             $TCateg[$TProjet['categorie']][]=$TProjet;
@@ -457,24 +456,11 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
     $vente = $achat = $ndf = 0;
        
      $sqlClient = "
-        SELECT SUM(f.total) as total
+        SELECT SUM(DISTINCT(f.total)) as total
         FROM ".MAIN_DB_PREFIX."facture as f LEFT JOIN ".MAIN_DB_PREFIX."element_element el ON (el.fk_source=f.rowid)
-        WHERE (f.fk_projet = ".$fk_projet." OR (el.fk_target=".$fk_projet." AND el.sourcetype LIKE 'facture' AND el.targettype LIKE 'project'))   
-        AND f.fk_statut IN(1, 2)
+        WHERE (f.fk_projet = ".$fk_projet." OR (el.fk_target=".$fk_projet." AND el.sourcetype LIKE 'facture' AND el.targettype LIKE 'project'))
         ".($t_deb>0 && $t_fin>0 ? " AND f.datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  );
-      
-   /* , (
-       $sqlAchat= SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1 
-        ".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-    ) as total_achat";
-    
-    if($conf->ndfp->enabled){
-        $sqlNdf .=" , (
-            SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
-            ".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-        ) as total_ndf ";
-    }
-    */
+
     $PDOdb2= new TPDOdb;
     $PDOdb2->Execute($sqlClient);
 
@@ -496,7 +482,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
     
      if($conf->ndfp->enabled){
         $sqlNdf=" , (
-            SELECT SUM(ndfp.total_ht) AS totalNdf FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
+            SELECT SUM(DISTINCT(ndfp.total_ht)) AS totalNdf FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1  
             ".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
         ) as total_ndf ";
         
