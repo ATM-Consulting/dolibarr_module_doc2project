@@ -320,6 +320,8 @@ if($ok) {
 
 print '</table>';
 
+dol_fiche_end();
+
 llxFooter();
 
 $db->close();
