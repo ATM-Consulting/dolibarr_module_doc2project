@@ -290,8 +290,6 @@ class InterfaceDoc2Projecttrigger
 	{
 		global $langs;
 		
-		dol_include_once('/nomenclature/class/nomenclature.class.php');
-		
 		$ATMdb = new TPDOdb;
 		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
@@ -335,30 +333,38 @@ class InterfaceDoc2Projecttrigger
 			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && !empty($line->fk_product) && $line->product_type == 1)
 			{
 				// On va chercher la nomenclature du produit, puis on crée les tâches du projet en fonction des postes de travail trouvés.
-				/*$n = new TNomenclature;
+				$n = new TNomenclature;
 				$n->loadByObjectId($ATMdb, $line->fk_product, 'product');
 				
 				if(!empty($n->TNomenclatureWorkstation)) {
+					dol_include_once('/nomenclature/class/nomenclature.class.php');
+					dol_include_once('/peinture/lib/peinture.lib.php');
+					
+					// On créupère le produit qui correspond à la peinture
+					$TLinesPeinturePoudre = _get_lines_prod_peinture($object);
+					
 					// Pour chaque poste de travail, on crée une tâche de projet.
-					echo '<pre>';
-					print_r($n->TNomenclatureWorkstation);
-					echo '</pre>';
-					exit;
+					$i=1;
 					foreach($n->TNomenclatureWorkstation as $ws) {
 						
+						/*echo '<pre>';
+						print_r($ws);
+						echo '</pre>';exit;*/
 						$titre = $ws->note_private;
 						$nb_heures_preparation = $ws->nb_hour_prepare;
 						$nb_heures_fabrication = $ws->nb_hour_manufacture;
 						
-						$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='');
-						
+						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, 'DESCRIPTION A DEFINIR', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $ws->rowid);
+						if(!empty($id_task)) {
+							if(!empty($TLinesPeinturePoudre)) {
+								$sql = 'UPDATE '.MAIN_DB_PREFIX.'projet_task SET fk_soc = '.$object->socid.', fk_product_ral = '.$TLinesPeinturePoudre[0]->fk_product.' WHERE rowid = '.$id_task;
+								$db->query($sql);
+							}
+						}
+						$i++;
 					}
-				}*/
-				
-				/*echo '<pre>';
-				print_r($n);
-				echo '</pre>';
-				exit;*/
+				}
+
 				//$this->_createOneTask(...); //Avec les postes de travails liés à la nomenclature 
 			}
 			
@@ -395,10 +401,9 @@ class InterfaceDoc2Projecttrigger
 		}
 	}
 
-	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='')
+	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $afficher_sur_la_grille=0, $fk_workstation='')
 	{
 		$task = new Task($db);
-		
 		$task->fk_project = $fk_project;
 		$task->ref = $ref;
 		$task->label = $label;
@@ -410,6 +415,8 @@ class InterfaceDoc2Projecttrigger
 		$task->planned_workload = $planned_workload;
 		
 		$task->array_options['options_soldprice'] = $total_ht;
+		$task->array_options['options_grid_use'] = $afficher_sur_la_grille;
+		$task->array_options['options_fk_workstation'] = $fk_workstation;
 		
 		$r = $task->create($user);
 		if ($r > 0) return $r;
