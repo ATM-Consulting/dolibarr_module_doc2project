@@ -290,6 +290,10 @@ class InterfaceDoc2Projecttrigger
 	{
 		global $langs;
 		
+		dol_include_once('/nomenclature/class/nomenclature.class.php');
+		
+		$ATMdb = new TPDOdb;
+		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
@@ -327,8 +331,34 @@ class InterfaceDoc2Projecttrigger
 				}
 				
 			}
-			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
+			// Si on couple avec nomenclature et WS et que c'est un service
+			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && !empty($line->fk_product) && $line->product_type == 1)
 			{
+				// On va chercher la nomenclature du produit, puis on crée les tâches du projet en fonction des postes de travail trouvés.
+				/*$n = new TNomenclature;
+				$n->loadByObjectId($ATMdb, $line->fk_product, 'product');
+				
+				if(!empty($n->TNomenclatureWorkstation)) {
+					// Pour chaque poste de travail, on crée une tâche de projet.
+					echo '<pre>';
+					print_r($n->TNomenclatureWorkstation);
+					echo '</pre>';
+					exit;
+					foreach($n->TNomenclatureWorkstation as $ws) {
+						
+						$titre = $ws->note_private;
+						$nb_heures_preparation = $ws->nb_hour_prepare;
+						$nb_heures_fabrication = $ws->nb_hour_manufacture;
+						
+						$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='');
+						
+					}
+				}*/
+				
+				/*echo '<pre>';
+				print_r($n);
+				echo '</pre>';
+				exit;*/
 				//$this->_createOneTask(...); //Avec les postes de travails liés à la nomenclature 
 			}
 			
