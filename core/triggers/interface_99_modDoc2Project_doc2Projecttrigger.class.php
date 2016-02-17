@@ -349,7 +349,14 @@ class InterfaceDoc2Projecttrigger
 					
 					// Fetch du produit pour afficher sa réf
 					$p = new Product($db);
-					if(!empty($TLinesPeinturePoudre)) $p->fetch($TLinesPeinturePoudre[0]->fk_product);
+					if(!empty($TLinesPeinturePoudre)) {
+						$res = $p->fetch($TLinesPeinturePoudre[0]->fk_product);
+						$no_stock = false;
+						if($res > 0) {
+							$p->load_stock();
+							if($p->stock_reel < $TLinesPeinturePoudre[0]->qty) $no_stock = true;
+						}
+					}
 					
 					// Récupération de l'id du ws Petite chaîne
 					$resql = $db->query('SELECT rowid FROM '.MAIN_DB_PREFIX.'workstation WHERE code = "pt_chaine"');
@@ -367,7 +374,7 @@ class InterfaceDoc2Projecttrigger
 						// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
 						$fk_ws = $ws->workstation->rowid;
 						if($conf->cliepoxy->enabled && $id_cibox == $object->socid && $ws->workstation->code == 'gd_chaine') $fk_ws = $id_ws_petite_chaine;
-						if($conf->cliepoxy->enabled && $ws->workstation->code == 'liquide') $fk_ws = 0;
+						if($conf->cliepoxy->enabled && ($ws->workstation->code == 'liquide' || $no_stock)) $fk_ws = 0;
 						
 						$titre = $ws->note_private."<br />RAL : ".$p->ref;
 						$nb_heures_preparation = $ws->nb_hour_prepare;
