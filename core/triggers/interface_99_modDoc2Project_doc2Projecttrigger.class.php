@@ -113,7 +113,7 @@ class InterfaceDoc2Projecttrigger
      */
     public function run_trigger($action, $object, $user, $langs, $conf)
     {
-    	global $db;
+    	global $db, $conf;
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
         // Users
@@ -201,8 +201,9 @@ class InterfaceDoc2Projecttrigger
 		        $project->description    = '';
 		        $project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
 		        $project->datec			 = dol_now();
-		        $project->date_start	 = $object->date_livraison;
+				$project->date_start	 = $object->date_livraison;
 		        $project->date_end		 = null;
+				if($conf->cliepoxy->enabled) $project->date_end = $object->array_options['options_date_butoir'];
 				
 				$r = $project->create($user);
 				if ($r > 0) 
@@ -366,6 +367,7 @@ class InterfaceDoc2Projecttrigger
 						// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
 						$fk_ws = $ws->workstation->rowid;
 						if($conf->cliepoxy->enabled && $id_cibox == $object->socid && $ws->workstation->code == 'gd_chaine') $fk_ws = $id_ws_petite_chaine;
+						if($conf->cliepoxy->enabled && $ws->workstation->code == 'liquide') $fk_ws = 0;
 						
 						$titre = $ws->note_private."<br />RAL : ".$p->ref;
 						$nb_heures_preparation = $ws->nb_hour_prepare;
@@ -376,6 +378,9 @@ class InterfaceDoc2Projecttrigger
 						$i++;
 						
 					}
+					
+					// TODO Appeler le script interface.php de scrumboard en ajax pour être sûr que l'ordonnancement se fait bien à chaque commande
+					
 				}
 
 			}
