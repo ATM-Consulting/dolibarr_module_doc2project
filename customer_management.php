@@ -36,10 +36,11 @@ function _get_filtres(){
 
 //function _fiche
 function _fiche(&$PDOdb){
-	
+	_get_infos_propal_rapport($PDOdb);
 	print '<div>';
 	$TRapport=_get_infos_rapport($PDOdb);
 	?>
+	
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="statistiques_projet" class="noborder" width="100%">
 			<thead>
@@ -57,6 +58,7 @@ function _fiche(&$PDOdb){
 						print '<th class="liste_titre">'.$categ['label'].'</th>';						
 					}
 					?>
+					<td class="liste_titre">note</td>
 				</tr>
 			</thead>
 			<!--AJOUTER UN BANDEAU POUR FILTRER SUR LE PROJET, ETC.. -->
@@ -71,6 +73,7 @@ function _fiche(&$PDOdb){
 						print '<td>'.' '.'</td>';						
 					}
 				?>
+				<td></td>
 			</tbody>
 			<tfoot>
 				<tr style="font-weight: bold;">
@@ -79,9 +82,11 @@ function _fiche(&$PDOdb){
 					<td></td>
 					<td></td>
 					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
+					<?php
+					foreach ($TCateg as $categ) {
+							print '<td>'.' '.'</td>';						
+						}
+					?>
 					<td></td>
 				</tr>
 			</tfoot>
@@ -92,7 +97,7 @@ function _fiche(&$PDOdb){
 	print '</div>';
 }
 
-function _get_infos_rapport(&$PDOdb){
+function _get_infos_categs_rapport($PDOdb){
 	$TReport=array();
 	/*
 	 *Requete SQL 
@@ -102,13 +107,40 @@ function _get_infos_rapport(&$PDOdb){
 	return $TReport;
 }
 
-function _print_infos_rapport($TRapport){
+function _get_infos_propal_rapport($PDOdb){
+	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture, 
+	fact.rowid AS facId, fact.facnumber AS facnumber, fact.fk_statut AS fac_statut, proj.note_private AS proj_note 
+	FROM '.MAIN_DB_PREFIX.'societe soc INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc 
+	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source = prop.rowid 
+	INNER JOIN '.MAIN_DB_PREFIX.'facture fact ON el.fk_target = fact.rowid 
+	LEFT JOIN '.MAIN_DB_PREFIX.'projet proj ON fact.fk_projet=proj.rowid
+	WHERE 1
+	ORDER BY soc.nom';
+	
+	//var_dump($sql);
+	$PDOdb->Execute($sql);
+	$TInfosPropal = array();
+	while ($PDOdb->Get_line()) {
+		$TInfosPropal[]=array(
+						"socId"        => $PDOdb->Get_field('socId'),
+						"soc_name"     => $PDOdb->Get_field('soc_name'),
+						"propId"       => $PDOdb->Get_field('propId'),
+						"prop_ref"     => $PDOdb->Get_field('prop_ref'),
+						"prop_cloture" => $PDOdb->Get_field('prop_cloture'),
+						"facId"        => $PDOdb->Get_field('facId'),
+						"facnumber"    => $PDOdb->Get_field('facnumber'),
+						"fac_statut"   => $PDOdb->Get_field('fac_statut'),
+						"proj_note"    => $PDOdb->Get_field('proj_note')						
+					);
+	}
+	//var_dump($TInfosPropal);
+	return $TInfosPropal;
 	
 	
 }
 
 
-function _select_categ(&$PDOdb){
+function _select_categ($PDOdb){
 	$sql = 'SELECT cat.rowid AS rowid, cat.label AS label FROM '.MAIN_DB_PREFIX.'categorie cat WHERE cat.fk_parent=73';
 	
 	$PDOdb->Execute($sql);
@@ -123,7 +155,6 @@ function _select_categ(&$PDOdb){
 	}
 	return $TCategs;
 }
-
 
 
 llxFooter();
