@@ -288,7 +288,7 @@ class InterfaceDoc2Projecttrigger
 
 	private function _createTask(&$db, &$object, &$project, &$user, &$conf)
 	{
-		global $langs;
+		global $db, $langs;
 		
 		$ATMdb = new TPDOdb;
 		
@@ -342,6 +342,10 @@ class InterfaceDoc2Projecttrigger
 					
 					// On créupère le produit qui correspond à la peinture
 					$TLinesPeinturePoudre = _get_lines_prod_peinture($object);
+					$p = new Product($db);
+					if(!empty($TLinesPeinturePoudre)) {
+						$p->fetch($TLinesPeinturePoudre[0]->fk_product);
+					}
 					
 					// Pour chaque poste de travail, on crée une tâche de projet.
 					$i=1;
@@ -350,18 +354,14 @@ class InterfaceDoc2Projecttrigger
 						/*echo '<pre>';
 						print_r($ws);
 						echo '</pre>';exit;*/
-						$titre = $ws->note_private;
+						$titre = $ws->note_private."\n".$p->ref;
 						$nb_heures_preparation = $ws->nb_hour_prepare;
 						$nb_heures_fabrication = $ws->nb_hour_manufacture;
 						
-						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, 'DESCRIPTION A DEFINIR', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $ws->workstation->rowid);
-						if(!empty($id_task)) {
-							if(!empty($TLinesPeinturePoudre)) {
-								$sql = 'UPDATE '.MAIN_DB_PREFIX.'projet_task SET fk_soc = '.$object->socid.', fk_product_ral = '.$TLinesPeinturePoudre[0]->fk_product.' WHERE rowid = '.$id_task;
-								$db->query($sql);
-							}
-						}
+						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, 'DESCRIPTION A DEFINIR', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $ws->workstation->rowid, $object->socid, $p->id);
+						
 						$i++;
+						
 					}
 				}
 
@@ -401,7 +401,7 @@ class InterfaceDoc2Projecttrigger
 		}
 	}
 
-	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $afficher_sur_la_grille=0, $fk_workstation='')
+	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $afficher_sur_la_grille=0, $fk_workstation='', $fk_soc_order=0, $fk_product_ral=0)
 	{
 		$task = new Task($db);
 		$task->fk_project = $fk_project;
@@ -416,7 +416,9 @@ class InterfaceDoc2Projecttrigger
 		
 		$task->array_options['options_soldprice'] = $total_ht;
 		$task->array_options['options_grid_use'] = $afficher_sur_la_grille;
-		$task->array_options['options_fk_workstation'] = $fk_workstation;
+		if(!empty($fk_workstation)) $task->array_options['options_fk_workstation'] = $fk_workstation;
+		if(!empty($fk_soc_order)) $task->array_options['options_fk_soc_order'] = $fk_soc_order;
+		if(!empty($fk_product_ral)) $task->array_options['options_fk_product_ral'] = $fk_product_ral;
 		
 		$r = $task->create($user);
 		if ($r > 0) return $r;
