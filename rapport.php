@@ -141,7 +141,7 @@ function _get_filtre($report,$PDOdb,$form){
 			_print_filtre_liste_projet($form,$PDOdb);
 			_print_filtre_plage_date($form);
 			break;
-		
+			
 		default:
 			break;
 	}

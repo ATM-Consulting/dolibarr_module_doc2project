@@ -224,6 +224,20 @@ class modDoc2Project extends DolibarrModules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
+		 
+		 $this->menu[$r]=array(	'fk_menu'=>"fk_mainmenu=project,fk_leftmenu=doc2project",			                // Put 0 if this is a top menu
+								'type'=>'left',			                // This is a Top menu entry
+								'titre'=>'gestion client',
+								'mainmenu'=>'doc2project',
+								'leftmenu'=>'statistiques',
+								'url'=>'/doc2project/customer_management.php',
+								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+								'position'=>167,
+								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
+								'perms'=>'1',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'target'=>'',
+								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
+		 $r++;
 		//
 		// Example to declare a Left Menu entry into an existing Top menu entry:
 		// $this->menu[$r]=array(	'fk_menu'=>'fk_mainmenu=xxx',		    // Use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode

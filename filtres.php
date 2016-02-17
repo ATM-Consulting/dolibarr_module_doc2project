@@ -134,3 +134,34 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 		</tr>
 	<?php
 }
+
+function _print_filtre_customer_management(&$form){
+    print_fiche_titre('Filtres');
+    print '<div class="tabBar">';
+    print '<table>';
+	print '<tr><td><b>Réception des enquetes : </b></td></tr>';
+	print '<tr>';
+	print '<td>Date de début : </td>';
+	print '<td>'.$form->calendrier('', 'date_deb_reception', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '</tr>';
+	print '<tr>';
+	print '<td>Date de fin : </td>';
+	print '<td>'.$form->calendrier('', 'date_fin_reception', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '</tr>';
+	
+	
+	print '<tr><td><b>Réalisation des essais :</b></td></tr>';
+	print '<tr>';
+	print '<td>Date de début : </td>';
+	print '<td>'.$form->calendrier('', 'date_deb_essai', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '</tr>';
+	print '<tr>';
+	print '<td>Date de fin : </td>';
+	print '<td>'.$form->calendrier('', 'date_fin_essai', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '</tr>';
+
+    print '<tr><td colspan="2" align="center">'.$form->btsubmit('Valider', '').'</td></tr>';
+    print '</table>';
+    
+    print '</div>';
+}
