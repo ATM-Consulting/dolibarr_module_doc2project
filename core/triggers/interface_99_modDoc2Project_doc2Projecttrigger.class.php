@@ -337,35 +337,47 @@ class InterfaceDoc2Projecttrigger
 				$n->loadByObjectId($ATMdb, $line->fk_product, 'product');
 				
 				if(!empty($n->TNomenclatureWorkstation)) {
+					
 					dol_include_once('/nomenclature/class/nomenclature.class.php');
 					dol_include_once('/peinture/lib/peinture.lib.php');
-					
+					dol_include_once('/product/class/product.class.php');
+					dol_include_once('/societe/class/societe.class.php');		
+								
 					// On créupère le produit qui correspond à la peinture
 					$TLinesPeinturePoudre = _get_lines_prod_peinture($object);
+					
+					// Fetch du produit pour afficher sa réf
 					$p = new Product($db);
-					if(!empty($TLinesPeinturePoudre)) {
-						$p->fetch($TLinesPeinturePoudre[0]->fk_product);
-					}
+					if(!empty($TLinesPeinturePoudre)) $p->fetch($TLinesPeinturePoudre[0]->fk_product);
+					
+					// Récupération de l'id du ws Petite chaîne
+					$resql = $db->query('SELECT rowid FROM '.MAIN_DB_PREFIX.'workstation WHERE code = "pt_chaine"');
+					$res = $db->fetch_object($resql);
+					$id_ws_petite_chaine = $res->rowid; 
+					
+					$s = new Societe($db);
+					$s->fetch('', 'CIBOX');
+					$id_cibox = $s->id;
 					
 					// Pour chaque poste de travail, on crée une tâche de projet.
 					$i=1;
 					foreach($n->TNomenclatureWorkstation as $ws) {
 						
-						/*echo '<pre>';
-						print_r($ws);
-						echo '</pre>';exit;*/
-						$titre = $ws->note_private."\n".$p->ref;
+						// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
+						$fk_ws = $ws->workstation->rowid;
+						if($conf->cliepoxy->enabled && $id_cibox == $object->socid && $ws->workstation->code == 'gd_chaine') $fk_ws = $id_ws_petite_chaine;
+						
+						$titre = $ws->note_private."<br />RAL : ".$p->ref;
 						$nb_heures_preparation = $ws->nb_hour_prepare;
 						$nb_heures_fabrication = $ws->nb_hour_manufacture;
 						
-						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, 'DESCRIPTION A DEFINIR', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $ws->workstation->rowid, $object->socid, $p->id);
+						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, '', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $fk_ws, $object->socid, $p->id);
 						
 						$i++;
 						
 					}
 				}
 
-				//$this->_createOneTask(...); //Avec les postes de travails liés à la nomenclature 
 			}
 			
 			        // => ligne de type service										=> ligne libre
