@@ -354,7 +354,7 @@ class InterfaceDoc2Projecttrigger
 						$nb_heures_preparation = $ws->nb_hour_prepare;
 						$nb_heures_fabrication = $ws->nb_hour_manufacture;
 						
-						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, 'DESCRIPTION A DEFINIR', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $ws->rowid);
+						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, 'DESCRIPTION A DEFINIR', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $ws->workstation->rowid);
 						if(!empty($id_task)) {
 							if(!empty($TLinesPeinturePoudre)) {
 								$sql = 'UPDATE '.MAIN_DB_PREFIX.'projet_task SET fk_soc = '.$object->socid.', fk_product_ral = '.$TLinesPeinturePoudre[0]->fk_product.' WHERE rowid = '.$id_task;
