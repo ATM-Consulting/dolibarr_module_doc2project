@@ -196,6 +196,19 @@ class InterfaceDoc2Projecttrigger
 		
 		    	$project->ref 			 = $modProject->getNextValue($thirdparty, $project);
 				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+				
+				// Nom projet spécifique pour epoxy
+				if(!empty($conf->cliepoxy->enabled)) {
+					$TTitle = array();
+					if(!empty($object->socid)) {
+						$thirdparty->fetch($object->socid);
+						$TTitle[] = $thirdparty->name;
+					}
+					if(!empty($object->ref)) $TTitle[] = $object->ref;
+					if(!empty($object->ref_client)) $TTitle[] = $object->ref_client;
+					$title = implode(' - ', $TTitle);
+				}
+				
 				$project->title			 = $langs->trans('Doc2ProjectTitle', $title);
 				$project->socid          = $object->socid;
 		        $project->description    = '';
