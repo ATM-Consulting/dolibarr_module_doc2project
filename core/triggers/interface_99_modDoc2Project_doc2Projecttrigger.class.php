@@ -317,6 +317,7 @@ class InterfaceDoc2Projecttrigger
 		$TTask_id_parent = array();
 		$index = 1;
 		
+		$TLinesServices = array();
 		$fk_task_parent = 0;
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as $line) 
@@ -346,62 +347,8 @@ class InterfaceDoc2Projecttrigger
 			// Si on couple avec nomenclature et WS et que c'est un service
 			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && !empty($line->fk_product) && $line->product_type == 1)
 			{
-				// On va chercher la nomenclature du produit, puis on crée les tâches du projet en fonction des postes de travail trouvés.
-				$n = new TNomenclature;
-				$n->loadByObjectId($ATMdb, $line->fk_product, 'product');
 				
-				if(!empty($n->TNomenclatureWorkstation)) {
-					
-					dol_include_once('/nomenclature/class/nomenclature.class.php');
-					dol_include_once('/peinture/lib/peinture.lib.php');
-					dol_include_once('/product/class/product.class.php');
-					dol_include_once('/societe/class/societe.class.php');		
-								
-					// On créupère le produit qui correspond à la peinture
-					$TLinesPeinturePoudre = _get_lines_prod_peinture($object);
-					
-					// Fetch du produit pour afficher sa réf
-					$p = new Product($db);
-					if(!empty($TLinesPeinturePoudre)) {
-						$res = $p->fetch($TLinesPeinturePoudre[0]->fk_product);
-						$no_stock = false;
-						if($res > 0) {
-							$p->load_stock();
-							if($p->stock_reel < $TLinesPeinturePoudre[0]->qty) $no_stock = true;
-						}
-					}
-					
-					// Récupération de l'id du ws Petite chaîne
-					$resql = $db->query('SELECT rowid FROM '.MAIN_DB_PREFIX.'workstation WHERE code = "pt_chaine"');
-					$res = $db->fetch_object($resql);
-					$id_ws_petite_chaine = $res->rowid; 
-					
-					$s = new Societe($db);
-					$s->fetch('', 'CIBOX');
-					$id_cibox = $s->id;
-					
-					// Pour chaque poste de travail, on crée une tâche de projet.
-					$i=1;
-					foreach($n->TNomenclatureWorkstation as $ws) {
-						
-						// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
-						$fk_ws = $ws->workstation->rowid;
-						if($conf->cliepoxy->enabled && $id_cibox == $object->socid && $ws->workstation->code == 'gd_chaine') $fk_ws = $id_ws_petite_chaine;
-						if($conf->cliepoxy->enabled && ($ws->workstation->code == 'liquide' || $no_stock)) $fk_ws = 0;
-						
-						$titre = $ws->note_private."<br />RAL : ".$p->ref;
-						$nb_heures_preparation = $ws->nb_hour_prepare;
-						$nb_heures_fabrication = $ws->nb_hour_manufacture;
-						
-						$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'_'.$i, $titre, '', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600, $total_ht, 1, $fk_ws, $object->socid, $p->id);
-						
-						$i++;
-						
-					}
-					
-					// TODO Appeler le script interface.php de scrumboard en ajax pour être sûr que l'ordonnancement se fait bien à chaque commande
-					
-				}
+				$TLinesServices[$line->fk_product][] = $line;
 
 			}
 			
@@ -436,6 +383,79 @@ class InterfaceDoc2Projecttrigger
 			}
 			
 		}
+
+		$this->_caseNomenclatureAndWS($db, $conf, $user, $project, $object, $TLinesServices);
+
+	}
+	
+	// Gère le cas des tâches par nomenclature, en créant 1 tâche par service différent dans la commande
+	private function _caseNomenclatureAndWS(&$db, &$conf, &$user, &$project, &$object, &$TLinesServices) {
+		
+		if(empty($TLinesServices)) return 0;
+		
+		dol_include_once('/nomenclature/class/nomenclature.class.php');
+		dol_include_once('/peinture/lib/peinture.lib.php');
+		dol_include_once('/product/class/product.class.php');
+		dol_include_once('/societe/class/societe.class.php');
+		
+		$ATMdb = new TPDOdb;
+		//pre($TLinesServices, true);exit;
+		foreach($TLinesServices as $id_product => $TLines) {
+		
+			// On va chercher la nomenclature du produit, puis on crée les tâches du projet en fonction des postes de travail trouvés.
+			$n = new TNomenclature;
+			$n->loadByObjectId($ATMdb, $id_product, 'product');
+			
+			if(!empty($n->TNomenclatureWorkstation)) {
+	
+				// On récupère le produit qui correspond à la peinture
+				$TLinesPeinturePoudre = _get_lines_prod_peinture($object);
+				
+				// Fetch du produit pour afficher sa réf
+				$p = new Product($db);
+				if(!empty($TLinesPeinturePoudre)) {
+					$res = $p->fetch($TLinesPeinturePoudre[0]->fk_product);
+					$no_stock = false;
+					if($res > 0) {
+						$p->load_stock();
+						if($p->stock_reel < $TLinesPeinturePoudre[0]->qty) $no_stock = true;
+					}
+				}
+				
+				// Récupération de l'id du ws Petite chaîne
+				$resql = $db->query('SELECT rowid FROM '.MAIN_DB_PREFIX.'workstation WHERE code = "pt_chaine"');
+				$res = $db->fetch_object($resql);
+				$id_ws_petite_chaine = $res->rowid; 
+				
+				$s = new Societe($db);
+				$s->fetch('', 'CIBOX');
+				$id_cibox = $s->id;
+				
+				// Pour chaque poste de travail, on crée une tâche de projet.
+				$i=1;
+				foreach($n->TNomenclatureWorkstation as $ws) {
+					
+					// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
+					$fk_ws = $ws->workstation->rowid;
+					if($conf->cliepoxy->enabled && $id_cibox == $object->socid && $ws->workstation->code == 'gd_chaine') $fk_ws = $id_ws_petite_chaine;
+					if($conf->cliepoxy->enabled && ($ws->workstation->code == 'liquide' || $no_stock)) $fk_ws = 0;
+					
+					$titre = $ws->note_private." ".((count($TLines) > 1) ? "(x".count($TLines).")" : '')." <br />RAL : ".$p->ref;
+					$nb_heures_preparation = $ws->nb_hour_prepare;
+					$nb_heures_fabrication = $ws->nb_hour_manufacture;
+					
+					$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'_'.$i, $titre, '', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, (($nb_heures_preparation + $nb_heures_fabrication)*3600*$object->array_options['options_duree_prevue']) * count($TLines), $total_ht, 1, $fk_ws, $object->socid, $p->id);
+					
+					$i++;
+					
+				}
+				
+				// TODO Appeler le script interface.php de scrumboard en ajax pour être sûr que l'ordonnancement se fait bien à chaque commande
+				
+			}
+
+		}
+		
 	}
 
 	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $afficher_sur_la_grille=0, $fk_workstation='', $fk_soc_order=0, $fk_product_ral=0)
