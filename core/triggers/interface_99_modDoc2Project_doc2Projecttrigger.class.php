@@ -440,11 +440,12 @@ class InterfaceDoc2Projecttrigger
 					if($conf->cliepoxy->enabled && $id_cibox == $object->socid && $ws->workstation->code == 'gd_chaine') $fk_ws = $id_ws_petite_chaine;
 					if($conf->cliepoxy->enabled && ($ws->workstation->code == 'liquide' || $no_stock)) $fk_ws = 0;
 					
-					$titre = $ws->note_private." ".((count($TLines) > 1) ? "(x".count($TLines).")" : '')." <br />RAL : ".$p->ref;
+					//$titre = $ws->note_private." ".((count($TLines) > 1) ? "(x".count($TLines).")" : '')." <br />RAL : ".$p->ref;
+					$titre = $ws->note_private."<br />RAL : ".$p->ref;
 					$nb_heures_preparation = $ws->nb_hour_prepare;
 					$nb_heures_fabrication = $ws->nb_hour_manufacture;
 					
-					$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'_'.$i, $titre, '', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, (($nb_heures_preparation + $nb_heures_fabrication)*3600*$object->array_options['options_duree_prevue']) * count($TLines), $total_ht, 1, $fk_ws, $object->socid, $p->id);
+					$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'_'.$i, $titre, '', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600*$object->array_options['options_duree_prevue'], $total_ht, 1, $fk_ws, $object->socid, $p->id);
 					
 					$i++;
 					
