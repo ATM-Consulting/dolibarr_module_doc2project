@@ -159,7 +159,17 @@ function _print_filtre_customer_management(&$form){
 	print '<td>Date de fin : </td>';
 	print '<td>'.$form->calendrier('', 'date_fin_essai', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
 	print '</tr>';
-
+	
+	print '<tr><td><b>Cloture du devis :</b></td></tr>';
+	print '<tr>';
+	print '<td>Date de début : </td>';
+	print '<td>'.$form->calendrier('', 'date_deb_cloture', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '</tr>';
+	print '<tr>';
+	print '<td>Date de fin : </td>';
+	print '<td>'.$form->calendrier('', 'date_fin_cloture', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '</tr>';
+	
     print '<tr><td colspan="2" align="center">'.$form->btsubmit('Valider', '').'</td></tr>';
     print '</table>';
     

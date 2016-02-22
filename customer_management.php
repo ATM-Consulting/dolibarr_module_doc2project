@@ -44,9 +44,10 @@ function _fiche(&$PDOdb){
 }
 
 function _print_rapport(&$PDOdb){
-	global $db;	
-	?>
+	global $db;
 	
+	//var_dump($_REQUEST);	
+	?>
 	<div class="tabBar" style="padding-bottom: 25px;">
 		<table id="gestion_client" class="noborder" width="100%">
 			<thead>
@@ -65,6 +66,9 @@ function _print_rapport(&$PDOdb){
 					}
 					?>
 					<td class="liste_titre">commentaires</td>
+					<?php
+						//_print_titre_categories($idCategorie, $TCateg); //ATTRIBUTS A REDEFINIR						
+					?>
 				</tr>
 			</thead>
 			<!--AJOUTER UN BANDEAU POUR FILTRER SUR LE PROJET, ETC.. -->
@@ -82,13 +86,15 @@ function _print_rapport(&$PDOdb){
 					
 					$facture=new Facture($db);
 					$facture->fetch($infoLine['facId']);
+					//var_dump($facture);
 					
 					
 					print '<tr>';
 					print '<td>'.$societe->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->getNomUrl(1,'').'</td>';
 					print '<td>'.$infoLine['prop_cloture'].'</td>';
-					print '<td>'.$facture->getNomUrl(1,'').'</td>';
+					if ($facture->statut==2)print '<td bgcolor="#A9F5A9">'.$facture->getNomUrl(1,'').'</td>';
+					else print '<td bgcolor="#F78181">'.$facture->getNomUrl(1,'').'</td>';
 					print '<td>'.$infoLine[''].'</td>';
 					
 					
@@ -131,16 +137,53 @@ function _get_infos_categs_rapport($PDOdb){
 }
 
 function _get_infos_propal_rapport($PDOdb){
+	
+	
+	//var_dump($_REQUEST);
+	
+	$plageReception_deb   =  GETPOST('date_deb_reception');
+	$plageReception_fin   = GETPOST('date_fin_reception');
+	$plageEssai_deb       = GETPOST('date_deb_essai');
+	$plageEssai_fin       = GETPOST('date_fin_essai');
+	$plageClotureProp_deb = GETPOST('date_deb_cloture');
+	$plageClotureProp_fin = GETPOST('date_fin_cloture');
+	
+	
+	$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
+	$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
+	
+	
+	//var_dump($plageClotureProp_deb, $plageClotureProp_fin);
 	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture, 
 	fact.rowid AS facId, fact.facnumber AS facnumber, fact.fk_statut AS fac_statut, proj.note_private AS proj_note, proj.rowid AS id_project  
 	FROM '.MAIN_DB_PREFIX.'societe soc INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc 
 	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source = prop.rowid 
 	INNER JOIN '.MAIN_DB_PREFIX.'facture fact ON el.fk_target = fact.rowid 
-	LEFT JOIN '.MAIN_DB_PREFIX.'projet proj ON fact.fk_projet=proj.rowid
-	WHERE 1
-	ORDER BY soc.nom';
+	LEFT JOIN '.MAIN_DB_PREFIX.'projet proj ON fact.fk_projet=proj.rowid ';
 	
-	//var_dump($sql);
+	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
+		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
+		$plageClotureProp_fin = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_fin)));
+		
+		$sql.='WHERE prop.date_cloture BETWEEN "'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'" ';
+	}
+
+	if (!empty($plageReception_deb) && !empty($plageReception_fin)){
+		$plageReception_deb   = date("Y-m-d", strtotime(str_replace('/', '-', $plageReception_deb)));
+		$plageReception_fin   = date("Y-m-d", strtotime(str_replace('/', '-', $plageReception_fin)));
+		
+		$sql.='';
+	}
+	if (!empty($plageEssai_deb) && !empty($plageEssai_fin)){
+		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
+		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
+	
+		$sql.='';
+	}
+	
+	$sql.= 'ORDER BY soc.nom';
+	
+	//pre($sql, TRUE);
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
@@ -163,7 +206,10 @@ function _get_infos_propal_rapport($PDOdb){
 	
 }
 
-
+/*
+ *Fonction qui va aller chercher les catégories de service dans un devis (et par la meme un projet)
+ * 
+*/
 function _select_categ($PDOdb){
 	$sql = 'SELECT cat.rowid AS rowid, cat.label AS label FROM '.MAIN_DB_PREFIX.'categorie cat WHERE cat.fk_parent=73';
 	
@@ -180,5 +226,19 @@ function _select_categ($PDOdb){
 	return $TCategs;
 }
 
-
+/*
+ * Fonction qui va afficher les titres des différentes catégories de service contenues dans un devis/projet
+ */
+function _print_titre_categories($idCategorie, $TReport){
+	
+	foreach ($TReport as $categ) {
+		print '<th class="liste_titre">N° de rapport</th>';
+		print '<th class="liste_titre">Envoi rapport</th>';
+		print '<th class="liste_titre">Délai rapport</th>';
+		print '<th class="liste_titre">Envoi ES</th>';
+		print '<th class="liste_titre">Relance 1 ES</th>';
+		print '<th class="liste_titre">Relance 2 ES</th>';
+		print '<th class="liste_titre">Reception ES</th>';
+	}
+}
 llxFooter();
