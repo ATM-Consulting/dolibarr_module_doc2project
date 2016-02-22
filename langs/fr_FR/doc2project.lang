@@ -21,6 +21,7 @@ Doc2ProjectClotureProjectOnValidateExpedition=Clôturer le projet sur la validat
 Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-services associés au service parent
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
 Doc2projectWithWorkstation=Créer autant de tâche qu'il y a de poste de travail associé au produit/service
+Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
