@@ -48,9 +48,22 @@ function _print_rapport(&$PDOdb){
 	
 	//var_dump($_REQUEST);	
 	?>
-	<div class="tabBar" style="padding-bottom: 25px;">
+	<div style="padding-bottom: 25px;">
 		<table id="gestion_client" class="noborder" width="100%">
 			<thead>
+				<!--
+				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
+					<?php
+					$TCateg = _select_categ($PDOdb);
+					$colspan = count($TCateg) + 6;
+					
+					print '<td colspan='.$colspan.'></td>';
+					
+					foreach ($TCateg as $categ) {
+						print '<td colspan=7>'.$categ['label'].'</td>';						
+					}
+					?>
+				</tr>-->
 				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Tiers</th>
 					<th class="liste_titre">Devis</th>
@@ -60,7 +73,7 @@ function _print_rapport(&$PDOdb){
 					<th class="liste_titre">Facture</th>
 					<th class="liste_titre">Délais</th>
 					<?php
-					$TCateg = _select_categ($PDOdb);
+					
 					foreach ($TCateg as $categ) {
 						print '<th class="liste_titre">'.$categ['label'].'</th>';						
 					}
@@ -147,6 +160,8 @@ function _get_infos_propal_rapport($PDOdb){
 	$plageEssai_fin       = GETPOST('date_fin_essai');
 	$plageClotureProp_deb = GETPOST('date_deb_cloture');
 	$plageClotureProp_fin = GETPOST('date_fin_cloture');
+	$client               = GETPOST('client');
+	$categ                = GETPOST('parent');
 	
 	
 	$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
@@ -159,13 +174,14 @@ function _get_infos_propal_rapport($PDOdb){
 	FROM '.MAIN_DB_PREFIX.'societe soc INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc 
 	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source = prop.rowid 
 	INNER JOIN '.MAIN_DB_PREFIX.'facture fact ON el.fk_target = fact.rowid 
-	LEFT JOIN '.MAIN_DB_PREFIX.'projet proj ON fact.fk_projet=proj.rowid ';
+	LEFT JOIN '.MAIN_DB_PREFIX.'projet proj ON fact.fk_projet=proj.rowid 
+	WHERE 1 ';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
 		$plageClotureProp_fin = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_fin)));
 		
-		$sql.='WHERE prop.date_cloture BETWEEN "'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'" ';
+		$sql.='AND prop.date_cloture BETWEEN ()"'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'") ';
 	}
 
 	if (!empty($plageReception_deb) && !empty($plageReception_fin)){
@@ -180,8 +196,10 @@ function _get_infos_propal_rapport($PDOdb){
 	
 		$sql.='';
 	}
-	
-	$sql.= 'ORDER BY soc.nom';
+	if (!empty($client)){
+		$sql.= 'AND soc.rowid='.$client.' ';
+	}
+	//$sql.= 'ORDER BY soc.nom';
 	
 	//pre($sql, TRUE);
 	$PDOdb->Execute($sql);
@@ -240,5 +258,24 @@ function _print_titre_categories($idCategorie, $TReport){
 		print '<th class="liste_titre">Relance 2 ES</th>';
 		print '<th class="liste_titre">Reception ES</th>';
 	}
+}
+
+
+function _get_factures_from_propale($PDOdb, $id){
+	
+	$sql= 'SELECT fac.rowid AS facid, fac.ref AS facref FROM '.MAIN_DB_PREFIX.' INNER JOIN '.MAIN_DB_PREFIX.'element_element 
+	WHERE sourcetype= propal AND fk_source='.$id.' ';
+	
+	//var_dump($sql);
+	$PDOdb->Execute($sql);
+	$TFactures = array();
+	while ($PDOdb->Get_line()) {
+		$TFactures[]=array(
+						"facid"        => $PDOdb->Get_field('facid'),
+						"facref"     => $PDOdb->Get_field('facref')				
+					);
+	}
+	return $TFactures;
+	
 }
 llxFooter();
