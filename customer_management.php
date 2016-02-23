@@ -119,6 +119,8 @@ function _print_rapport(&$PDOdb){
 						}
 					print '</td>';
 					print '<td>'.$commande->getNomUrl(1,'').'</td>';
+					
+					//ICI COLONNE DELAIS
 					print '<td>'.$infoLine[''].'</td>';
 						
 					
@@ -216,7 +218,7 @@ function _get_infos_propal_rapport($PDOdb){
 	$sql.= 'GROUP BY prop.rowid 
 	ORDER BY soc.nom';
 	
-	pre($sql, true);
+	//pre($sql, true);
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
