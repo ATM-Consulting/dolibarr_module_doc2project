@@ -179,7 +179,7 @@ class ActionsDoc2Project
 	function doActions($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf,$langs,$db,$user;
-		
+		//var_dump($object);exit;
 		if($user->rights->projet->all->creer && $action == 'create_project' &&
 			((in_array('propalcard',explode(':',$parameters['context'])) && $object->statut == 2)
 			|| (in_array('ordercard',explode(':',$parameters['context'])) && $object->statut == 1))
@@ -215,6 +215,7 @@ class ActionsDoc2Project
 			
 			// CREATION DES TACHES
 			foreach($object->lines as $line) {
+				//var_dump($line);exit;
 				$fk_parent = 0;
 				if(!empty($line->fk_product) && $line->fk_product_type == 1) { // On ne créé que les tâches correspondant à des services
 				
@@ -225,11 +226,11 @@ class ActionsDoc2Project
 						$s->fetch($line->fk_product);
 						$s->get_sousproduits_arbo();
 						$TProdArbo = $s->get_arbo_each_prod();
-						
+						//var_dump($s);exit;
 						if(!empty($TProdArbo)){
 							
 							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT){
-								$fk_parent = $this->create_task($line,$p,$start,0,true);
+								$fk_parent = $this->create_task($line,$p,$start,0,true, 0, $line->fk_product);
 								
 								if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 									dol_include_once('/workstation/class/workstation.class.php');
@@ -248,7 +249,6 @@ class ActionsDoc2Project
 										$line->product_label = $TWorkstation->name;
 										$line->desc = '';
 										$line->total_ht = 0;
-										
 										$this->create_task($line, $p, $start,$fk_parent,false,$TWorkstation->rowid);
 									}
 								}
@@ -286,7 +286,7 @@ class ActionsDoc2Project
 											$line->desc = '';
 											$line->total_ht = 0;
 											
-											$this->create_task($line, $p, $start,$new_fk_parent,false,$TWorkstation->rowid);
+											$this->create_task($line, $p, $start,$new_fk_parent,false,$TWorkstation->rowid, $line->fk_product);
 										}
 									}
 								}
@@ -312,12 +312,13 @@ class ActionsDoc2Project
 		return 0;
 	}
 
-	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){
+	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0, $fk_linkedProduct=0){
 		global $conf,$langs,$db,$user;
+		
 		
 		$s = new Product($db);
 		$s->fetch($line->fk_product);
-		
+		//var_dump($s);exit;
 		// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
 		$durationInSec = $line->qty * $s->duration_value * 3600;
 		$nbDays = 0;
@@ -372,6 +373,9 @@ class ActionsDoc2Project
 			
 			if($fk_workstation){
 				$t->array_options['options_fk_workstation'] = $fk_workstation;
+			}
+			if($fk_linkedProduct){
+				$t->array_options['options_fk_linked_product']= $fk_linkedProduct;
 			}
 			
 			$t->create($user);

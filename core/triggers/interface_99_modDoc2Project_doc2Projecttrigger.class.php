@@ -368,7 +368,7 @@ class InterfaceDoc2Projecttrigger
 	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='')
 	{
 		$task = new Task($db);
-		var_dump($task); exit;
+		
 		$task->fk_project = $fk_project;
 		$task->ref = $ref;
 		$task->label = $label;
