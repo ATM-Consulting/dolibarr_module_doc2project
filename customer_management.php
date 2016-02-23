@@ -6,6 +6,7 @@ dol_include_once("/doc2project/filtres.php");
 dol_include_once("../comm/propal/class/propal.class.php");
 dol_include_once("../compta/facture/class/facture.class.php");
 dol_include_once("../projet/class/project.class.php");
+dol_include_once("../commande/class/commande.class.php");
 
 llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
@@ -56,7 +57,7 @@ function _print_rapport(&$PDOdb){
 				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<?php
 					$TCateg = _select_categ($PDOdb);
-					$colspan = count($TCateg) + 6;
+					$colspan = count($TCateg) + 7;
 					
 					print '<td colspan='.$colspan.'></td>';
 					
@@ -72,6 +73,7 @@ function _print_rapport(&$PDOdb){
 					print_liste_field_titre('Date cloture', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
 					?>
 					<th class="liste_titre">Facture</th>
+					<th class="liste_titre">Commande</th>
 					<th class="liste_titre">Délais</th>
 					<?php
 					
@@ -97,8 +99,10 @@ function _print_rapport(&$PDOdb){
 					$propal=new Propal($db);
 					$propal->fetch($infoLine['propId']);
 					
+					$commande = new Commande($db);
+					$commande->fetch($infoLine['commId']);
+					
 					$Tfactures = _get_factures_from_propale($PDOdb, $propal->id);
-					//var_dump($facture);
 					
 					
 					print '<tr>';
@@ -113,8 +117,9 @@ function _print_rapport(&$PDOdb){
 						else print '<div style="background-color:#F78181">'.$facture->getNomUrl(1,'').'</div>';
 							
 						}
-						print '</td>';
-						print '<td>'.$infoLine[''].'</td>';
+					print '</td>';
+					print '<td>'.$commande->getNomUrl(1,'').'</td>';
+					print '<td>'.$infoLine[''].'</td>';
 						
 					
 					
@@ -177,10 +182,13 @@ function _get_infos_propal_rapport($PDOdb){
 	
 	
 	//var_dump($plageClotureProp_deb, $plageClotureProp_fin);
-	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture
-	FROM '.MAIN_DB_PREFIX.'societe soc INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc 
-	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source = prop.rowid  
-	WHERE 1 ';
+	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture, co.rowid AS commId
+	FROM '.MAIN_DB_PREFIX.'societe soc 
+	INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc
+	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source=prop.rowid 
+	INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
+	INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet  
+	WHERE proj.fk_statut=1 ';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
@@ -188,13 +196,14 @@ function _get_infos_propal_rapport($PDOdb){
 		
 		$sql.='AND prop.date_cloture BETWEEN ()"'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'") ';
 	}
-
+	//A REMPLIR POUR FILTRE SUR PLAFE RECEPTION ENQUETE DE SATISFACTION
 	if (!empty($plageReception_deb) && !empty($plageReception_fin)){
 		$plageReception_deb   = date("Y-m-d", strtotime(str_replace('/', '-', $plageReception_deb)));
 		$plageReception_fin   = date("Y-m-d", strtotime(str_replace('/', '-', $plageReception_fin)));
 		
 		$sql.='';
 	}
+	// A REMPLIR POUR FILTRE SUR REALISATION DES ESSAIS
 	if (!empty($plageEssai_deb) && !empty($plageEssai_fin)){
 		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
 		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
@@ -207,6 +216,7 @@ function _get_infos_propal_rapport($PDOdb){
 	$sql.= 'GROUP BY prop.rowid 
 	ORDER BY soc.nom';
 	
+	pre($sql, true);
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
@@ -215,7 +225,8 @@ function _get_infos_propal_rapport($PDOdb){
 						"soc_name"     => $PDOdb->Get_field('soc_name'),
 						"propId"       => $PDOdb->Get_field('propId'),
 						"prop_ref"     => $PDOdb->Get_field('prop_ref'),
-						"prop_cloture" => $PDOdb->Get_field('prop_cloture')					
+						"prop_cloture" => $PDOdb->Get_field('prop_cloture'),
+						"commId"       => $PDOdb->Get_field('commId')       
 					);
 	}
 	//var_dump($TInfosPropal);
@@ -298,6 +309,11 @@ function _get_projet_from_propale($PDOdb, $id){
 	}
 
 	return $TProjet;
+}
+
+function _get_commande_from_propale($PDOdb, $idPropale){
+	
+	$sql = 'SELECT ';
 }
 
 

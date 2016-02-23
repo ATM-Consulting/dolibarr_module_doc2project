@@ -306,6 +306,9 @@ class modDoc2Project extends DolibarrModules
         $param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
         $res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
 		
+		$extrafields=new ExtraFields($this->db);
+		$res = $extrafields->addExtraField('fk_linked_product', 'Produit Lié', 'sellist', 0, '', 'projet_task',0,0,'',serialize(array('options'=>array('product:label:rowid'=>null))));
+		
 		return $this->_init($sql, $options);
 	}
 
