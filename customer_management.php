@@ -5,6 +5,7 @@ dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");
 dol_include_once("../comm/propal/class/propal.class.php");
 dol_include_once("../compta/facture/class/facture.class.php");
+dol_include_once("../projet/class/project.class.php");
 
 llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
@@ -94,11 +95,9 @@ function _print_rapport(&$PDOdb){
 					$societe->fetch($infoLine['socId']);
 					
 					$propal=new Propal($db);
-					
 					$propal->fetch($infoLine['propId']);
 					
-					$facture=new Facture($db);
-					$facture->fetch($infoLine['facId']);
+					$Tfactures = _get_factures_from_propale($PDOdb, $propal->id);
 					//var_dump($facture);
 					
 					
@@ -106,15 +105,28 @@ function _print_rapport(&$PDOdb){
 					print '<td>'.$societe->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->getNomUrl(1,'').'</td>';
 					print '<td>'.$infoLine['prop_cloture'].'</td>';
-					if ($facture->statut==2)print '<td bgcolor="#A9F5A9">'.$facture->getNomUrl(1,'').'</td>';
-					else print '<td bgcolor="#F78181">'.$facture->getNomUrl(1,'').'</td>';
-					print '<td>'.$infoLine[''].'</td>';
+					print '<td>';
+					foreach ($Tfactures as $lstfacture) {
+						$facture=new Facture($db);
+						$facture->fetch($lstfacture['facid']);
+						if ($facture->statut==2)print '<div style="background-color:#A9F5A9">'.$facture->getNomUrl(1,'').'</div>';
+						else print '<div style="background-color:#F78181">'.$facture->getNomUrl(1,'').'</div>';
+							
+						}
+						print '</td>';
+						print '<td>'.$infoLine[''].'</td>';
+						
 					
 					
 					foreach ($TCateg as $categ) {
 						
 					}
-					print '<td>'.$infoLine['proj_note'].'</td>';
+					
+					$TProjet= _get_projet_from_propale($PDOdb, $propal->id);
+					//var_dump($TProjet);
+					$projet = new Project($db);
+					$projet->fetch($TProjet['projId']);
+					print '<td>'.$projet->note_private.'</td>';
 					print '</tr>';											
 				}
 				?>
@@ -127,11 +139,7 @@ function _print_rapport(&$PDOdb){
 					<td></td>
 					<td></td>
 					<td></td>
-					<?php
-					foreach ($TCateg as $categ) {
-							print '<td>'.' '.'</td>';						
-						}
-					?>
+					<td></td>
 					<td></td>
 				</tr>
 			</tfoot>
@@ -169,12 +177,9 @@ function _get_infos_propal_rapport($PDOdb){
 	
 	
 	//var_dump($plageClotureProp_deb, $plageClotureProp_fin);
-	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture, 
-	fact.rowid AS facId, fact.facnumber AS facnumber, fact.fk_statut AS fac_statut, proj.note_private AS proj_note, proj.rowid AS id_project  
+	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture
 	FROM '.MAIN_DB_PREFIX.'societe soc INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc 
-	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source = prop.rowid 
-	INNER JOIN '.MAIN_DB_PREFIX.'facture fact ON el.fk_target = fact.rowid 
-	LEFT JOIN '.MAIN_DB_PREFIX.'projet proj ON fact.fk_projet=proj.rowid 
+	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source = prop.rowid  
 	WHERE 1 ';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
@@ -199,9 +204,9 @@ function _get_infos_propal_rapport($PDOdb){
 	if (!empty($client)){
 		$sql.= 'AND soc.rowid='.$client.' ';
 	}
-	//$sql.= 'ORDER BY soc.nom';
+	$sql.= 'GROUP BY prop.rowid 
+	ORDER BY soc.nom';
 	
-	//pre($sql, TRUE);
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
@@ -210,12 +215,7 @@ function _get_infos_propal_rapport($PDOdb){
 						"soc_name"     => $PDOdb->Get_field('soc_name'),
 						"propId"       => $PDOdb->Get_field('propId'),
 						"prop_ref"     => $PDOdb->Get_field('prop_ref'),
-						"prop_cloture" => $PDOdb->Get_field('prop_cloture'),
-						"facId"        => $PDOdb->Get_field('facId'),
-						"facnumber"    => $PDOdb->Get_field('facnumber'),
-						"fac_statut"   => $PDOdb->Get_field('fac_statut'),
-						"proj_note"    => $PDOdb->Get_field('proj_note'),	
-						"id_project"   => $PDOdb->Get_field('id_project')					
+						"prop_cloture" => $PDOdb->Get_field('prop_cloture')					
 					);
 	}
 	//var_dump($TInfosPropal);
@@ -263,19 +263,42 @@ function _print_titre_categories($idCategorie, $TReport){
 
 function _get_factures_from_propale($PDOdb, $id){
 	
-	$sql= 'SELECT fac.rowid AS facid, fac.ref AS facref FROM '.MAIN_DB_PREFIX.' INNER JOIN '.MAIN_DB_PREFIX.'element_element 
-	WHERE sourcetype= propal AND fk_source='.$id.' ';
+	$sql= 'SELECT fac.rowid AS facid, fac.facnumber AS facref FROM '.MAIN_DB_PREFIX.'facture fac 
+	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON fac.rowid=el.fk_target 
+	WHERE el.sourcetype= "propal" AND el.fk_source='.$id.' ';
 	
 	//var_dump($sql);
 	$PDOdb->Execute($sql);
 	$TFactures = array();
 	while ($PDOdb->Get_line()) {
 		$TFactures[]=array(
-						"facid"        => $PDOdb->Get_field('facid'),
+						"facid"      => $PDOdb->Get_field('facid'),
 						"facref"     => $PDOdb->Get_field('facref')				
 					);
 	}
+	//var_dump($TFactures);
 	return $TFactures;
 	
 }
+
+function _get_projet_from_propale($PDOdb, $id){
+	
+	$sql='SELECT prop.rowid AS propId, proj.rowid AS projId, proj.note_private AS projNote FROM '.MAIN_DB_PREFIX.'propal prop 
+	INNER JOIN '.MAIN_DB_PREFIX.'projet proj ON prop.fk_projet=proj.rowid
+	WHERE prop.rowid='.$id.' ';
+	
+	//var_dump($sql);
+	$PDOdb->Execute($sql);
+	$TProjet = array();
+	while ($PDOdb->Get_line()) {
+		$TProjet=array(
+						"propId"      => $PDOdb->Get_field('propId'),
+						"projId"      => $PDOdb->Get_field('projId')  	
+					);
+	}
+
+	return $TProjet;
+}
+
+
 llxFooter();
