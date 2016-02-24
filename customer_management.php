@@ -19,10 +19,7 @@ $PDOdb=new TPDOdb($db);
 _get_filtres();
 _print_legende();
 _fiche($PDOdb);
-_print_totaux();
-
-
-//function _fiche
+//_print_totaux();
 
 
 
@@ -32,7 +29,11 @@ _print_totaux();
 
 
 
-//affiche le tableau des filtres
+
+
+/*
+ * Affiche les différents filtres pour le rapport 
+*/
 function _get_filtres(){
 	$form=new TFormCore('auto','formCustManagement', 'POST');
 	
@@ -128,6 +129,7 @@ function _print_rapport(&$PDOdb){
 					<th class="liste_titre">Facture</th>
 					<th class="liste_titre">Commande</th>
 					<th class="liste_titre">Délais</th>
+					<th class="liste_titre">Projet</th>
 					<?php					
 					foreach ($TCateg as $categ) {
 						print '<th class="liste_titre">'.$categ['label'].'</th>';						
@@ -176,6 +178,7 @@ function _print_rapport(&$PDOdb){
 					print '</td>';
 					print '<td>'.$commande->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->array_options['options_delai_realisation'].'</td>';
+					print '<td>'.$projet->getNomUrl(1,'');
 						
 					$TCateg_task=_get_categ_from_tasks($PDOdb, $projet->id);
 					//var_dump($TCateg_task);
@@ -213,15 +216,13 @@ function _print_rapport(&$PDOdb){
 	<?php
 }
 
-function _get_infos_categs_rapport($PDOdb){
-	
-	$sql='SELECT ';
-	
-	$TReport=array();
-	
-	return $TReport;
-}
 
+/*
+ * Recupere les différentes lignes du rapport :
+ * société,  propal, commande, et projet
+ * Applique les filtres 
+ * TODO Filtres à compléter à l'avenir
+*/
 function _get_infos_propal_rapport($PDOdb){
 	
 	
@@ -299,8 +300,7 @@ function _get_infos_propal_rapport($PDOdb){
 
 
 /*
- *Fonction qui va aller chercher les catégories de service dans un devis (et par la meme un projet)
- * 
+ * Recupere toutes les catégories de produits/services existantes
 */
 function _select_categ($PDOdb){
 	$sql = 'SELECT cat.rowid AS rowid, cat.label AS label FROM '.MAIN_DB_PREFIX.'categorie cat WHERE cat.fk_parent=73';
@@ -319,8 +319,8 @@ function _select_categ($PDOdb){
 }
 
 /*
- * Fonction qui va afficher les titres des différentes catégories de service contenues dans un devis/projet
- */
+ * Affiche les titres des différentes catégories de service contenues dans un devis/projet
+*/
 function _print_titre_categories($TReport){
 	
 	foreach ($TReport as $categ) {
@@ -335,6 +335,10 @@ function _print_titre_categories($TReport){
 	}
 }
 
+/*
+ * Affiche les infos des catégories 
+ * TODO remplir chaque td avec les infos correspondantes 
+*/
 function _print_infos_categories($TReport){
 	foreach ($TReport as $categ){
 		print '<td></td>';
@@ -348,7 +352,9 @@ function _print_infos_categories($TReport){
 	}
 }
 
-
+/*
+ * Recupere les factures associées à une propal 
+*/
 function _get_factures_from_propale($PDOdb, $id){
 	
 	$sql= 'SELECT fac.rowid AS facid, fac.facnumber AS facref FROM '.MAIN_DB_PREFIX.'facture fac 
@@ -369,6 +375,9 @@ function _get_factures_from_propale($PDOdb, $id){
 	
 }
 
+/*
+ * Recupere le projet associé à une commande 
+*/
 function _get_projet_from_commande($PDOdb, $id){
 	
 	$sql='SELECT com.rowid AS comId, proj.rowid AS projId, proj.note_private AS projNote FROM '.MAIN_DB_PREFIX.'commande com 
@@ -388,6 +397,10 @@ function _get_projet_from_commande($PDOdb, $id){
 	return $TProjet;
 }
 
+
+/*
+ * Recupere la catégorie associée au produit/service d'une tache 
+*/
 function _get_categ_from_tasks($PDOdb, $idProjet){
 	
 	$sql='SELECT task.rowid AS taskId, cat.rowid AS catid, cat.label catLabel
