@@ -3,6 +3,7 @@
 require('config.php');
 dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");
+dol_include_once("/asset/class/asset.class.php");
 dol_include_once("../comm/propal/class/propal.class.php");
 dol_include_once("../compta/facture/class/facture.class.php");
 dol_include_once("../projet/class/project.class.php");
@@ -16,10 +17,9 @@ print_fiche_titre($langs->trans("Gestion Client"));
 
 $PDOdb=new TPDOdb($db);
 
-_get_filtres();
-_print_legende();
+
 _fiche($PDOdb);
-//_print_totaux();
+
 
 
 
@@ -78,18 +78,89 @@ function _print_legende(){
 }
 /*
  * Affiche : 
- * le total de chaque prestation du rapport (nombre réalisé, nombre programmé, et nombre total de prestations)
+ * le total de chaque prestation du rapport (nombre réalisé, nombre programmé, nombre à programmer et nombre total de prestations)
  * le total des enquetes de satisfaction (total envoyé, nb relance 1, nb relance 2, nb relance 3, total réceptionné et total de rapport envoyé)
+ * TODO total des enquetes
 */
-function _print_totaux(){
+function _print_totaux($TPrestations){
 	print_fiche_titre('Totaux');
+	?>
+	<div class="tabBar">
+		<table>
+			<tbody>
+				<tr>
+					<td><b>Prestations</b></td>
+				</tr>
+				<tr>
+					<td>nombre réalisées :</td>
+					<td>
+					<?php
+					print $TPrestations['realisees']
+					?>
+					</td>
+				</tr>
+				<tr>
+					<td>nombre programmées :</td>
+					<td>
+					<?php
+					print $TPrestations['programmees']
+					?>
+					</td>
+				</tr>
+				<tr>
+					<td>nombre à programmer :</td>
+					<td>
+					<?php
+					print $TPrestations['a_programmer']
+					?>
+					</td>
+				</tr>
+				<tr>
+					<td>total :</td>
+					<td>
+					<?php
+					print $TPrestations['total']
+					?>
+					</td>
+				</tr>
+				<tr>
+					<td><b>Enquetes</b></td>
+				</tr>
+				<tr>
+					<td>Envoyées :</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Relance 1 :</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Relance 2 :</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Relance 3 :</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>Rapports envoyés :</td>
+					<td></td>
+				</tr>
+				
+			</tbody>			
+		</table>
+	</div>
+	<?php
 }
 /*
  * Affiche le rapport 
 */
 function _fiche(&$PDOdb){
 	
+	_get_filtres();
+	_print_legende();
 	_print_rapport($PDOdb);
+	//_print_totaux();
 	//$TRapport=_get_infos_rapport($PDOdb);
 }
 
@@ -111,7 +182,7 @@ function _print_rapport(&$PDOdb){
 				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<?php
 					$TCateg = _select_categ($PDOdb);
-					$colspan = count($TCateg) + 7;
+					$colspan = count($TCateg) + 8;
 					
 					print '<td colspan='.$colspan.'></td>';
 					
@@ -143,9 +214,24 @@ function _print_rapport(&$PDOdb){
 			</thead>
 			<tbody>
 				<?php
+				$nbPropale=0;
+				$nbFacture=0;
+				$nbCommande=0;
+				$nbProjet=0;
 				$TInfosPropal = _get_infos_propal_rapport($PDOdb);
+				
+				$TPrestations=array();
+				$nbRealise=0;
+				$nbProgrammee=0;
+				$nbAProgrammer=0;
+				$totalPrestations=0;
+				
 				foreach ($TInfosPropal as $K => $infoLine) {
-
+					
+					$nbPropale++;
+					$nbCommande++;
+					$nbProjet++;
+					
 					$societe= new Societe($db);
 					$societe->fetch($infoLine['socId']);
 					
@@ -169,6 +255,8 @@ function _print_rapport(&$PDOdb){
 					print '<td>'.date("d-m-Y", strtotime($infoLine['prop_cloture'])).'</td>';
 					print '<td>';
 					foreach ($Tfactures as $lstfacture) {
+						$nbFacture++;
+						
 						$facture=new Facture($db);
 						$facture->fetch($lstfacture['facid']);
 						if ($facture->statut==2)print '<div style="background-color:#A9F5A9">'.$facture->getNomUrl(1,'').'</div>';
@@ -182,38 +270,66 @@ function _print_rapport(&$PDOdb){
 						
 					$TCateg_task=_get_categ_from_tasks($PDOdb, $projet->id);
 					//var_dump($TCateg_task);
+					
 					foreach ($TCateg as $categ) {
 						print '<td>';
 							foreach ($TCateg_task as $categ_task) {
+
+								
 								$task = new Task($db);
 								$task->fetch($categ_task['taskId']);
 								if ($categ_task['catid']==$categ['rowid']){
 									if ($task->date_start==null){
+										$nbAProgrammer++;
+										$totalPrestations++;
+										
 										print '<div style="background-color:#9A2EFE">'.$task->getNomUrl(1,'').'</div>';
 									}elseif ($task->date_start!=null && $task->date_end >= date("Y-m-d") && $task->progress!=100){
+										$nbProgrammee++;
+										$totalPrestations++;
 										
 										print '<div style="background-color:#FFFF00">'.$task->getNomUrl(1,'').'</div>';
 									}elseif($task->progress==100) {
+										$nbRealise++;
+										$totalPrestations++;
+										
 										print '<div style="background-color:#00BFFF">'.$task->getNomUrl(1,'').'</div>';
 									}
 								}
 							}
 						print '</td>';
+						$TPrestations=array(
+							"realisees" => $nbRealise,
+							"programmees" => $nbProgrammee,
+							"a_programmer" => $nbAProgrammer,
+							"total" => $totalPrestations
+						);
 					}
 					print '<td>'.$projet->note_private.'</td>';
-					_print_infos_categories($TCateg);
+					_print_infos_categories($PDOdb, $TCateg);
 					print '</tr>';
 															
 				}
 				?>
 				<td></td>
 			</tbody>
-			<tfoot>
-				<tr></tr>
-			</tfoot>
+			<!-- <tfoot>
+				<tr style="font-weight: bold;">
+					<?php
+					print '<td>Totaux :</td>';
+					print '<td>'.$nbPropale.'</td>';
+					print '<td></td>';
+					print '<td>'.$nbFacture.'</td>';
+					print '<td>'.$nbCommande.'</td>';
+					print '<td></td>';
+					print '<td>'.$nbProjet.'</td>';
+					?>
+				</tr>
+			</tfoot> -->
 		</table>
 	</div>
 	<?php
+	_print_totaux($TPrestations);
 }
 
 
@@ -339,10 +455,12 @@ function _print_titre_categories($TReport){
  * Affiche les infos des catégories 
  * TODO remplir chaque td avec les infos correspondantes 
 */
-function _print_infos_categories($TReport){
+function _print_infos_categories($PDOdb, $TReport){
 	foreach ($TReport as $categ){
-		print '<td></td>';
-		print '<td></td>';
+		//$TAsset=_get_equipement($PDOdb, $categ['rowid']);
+		//var_dump($TAsset);
+		print '<td>'.$TAsset['typelabel'].'</td>';
+		print '<td>'.$TAsset['lot_number'].'</td>';
 		print '<td></td>';
 		print '<td></td>';
 		print '<td></td>';
@@ -423,6 +541,31 @@ function _get_categ_from_tasks($PDOdb, $idProjet){
 					);
 	}
 	return $TCateg_task;
+}
+
+function _get_equipement($PDOdb, $idCateg, $idproduct){
+	
+	$sql='SELECT typass.rowid AS typeId, typass.libelle AS typelabel, ass.lot_number AS lot_number, ass.serial_number AS serial_number
+	FROM '.MAIN_DB_PREFIX.'asset_type  typass 
+	INNER JOIN '.MAIN_DB_PREFIX.'asset ass ON typass.rowid=ass.fk_asset_type 
+	INNER JOIN '.MAIN_DB_PREFIX.'product prod ON prod.rowid=ass.fk_product 
+	INNER JOIN '.MAIN_DB_PREFIX.'categorie_product cat ON cat.fk_product=prod.rowid 
+	WHERE cat.fk_categorie='.$idCateg.' AND ass.fk_product='.$idproduct;
+	
+	var_dump($sql);
+	$PDOdb->Execute($sql);
+	$TAsset = array();
+	while ($PDOdb->Get_line()) {
+		$TAsset=array(
+						"assId"           => $PDOdb->Get_field('assId'),
+						"lot_number"      => $PDOdb->Get_field('lot_number'),
+						"serial_number"   => $PDOdb->Get_field('serial_number'), 
+						"typeId"          => $PDOdb->Get_field('typeId'),
+						"typelabel"       => $PDOdb->Get_field('typelabel')
+					);
+	}
+	return $TAsset;
+	
 }
 
 
