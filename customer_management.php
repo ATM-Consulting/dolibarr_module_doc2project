@@ -7,6 +7,7 @@ dol_include_once("../comm/propal/class/propal.class.php");
 dol_include_once("../compta/facture/class/facture.class.php");
 dol_include_once("../projet/class/project.class.php");
 dol_include_once("../commande/class/commande.class.php");
+dol_include_once("../projet/class/task.class.php");
 
 llxHeader('',$langs->trans('Report'));
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
@@ -50,10 +51,16 @@ function _print_rapport(&$PDOdb){
 	
 	//var_dump($_REQUEST);	
 	?>
+	<style type="text/css">
+		table#gestion_client td,table#gestion_client th {
+			white-space: nowrap;
+		}
+	</style>
+	
 	<div style="padding-bottom: 25px;">
 		<table id="gestion_client" class="noborder" width="100%">
 			<thead>
-				<!--
+				
 				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<?php
 					$TCateg = _select_categ($PDOdb);
@@ -65,7 +72,7 @@ function _print_rapport(&$PDOdb){
 						print '<td colspan=7>'.$categ['label'].'</td>';						
 					}
 					?>
-				</tr>-->
+				</tr>
 				<tr style="text-align:left;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Tiers</th>
 					<th class="liste_titre">Devis</th>
@@ -75,19 +82,17 @@ function _print_rapport(&$PDOdb){
 					<th class="liste_titre">Facture</th>
 					<th class="liste_titre">Commande</th>
 					<th class="liste_titre">Délais</th>
-					<?php
-					
+					<?php					
 					foreach ($TCateg as $categ) {
 						print '<th class="liste_titre">'.$categ['label'].'</th>';						
 					}
 					?>
 					<td class="liste_titre">commentaires</td>
 					<?php
-						//_print_titre_categories($idCategorie, $TCateg); //ATTRIBUTS A REDEFINIR						
+						_print_titre_categories($idCategorie, $TCateg); //ATTRIBUTS A REDEFINIR						
 					?>
 				</tr>
 			</thead>
-			<!--AJOUTER UN BANDEAU POUR FILTRER SUR LE PROJET, ETC.. -->
 			<tbody>
 				<?php
 				$TInfosPropal = _get_infos_propal_rapport($PDOdb);
@@ -104,6 +109,11 @@ function _print_rapport(&$PDOdb){
 					
 					$Tfactures = _get_factures_from_propale($PDOdb, $propal->id);
 					
+					$TProjet= _get_projet_from_commande($PDOdb, $commande->id);
+					
+					$projet = new Project($db);
+					$projet->fetch($TProjet['projId']);
+					//var_dump($projet->id);
 					
 					print '<tr>';
 					print '<td>'.$societe->getNomUrl(1,'').'</td>';
@@ -119,37 +129,38 @@ function _print_rapport(&$PDOdb){
 						}
 					print '</td>';
 					print '<td>'.$commande->getNomUrl(1,'').'</td>';
-					
-					//ICI COLONNE DELAIS
-					print '<td>'.$infoLine[''].'</td>';
+					print '<td>'.$propal->array_options['options_delai_realisation'].'</td>';
 						
-					
-					
+					$TCateg_task=_get_categ_from_tasks($PDOdb, $projet->id);
+					//var_dump($TCateg_task);
 					foreach ($TCateg as $categ) {
-						
+						print '<td>';
+							foreach ($TCateg_task as $categ_task) {
+								$task = new Task($db);
+								$task->fetch($categ_task['taskId']);
+								if ($categ_task['catid']==$categ['rowid']){
+									if ($task->date_start==null){
+										print '<div style="background-color:#9A2EFE">'.$task->getNomUrl(1,'').'</div>';
+									}elseif ($task->date_start!=null && $task->date_end >= date("Y-m-d") && $task->progress!=100){
+										
+										print '<div style="background-color:#FFFF00">'.$task->getNomUrl(1,'').'</div>';
+									}elseif($task->progress==100) {
+										print '<div style="background-color:#00BFFF">'.$task->getNomUrl(1,'').'</div>';
+									}
+								}
+							}
+						print '</td>';
 					}
-					
-					$TProjet= _get_projet_from_propale($PDOdb, $propal->id);
-					//var_dump($TProjet);
-					$projet = new Project($db);
-					$projet->fetch($TProjet['projId']);
 					print '<td>'.$projet->note_private.'</td>';
-					print '</tr>';											
+					print '</tr>';
+					
+					foreach ($TCateg as $categ){
+						
+					}											
 				}
 				?>
 				<td></td>
 			</tbody>
-			<tfoot>
-				<tr style="font-weight: bold;">
-					<td>Totaux</td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-			</tfoot>
 		</table>
 	</div>
 	<?php
@@ -190,7 +201,7 @@ function _get_infos_propal_rapport($PDOdb){
 	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source=prop.rowid 
 	INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
 	INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet  
-	WHERE proj.fk_statut=1 ';
+	WHERE proj.fk_statut=1 AND el.targettype="commande" AND el.sourcetype="propal"';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
@@ -294,18 +305,18 @@ function _get_factures_from_propale($PDOdb, $id){
 	
 }
 
-function _get_projet_from_propale($PDOdb, $id){
+function _get_projet_from_commande($PDOdb, $id){
 	
-	$sql='SELECT prop.rowid AS propId, proj.rowid AS projId, proj.note_private AS projNote FROM '.MAIN_DB_PREFIX.'propal prop 
-	INNER JOIN '.MAIN_DB_PREFIX.'projet proj ON prop.fk_projet=proj.rowid
-	WHERE prop.rowid='.$id.' ';
+	$sql='SELECT com.rowid AS comId, proj.rowid AS projId, proj.note_private AS projNote FROM '.MAIN_DB_PREFIX.'commande com 
+	INNER JOIN '.MAIN_DB_PREFIX.'projet proj ON com.fk_projet=proj.rowid
+	WHERE com.rowid='.$id.' ';
 	
 	//var_dump($sql);
 	$PDOdb->Execute($sql);
 	$TProjet = array();
 	while ($PDOdb->Get_line()) {
 		$TProjet=array(
-						"propId"      => $PDOdb->Get_field('propId'),
+						"comId"      => $PDOdb->Get_field('comId'),
 						"projId"      => $PDOdb->Get_field('projId')  	
 					);
 	}
@@ -313,10 +324,30 @@ function _get_projet_from_propale($PDOdb, $id){
 	return $TProjet;
 }
 
-function _get_commande_from_propale($PDOdb, $idPropale){
+function _get_categ_from_tasks($PDOdb, $idProjet){
 	
-	$sql = 'SELECT ';
+	$sql='SELECT task.rowid AS taskId, cat.rowid AS catid, cat.label catLabel
+	FROM '.MAIN_DB_PREFIX.'projet proj
+	INNER JOIN '.MAIN_DB_PREFIX.'projet_task task ON task.fk_projet=proj.rowid 
+	INNER JOIN '.MAIN_DB_PREFIX.'projet_task_extrafields ext ON ext.fk_object=task.rowid 
+	INNER JOIN '.MAIN_DB_PREFIX.'product prod ON prod.rowid=ext.fk_linked_product 
+	INNER JOIN '.MAIN_DB_PREFIX.'categorie_product catp ON catp.fk_product=prod.rowid 
+	INNER JOIN '.MAIN_DB_PREFIX.'categorie cat ON catp.fk_categorie=cat.rowid 
+	WHERE cat.fk_parent=73 AND proj.rowid='.$idProjet.' ';
+	
+	//pre($sql,true);
+	$PDOdb->Execute($sql);
+	$TCateg_task = array();
+	while ($PDOdb->Get_line()) {
+		$TCateg_task[]=array(
+						"catid"         => $PDOdb->Get_field('catid'),
+						"catLabel"      => $PDOdb->Get_field('catLabel'),
+						"taskId"  	    => $PDOdb->Get_field('taskId')
+					);
+	}
+	return $TCateg_task;
 }
+
 
 
 llxFooter();

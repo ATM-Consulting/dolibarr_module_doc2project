@@ -212,7 +212,7 @@ class ActionsDoc2Project
 			}
 			
 			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
-			
+			//var_dump($object->lines);exit;
 			// CREATION DES TACHES
 			foreach($object->lines as $line) {
 				//var_dump($line);exit;
@@ -226,10 +226,10 @@ class ActionsDoc2Project
 						$s->fetch($line->fk_product);
 						$s->get_sousproduits_arbo();
 						$TProdArbo = $s->get_arbo_each_prod();
-						//var_dump($s);exit;
 						if(!empty($TProdArbo)){
 							
 							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT){
+								
 								$fk_parent = $this->create_task($line,$p,$start,0,true, 0, $line->fk_product);
 								
 								if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
@@ -249,7 +249,7 @@ class ActionsDoc2Project
 										$line->product_label = $TWorkstation->name;
 										$line->desc = '';
 										$line->total_ht = 0;
-										$this->create_task($line, $p, $start,$fk_parent,false,$TWorkstation->rowid);
+										$this->create_task($line, $p, $start,$fk_parent,false,$TWorkstation->rowid, $line->fk_product);
 									}
 								}
 							}
@@ -266,7 +266,7 @@ class ActionsDoc2Project
 									$line->desc = ($ss->description) ? $ss->description : '';
 									$line->total_ht = $ss->price;
 									
-									$new_fk_parent = $this->create_task($line,$p,$start,$fk_parent);
+									$new_fk_parent = $this->create_task($line,$p,$start,$fk_parent, false, 0, $line->product);
 									
 									if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 										dol_include_once('/workstation/class/workstation.class.php');
@@ -292,10 +292,10 @@ class ActionsDoc2Project
 								}
 							}
 						}else{
-							$this->create_task($line,$p,$start);
+							$this->create_task($line,$p,$start, 0,false,0,$line->fk_product);
 						}
 					}else{
-						$this->create_task($line,$p,$start);
+						$this->create_task($line,$p,$start,0,false,0,$line->fk_product);
 					}			
 				}
 			}
