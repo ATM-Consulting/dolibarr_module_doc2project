@@ -69,7 +69,7 @@ function _print_rapport(&$PDOdb){
 					print '<td colspan='.$colspan.'></td>';
 					
 					foreach ($TCateg as $categ) {
-						print '<td colspan=7>'.$categ['label'].'</td>';						
+						print '<td colspan=8>'.$categ['label'].'</td>';						
 					}
 					?>
 				</tr>
@@ -96,7 +96,7 @@ function _print_rapport(&$PDOdb){
 			<tbody>
 				<?php
 				$TInfosPropal = _get_infos_propal_rapport($PDOdb);
-				foreach ($TInfosPropal as $infoLine) {
+				foreach ($TInfosPropal as $K => $infoLine) {
 
 					$societe= new Societe($db);
 					$societe->fetch($infoLine['socId']);
@@ -113,12 +113,12 @@ function _print_rapport(&$PDOdb){
 					
 					$projet = new Project($db);
 					$projet->fetch($TProjet['projId']);
-					//var_dump($projet->id);
+					//var_dump($infoLine['prop_cloture']);
 					
-					print '<tr>';
+					print '<tr '.(($K % 2) ? 'class="pair"' : 'class="impair"' ).'>';
 					print '<td>'.$societe->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->getNomUrl(1,'').'</td>';
-					print '<td>'.$infoLine['prop_cloture'].'</td>';
+					print '<td>'.date("d-m-Y", strtotime($infoLine['prop_cloture'])).'</td>';
 					print '<td>';
 					foreach ($Tfactures as $lstfacture) {
 						$facture=new Facture($db);
@@ -161,6 +161,9 @@ function _print_rapport(&$PDOdb){
 				?>
 				<td></td>
 			</tbody>
+			<tfoot>
+				<tr></tr>
+			</tfoot>
 		</table>
 	</div>
 	<?php
@@ -248,6 +251,9 @@ function _get_infos_propal_rapport($PDOdb){
 	
 }
 
+
+
+
 /*
  *Fonction qui va aller chercher les catégories de service dans un devis (et par la meme un projet)
  * 
@@ -274,6 +280,7 @@ function _select_categ($PDOdb){
 function _print_titre_categories($idCategorie, $TReport){
 	
 	foreach ($TReport as $categ) {
+		print '<th class="liste_titre">N° Corps d\'épreuve ES</th>';
 		print '<th class="liste_titre">N° de rapport</th>';
 		print '<th class="liste_titre">Envoi rapport</th>';
 		print '<th class="liste_titre">Délai rapport</th>';
@@ -281,6 +288,19 @@ function _print_titre_categories($idCategorie, $TReport){
 		print '<th class="liste_titre">Relance 1 ES</th>';
 		print '<th class="liste_titre">Relance 2 ES</th>';
 		print '<th class="liste_titre">Reception ES</th>';
+	}
+}
+
+function _print_infos_categories($idCategorie, $TReport){
+	foreach ($TReport as $categ){
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
 	}
 }
 
