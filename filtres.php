@@ -140,7 +140,35 @@ function _print_filtre_customer_management(&$formcore){
     print_fiche_titre('Filtres');
     print '<div class="tabBar">';
     print '<table>';
-	print '<tr><td><b>Réception des enquetes : </b></td></tr>';
+	
+	
+	$form = new Form($db);
+	print '<tr><td><b>Client</b></td></tr>';
+	print '<tr>';
+	print '<td>Société : </td>';
+	print '<td>'.$form->select_company('', 'client', '', 1, 0, 0, array(), 0, 'minwidth50').'</td>';
+	print '</tr>';
+	
+	
+	print '<tr><td><b>Prestation</b></td></tr>';
+	print '<tr>';
+	print '<td>Catégorie : </td>';
+	print '<td>'.$form->select_all_categories(0).'</td>';
+	print '</tr>';
+	
+	
+	print '<tr><td><b>Cloture du devis</b></td></tr>';
+	print '<tr>';
+	print '<td>Date de début : </td>';
+	print '<td>'.$formcore->calendrier('', 'date_deb_cloture', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '</tr>';
+	print '<tr>';
+	print '<td>Date de fin : </td>';
+	print '<td>'.$formcore->calendrier('', 'date_fin_cloture', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '</tr>';
+	
+	
+	print '<tr><td><b>Réception des enquetes</b></td></tr>';
 	print '<tr>';
 	print '<td>Date de début : </td>';
 	print '<td>'.$formcore->calendrier('', 'date_deb_reception', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
@@ -151,7 +179,7 @@ function _print_filtre_customer_management(&$formcore){
 	print '</tr>';
 	
 	
-	print '<tr><td><b>Réalisation des essais :</b></td></tr>';
+	print '<tr><td><b>Réalisation des essais</b></td></tr>';
 	print '<tr>';
 	print '<td>Date de début : </td>';
 	print '<td>'.$formcore->calendrier('', 'date_deb_essai', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
@@ -161,30 +189,9 @@ function _print_filtre_customer_management(&$formcore){
 	print '<td>'.$formcore->calendrier('', 'date_fin_essai', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
 	print '</tr>';
 	
-	print '<tr><td><b>Cloture du devis :</b></td></tr>';
-	print '<tr>';
-	print '<td>Date de début : </td>';
-	print '<td>'.$formcore->calendrier('', 'date_deb_cloture', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
-	print '</tr>';
-	print '<tr>';
-	print '<td>Date de fin : </td>';
-	print '<td>'.$formcore->calendrier('', 'date_fin_cloture', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
-	print '</tr>';
-	
-	$form = new Form($db);
-	print '<tr><td><b>Client : </b></td></tr>';
-	print '<tr>';
-	print '<td>Société : </td>';
-	print '<td>'.$form->select_company('', 'client', '', 1, 0, 0, array(), 0, 'minwidth50').'</td>';
-	print '</tr>';
-	
-	print '<tr><td><b>Prestation : </b></td></tr>';
-	print '<tr>';
-	print '<td>Catégorie : </td>';
-	print '<td>'.$form->select_all_categories(0).'</td>';
-	print '</tr>';
-	
     print '<tr><td colspan="2" align="center">'.$formcore->btsubmit('Valider', '').'</td></tr>';
+	
+	
     print '</table>';
     
     print '</div>';

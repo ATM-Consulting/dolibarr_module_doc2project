@@ -17,7 +17,9 @@ print_fiche_titre($langs->trans("Gestion Client"));
 $PDOdb=new TPDOdb($db);
 
 _get_filtres();
+_print_legende();
 _fiche($PDOdb);
+_print_totaux();
 
 
 //function _fiche
@@ -39,7 +41,51 @@ function _get_filtres(){
 	print '</table>';
 }
 
-//function _fiche
+
+/*
+ * Affiche la légende pour les couleurs du rapport. 
+ */
+function _print_legende(){
+
+    print_fiche_titre('Legende');
+	?>
+	<div class="tabBar">
+		<table>
+			<tr>
+				<td>Facture Payée : </td>
+				<td bgcolor="#A9F5A9" width=70%></td>
+			</tr>
+			<tr>
+				<td>Facture Impayée : </td>
+				<td bgcolor="#F78181" width=70%></td>
+			</tr>
+			<tr>
+				<td>Tache à Programmer : </td>
+				<td bgcolor="#AC58FA" width=70%></td>
+			</tr>
+			<tr>
+				<td>Tache Programmée : </td>
+				<td bgcolor="#FFFF00" width=70%></td>
+			</tr>
+			<tr>
+				<td>Tache Terminée : </td>
+				<td bgcolor="#00BFFF" width=70%></td>
+			</tr>
+		</table>
+	</div>
+	<?php	
+}
+/*
+ * Affiche : 
+ * le total de chaque prestation du rapport (nombre réalisé, nombre programmé, et nombre total de prestations)
+ * le total des enquetes de satisfaction (total envoyé, nb relance 1, nb relance 2, nb relance 3, total réceptionné et total de rapport envoyé)
+*/
+function _print_totaux(){
+	print_fiche_titre('Totaux');
+}
+/*
+ * Affiche le rapport 
+*/
 function _fiche(&$PDOdb){
 	
 	_print_rapport($PDOdb);
@@ -89,7 +135,7 @@ function _print_rapport(&$PDOdb){
 					?>
 					<td class="liste_titre">commentaires</td>
 					<?php
-						_print_titre_categories($idCategorie, $TCateg); //ATTRIBUTS A REDEFINIR						
+						_print_titre_categories($TCateg); //ATTRIBUTS A REDEFINIR						
 					?>
 				</tr>
 			</thead>
@@ -152,11 +198,9 @@ function _print_rapport(&$PDOdb){
 						print '</td>';
 					}
 					print '<td>'.$projet->note_private.'</td>';
+					_print_infos_categories($TCateg);
 					print '</tr>';
-					
-					foreach ($TCateg as $categ){
-						
-					}											
+															
 				}
 				?>
 				<td></td>
@@ -277,7 +321,7 @@ function _select_categ($PDOdb){
 /*
  * Fonction qui va afficher les titres des différentes catégories de service contenues dans un devis/projet
  */
-function _print_titre_categories($idCategorie, $TReport){
+function _print_titre_categories($TReport){
 	
 	foreach ($TReport as $categ) {
 		print '<th class="liste_titre">N° Corps d\'épreuve ES</th>';
@@ -291,7 +335,7 @@ function _print_titre_categories($idCategorie, $TReport){
 	}
 }
 
-function _print_infos_categories($idCategorie, $TReport){
+function _print_infos_categories($TReport){
 	foreach ($TReport as $categ){
 		print '<td></td>';
 		print '<td></td>';
