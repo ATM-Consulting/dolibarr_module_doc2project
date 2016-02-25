@@ -457,7 +457,7 @@ function _print_titre_categories($TReport){
 */
 function _print_infos_categories($PDOdb, $TReport){
 	foreach ($TReport as $categ){
-		//$TAsset=_get_equipement($PDOdb, $categ['rowid']);
+		$TAsset=_get_equipement($PDOdb, $categ['rowid'] );
 		//var_dump($TAsset);
 		print '<td>'.$TAsset['typelabel'].'</td>';
 		print '<td>'.$TAsset['lot_number'].'</td>';
@@ -543,16 +543,16 @@ function _get_categ_from_tasks($PDOdb, $idProjet){
 	return $TCateg_task;
 }
 
-function _get_equipement($PDOdb, $idCateg, $idproduct){
+function _get_equipement($PDOdb, $idCateg){
 	
 	$sql='SELECT typass.rowid AS typeId, typass.libelle AS typelabel, ass.lot_number AS lot_number, ass.serial_number AS serial_number
 	FROM '.MAIN_DB_PREFIX.'asset_type  typass 
 	INNER JOIN '.MAIN_DB_PREFIX.'asset ass ON typass.rowid=ass.fk_asset_type 
 	INNER JOIN '.MAIN_DB_PREFIX.'product prod ON prod.rowid=ass.fk_product 
 	INNER JOIN '.MAIN_DB_PREFIX.'categorie_product cat ON cat.fk_product=prod.rowid 
-	WHERE cat.fk_categorie='.$idCateg.' AND ass.fk_product='.$idproduct;
+	WHERE cat.fk_categorie='.$idCateg.' ';
 	
-	var_dump($sql);
+	//var_dump($sql);
 	$PDOdb->Execute($sql);
 	$TAsset = array();
 	while ($PDOdb->Get_line()) {
