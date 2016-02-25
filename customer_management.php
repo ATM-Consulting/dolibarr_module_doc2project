@@ -21,16 +21,6 @@ $PDOdb=new TPDOdb($db);
 _fiche($PDOdb);
 
 
-
-
-
-
-
-
-
-
-
-
 /*
  * Affiche les différents filtres pour le rapport 
 */
@@ -221,10 +211,12 @@ function _print_rapport(&$PDOdb){
 				$TInfosPropal = _get_infos_propal_rapport($PDOdb);
 				
 				$TPrestations=array();
-				$nbRealise=0;
-				$nbProgrammee=0;
-				$nbAProgrammer=0;
-				$totalPrestations=0;
+				
+				$societe= new Societe($db);
+				$propal=new Propal($db);
+				$commande = new Commande($db);
+				$projet = new Project($db);
+				$facture=new Facture($db);
 				
 				foreach ($TInfosPropal as $K => $infoLine) {
 					
@@ -232,20 +224,15 @@ function _print_rapport(&$PDOdb){
 					$nbCommande++;
 					$nbProjet++;
 					
-					$societe= new Societe($db);
 					$societe->fetch($infoLine['socId']);
-					
-					$propal=new Propal($db);
 					$propal->fetch($infoLine['propId']);
-					
-					$commande = new Commande($db);
 					$commande->fetch($infoLine['commId']);
 					
 					$Tfactures = _get_factures_from_propale($PDOdb, $propal->id);
 					
 					$TProjet= _get_projet_from_commande($PDOdb, $commande->id);
 					
-					$projet = new Project($db);
+					
 					$projet->fetch($TProjet['projId']);
 					//var_dump($infoLine['prop_cloture']);
 					
@@ -255,14 +242,16 @@ function _print_rapport(&$PDOdb){
 					print '<td>'.date("d-m-Y", strtotime($infoLine['prop_cloture'])).'</td>';
 					print '<td>';
 					foreach ($Tfactures as $lstfacture) {
-						$nbFacture++;
-						
-						$facture=new Facture($db);
+
 						$facture->fetch($lstfacture['facid']);
-						if ($facture->statut==2)print '<div style="background-color:#A9F5A9">'.$facture->getNomUrl(1,'').'</div>';
-						else print '<div style="background-color:#F78181">'.$facture->getNomUrl(1,'').'</div>';
-							
-						}
+						
+						if ($facture->statut==2)
+							Print '<div style="background-color:#A9F5A9">'.$facture->getNomUrl(1,'').'</div>';
+						else 
+							print '<div style="background-color:#F78181">'.$facture->getNomUrl(1,'').'</div>';
+						
+						$nbFacture++;
+					}
 					print '</td>';
 					print '<td>'.$commande->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->array_options['options_delai_realisation'].'</td>';
@@ -273,47 +262,31 @@ function _print_rapport(&$PDOdb){
 					
 					foreach ($TCateg as $categ) {
 						print '<td>';
-							foreach ($TCateg_task as $categ_task) {
 
-								
-								$task = new Task($db);
-								$task->fetch($categ_task['taskId']);
-								if ($categ_task['catid']==$categ['rowid']){
-									if ($task->date_start==null){
-										$nbAProgrammer++;
-										$totalPrestations++;
-										
-										print '<div style="background-color:#9A2EFE">'.$task->getNomUrl(1,'').'</div>';
-									}elseif ($task->date_start!=null && $task->date_end >= date("Y-m-d") && $task->progress!=100){
-										$nbProgrammee++;
-										$totalPrestations++;
-										
-										print '<div style="background-color:#FFFF00">'.$task->getNomUrl(1,'').'</div>';
-									}elseif($task->progress==100) {
-										$nbRealise++;
-										$totalPrestations++;
-										
-										print '<div style="background-color:#00BFFF">'.$task->getNomUrl(1,'').'</div>';
-									}
-								}
+						foreach ($TCateg_task as $categ_task) {
+							
+							if(is_array($categ_task) && $categ_task['catid'] == $categ['rowid']){
+								print '<div style="background-color:'.$categ_task['bgColor'].'">'.$categ_task['taskId'].'</div>';
 							}
+						}
+						
 						print '</td>';
-						$TPrestations=array(
-							"realisees" => $nbRealise,
-							"programmees" => $nbProgrammee,
-							"a_programmer" => $nbAProgrammer,
-							"total" => $totalPrestations
-						);
 					}
+					
+					$TPrestations["realisees"] += $TCateg_task['total_realise'];
+					$TPrestations["programmees"] += $TCateg_task['total_programme'];
+					$TPrestations["a_programmer"] += $TCateg_task['total_a_programmer'];
+					$TPrestations["total"] += $TCateg_task['total_prestation'];
+					
 					print '<td>'.$projet->note_private.'</td>';
-					_print_infos_categories($PDOdb, $TCateg);
+					_print_infos_categories($PDOdb, $TCateg,$commande->ref);
 					print '</tr>';
 															
 				}
 				?>
 				<td></td>
 			</tbody>
-			<!-- <tfoot>
+			 <tfoot>
 				<tr style="font-weight: bold;">
 					<?php
 					print '<td>Totaux :</td>';
@@ -325,7 +298,7 @@ function _print_rapport(&$PDOdb){
 					print '<td>'.$nbProjet.'</td>';
 					?>
 				</tr>
-			</tfoot> -->
+			</tfoot>
 		</table>
 	</div>
 	<?php
@@ -455,19 +428,35 @@ function _print_titre_categories($TReport){
  * Affiche les infos des catégories 
  * TODO remplir chaque td avec les infos correspondantes 
 */
-function _print_infos_categories($PDOdb, $TReport){
+function _print_infos_categories($PDOdb, $TReport,$refcommande){
+	
 	foreach ($TReport as $categ){
-		$TAsset=_get_equipement($PDOdb, $categ['rowid'] );
+		
+		$TAsset=_get_equipement($PDOdb, $categ['rowid'],$refcommande);
 		//var_dump($TAsset);
-		print '<td>'.$TAsset['typelabel'].'</td>';
-		print '<td>'.$TAsset['lot_number'].'</td>';
+		print '<td><div>';
+		foreach ($TAsset as $TVal) {
+			print '<div>';
+			print $TVal['serial_number'];
+			print '</div>';
+		}
+		print '</div></td>';
+		print '<td><div>';
+		foreach ($TAsset as $TVal) {
+			print '<div>';
+			print $TVal['lot_number'];
+			print '</div>';
+		}
+		print '</div></td>';
 		print '<td></td>';
 		print '<td></td>';
 		print '<td></td>';
 		print '<td></td>';
 		print '<td></td>';
 		print '<td></td>';
+		
 	}
+	
 }
 
 /*
@@ -520,6 +509,7 @@ function _get_projet_from_commande($PDOdb, $id){
  * Recupere la catégorie associée au produit/service d'une tache 
 */
 function _get_categ_from_tasks($PDOdb, $idProjet){
+	global $db;
 	
 	$sql='SELECT task.rowid AS taskId, cat.rowid AS catid, cat.label catLabel
 	FROM '.MAIN_DB_PREFIX.'projet proj
@@ -533,37 +523,60 @@ function _get_categ_from_tasks($PDOdb, $idProjet){
 	//pre($sql,true);
 	$PDOdb->Execute($sql);
 	$TCateg_task = array();
+	$task = new Task($db);
+	
 	while ($PDOdb->Get_line()) {
+		
+		$task->fetch($PDOdb->Get_field('taskId'));
+		$TCateg_task['total_prestation'] ++;
+		
+		if ($task->date_start==null){
+			$TCateg_task['total_a_programmer'] ++;
+			$bgColor = '#9A2EFE';
+		}elseif ($task->date_start!=null && $task->date_end >= date("Y-m-d") && $task->progress!=100){
+			$TCateg_task['total_programme'] ++;
+			$bgColor = '#FFFF00';
+		}elseif($task->progress==100) {
+			$TCateg_task['total_realise'] ++;
+			$bgColor = '#00BFFF';
+		}
+
 		$TCateg_task[]=array(
 						"catid"         => $PDOdb->Get_field('catid'),
 						"catLabel"      => $PDOdb->Get_field('catLabel'),
-						"taskId"  	    => $PDOdb->Get_field('taskId')
+						"taskId"  	    => $task->getNomUrl(1,''),
+						"bgColor"		=> $bgColor
 					);
 	}
 	return $TCateg_task;
 }
 
-function _get_equipement($PDOdb, $idCateg){
+function _get_equipement($PDOdb, $idCateg, $refcommande){
 	
-	$sql='SELECT typass.rowid AS typeId, typass.libelle AS typelabel, ass.lot_number AS lot_number, ass.serial_number AS serial_number
-	FROM '.MAIN_DB_PREFIX.'asset_type  typass 
-	INNER JOIN '.MAIN_DB_PREFIX.'asset ass ON typass.rowid=ass.fk_asset_type 
-	INNER JOIN '.MAIN_DB_PREFIX.'product prod ON prod.rowid=ass.fk_product 
-	INNER JOIN '.MAIN_DB_PREFIX.'categorie_product cat ON cat.fk_product=prod.rowid 
-	WHERE cat.fk_categorie='.$idCateg.' ';
+	$sql = 'SELECT ass.rowid as assId,ass.lot_number AS lot_number, ass.serial_number AS serial_number
+			FROM '.MAIN_DB_PREFIX.'asset ass
+				INNER JOIN '.MAIN_DB_PREFIX.'product prod ON (prod.rowid=ass.fk_product) 
+				INNER JOIN '.MAIN_DB_PREFIX.'categorie_product cat ON (cat.fk_product=prod.rowid )
+				INNER JOIN '.MAIN_DB_PREFIX.'commande as co ON (co.rowid = ass.fk_commande) 
+			WHERE cat.fk_categorie='.$idCateg.' AND co.ref = "'.$refcommande.'"';
 	
 	//var_dump($sql);
 	$PDOdb->Execute($sql);
 	$TAsset = array();
-	while ($PDOdb->Get_line()) {
-		$TAsset=array(
-						"assId"           => $PDOdb->Get_field('assId'),
-						"lot_number"      => $PDOdb->Get_field('lot_number'),
-						"serial_number"   => $PDOdb->Get_field('serial_number'), 
-						"typeId"          => $PDOdb->Get_field('typeId'),
-						"typelabel"       => $PDOdb->Get_field('typelabel')
+	$asset = new TAsset;
+	
+	$TRes = $PDOdb->Get_All();
+	
+	foreach($TRes as $Res){
+
+		$asset->load($PDOdb,$Res->assId);
+		$TAsset[]=array(
+						"assId"           => $Res->assId,
+						"lot_number"      => $Res->lot_number,
+						"serial_number"   => $asset->getNomUrl()//$Res->serial_number
 					);
 	}
+	
 	return $TAsset;
 	
 }
