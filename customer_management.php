@@ -239,7 +239,7 @@ function _print_rapport(&$PDOdb){
 					print '<tr '.(($K % 2) ? 'class="pair"' : 'class="impair"' ).'>';
 					print '<td>'.$societe->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->getNomUrl(1,'').'</td>';
-					print '<td>'.date("d-m-Y", strtotime($infoLine['prop_cloture'])).'</td>';
+					print '<td>'.date("d/m/Y", strtotime($infoLine['prop_cloture'])).'</td>';
 					print '<td>';
 					foreach ($Tfactures as $lstfacture) {
 
