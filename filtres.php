@@ -83,7 +83,7 @@ function _print_filtre_categorie_product($form,$PDOdb,$TData=array()){
 
 function _print_filtre_categorie_produit(&$form,&$PDOdb){
 	
-	$PDOdb->Execute("SELECT c.rowid, c.label FROM ".MAIN_DB_PREFIX."categorie as c WHERE c.type = 0 "); //0 => produit
+	$PDOdb->Execute("SELECT c.rowid, c.label FROM ".MAIN_DB_PREFIX."categorie as c WHERE c.type = 0 AND fk_parent = 73 "); //0 => produit
 
 	$TCategorie = array();
 	$TCategorie[""] = "";
@@ -135,7 +135,7 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	<?php
 }
 
-function _print_filtre_customer_management(&$formcore){
+function _print_filtre_customer_management(&$PDOdb, &$formcore){
 	global $db;
     print_fiche_titre('Filtres');
     print '<div class="tabBar">';
@@ -146,19 +146,21 @@ function _print_filtre_customer_management(&$formcore){
 	print '<tr>
 				<td><b>Client</b></td>
 		   </tr>';
-	print '<tr>';
+		   _print_filtre_societe($formcore, $PDOdb);
+	/*print '<tr>';
 	print '		<td>Société : </td>';
-	print '		<td>'.$form->select_company('', 'client', '', 1, 0, 0, array(), 0, 'minwidth50').'</td>';
-	print '</tr>';
+	print '		<td>'.$formcore->combo('', 'socid', $TSoc, ($_REQUEST['socid'])? $_REQUEST['socid'] : '').'</td>';
+	print '</tr>';*/
 	
 	
 	print '<tr>
 				<td><b>Prestation</b></td>
 		   </tr>';
-	print '<tr>';
+		   _print_filtre_categorie_produit($formcore, $PDOdb);
+	/*print '<tr>';
 	print '		<td>Catégorie : </td>';
 	print '		<td>'.$form->select_all_categories(0).'</td>';
-	print '</tr>';
+	print '</tr>';*/
 	
 	print '<tr><td colspan="2">';
 			
@@ -170,19 +172,19 @@ function _print_filtre_customer_management(&$formcore){
 		   </tr>';
 	print '<tr>';
 	print '		<td>Date de début : </td>';
-	print '		<td>'.$formcore->calendrier('', 'date_deb_cloture', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '		<td>'.$formcore->calendrier('', 'date_deb_cloture', ($_REQUEST['date_deb_cloture'])? $_REQUEST['date_deb_cloture'] : '').'</td>';
 	print '		<td>Date de début : </td>';
-	print '		<td>'.$formcore->calendrier('', 'date_deb_reception', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '		<td>'.$formcore->calendrier('', 'date_deb_reception', ($_REQUEST['date_deb_reception'])? $_REQUEST['date_deb_reception'] : '').'</td>';
 	print '		<td>Date de début : </td>';
-	print '		<td>'.$formcore->calendrier('', 'date_deb_essai', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : '').'</td>';
+	print '		<td>'.$formcore->calendrier('', 'date_deb_essai', ($_REQUEST['date_deb_essai'])? $_REQUEST['date_deb_essai'] : '').'</td>';
 	print '</tr>';
 	print '<tr>';
 	print '		<td>Date de fin : </td>';
-	print '		<td>'.$formcore->calendrier('', 'date_fin_cloture', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '		<td>'.$formcore->calendrier('', 'date_fin_cloture', ($_REQUEST['date_fin_cloture'])? $_REQUEST['date_fin_cloture'] : '').'</td>';
 	print '		<td>Date de fin : </td>';
-	print '		<td>'.$formcore->calendrier('', 'date_fin_reception', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '		<td>'.$formcore->calendrier('', 'date_fin_reception', ($_REQUEST['date_fin_reception'])? $_REQUEST['date_fin_reception'] : '').'</td>';
 	print '		<td>Date de fin : </td>';
-	print '		<td>'.$formcore->calendrier('', 'date_fin_essai', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : '').'</td>';
+	print '		<td>'.$formcore->calendrier('', 'date_fin_essai', ($_REQUEST['date_fin_essai'])? $_REQUEST['date_fin_essai'] : '').'</td>';
 	print '</tr>';
 	print '</table>';
 	print '</td></tr>';

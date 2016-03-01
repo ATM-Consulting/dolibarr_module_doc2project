@@ -16,7 +16,7 @@ print_fiche_titre($langs->trans("Gestion Client"));
 
 
 $PDOdb=new TPDOdb($db);
-
+//var_dump($_REQUEST);
 
 _fiche($PDOdb);
 
@@ -24,11 +24,11 @@ _fiche($PDOdb);
 /*
  * Affiche les différents filtres pour le rapport 
 */
-function _get_filtres(){
+function _get_filtres($PDOdb){
 	$form=new TFormCore('auto','formCustManagement', 'POST');
 	
 	print '<table>';
-	_print_filtre_customer_management($form);
+	_print_filtre_customer_management($PDOdb, $form);
 	print '</table>';
 }
 
@@ -41,26 +41,42 @@ function _print_legende(){
     print_fiche_titre('Legende');
 	?>
 	<div class="tabBar">
-		<table>
+		<table width=70%>
 			<tr>
-				<td>Facture Payée : </td>
-				<td bgcolor="#A9F5A9" width=70%></td>
-			</tr>
-			<tr>
-				<td>Facture Impayée : </td>
-				<td bgcolor="#F78181" width=70%></td>
-			</tr>
-			<tr>
-				<td>Tache à Programmer : </td>
-				<td bgcolor="#AC58FA" width=70%></td>
-			</tr>
-			<tr>
-				<td>Tache Programmée : </td>
-				<td bgcolor="#FFFF00" width=70%></td>
-			</tr>
-			<tr>
-				<td>Tache Terminée : </td>
-				<td bgcolor="#00BFFF" width=70%></td>
+				<td>
+					<table>
+						<tr>
+							<td><b>Factures :</b></td>
+						</tr>
+						<tr>
+							<td>Facture Payée : </td>
+							<td bgcolor="#A9F5A9" width=70%></td>
+						</tr>
+						<tr>
+							<td>Facture Impayée : </td>
+							<td bgcolor="#F78181" width=70%></td>
+						</tr>
+					</table>
+				</td>
+				<td>
+					<table>
+						<tr>
+							<td><b>Taches :</b></td>
+						</tr>
+						<tr>
+							<td>Tache à Programmer : </td>
+							<td bgcolor="#AC58FA" width=70%></td>
+						</tr>
+						<tr>
+							<td>Tache Programmée : </td>
+							<td bgcolor="#FFFF00" width=70%></td>
+						</tr>
+						<tr>
+							<td>Tache Terminée : </td>
+							<td bgcolor="#00BFFF" width=70%></td>
+						</tr>
+					</table>
+				</td>
 			</tr>
 		</table>
 	</div>
@@ -147,7 +163,7 @@ function _print_totaux($TPrestations){
 */
 function _fiche(&$PDOdb){
 	
-	_get_filtres();
+	_get_filtres($PDOdb);
 	_print_legende();
 	_print_rapport($PDOdb);
 	//_print_totaux();
@@ -323,7 +339,7 @@ function _get_infos_propal_rapport($PDOdb){
 	$plageEssai_fin       = GETPOST('date_fin_essai');
 	$plageClotureProp_deb = GETPOST('date_deb_cloture');
 	$plageClotureProp_fin = GETPOST('date_fin_cloture');
-	$client               = GETPOST('client');
+	$client               = GETPOST('socid');
 	$categ                = GETPOST('parent');
 	
 	
@@ -344,7 +360,7 @@ function _get_infos_propal_rapport($PDOdb){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
 		$plageClotureProp_fin = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_fin)));
 		
-		$sql.='AND prop.date_cloture BETWEEN ()"'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'") ';
+		$sql.='AND prop.date_cloture BETWEEN "'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'" ';
 	}
 	//A REMPLIR POUR FILTRE SUR PLAFE RECEPTION ENQUETE DE SATISFACTION
 	if (!empty($plageReception_deb) && !empty($plageReception_fin)){
