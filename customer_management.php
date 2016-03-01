@@ -178,6 +178,7 @@ function _print_rapport(&$PDOdb){
 	<style type="text/css">
 		table#gestion_client td,table#gestion_client th {
 			white-space: nowrap;
+			border-right: 1px solid #D8D8D8;
 		}
 	</style>
 	
