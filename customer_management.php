@@ -355,7 +355,7 @@ function _get_infos_propal_rapport($PDOdb){
 	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source=prop.rowid 
 	INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
 	INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet  
-	WHERE proj.fk_statut=1 AND el.targettype="commande" AND el.sourcetype="propal"';
+	WHERE proj.fk_statut>0 AND el.targettype="commande" AND el.sourcetype="propal"';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
