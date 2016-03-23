@@ -433,6 +433,8 @@ class InterfaceDoc2Projecttrigger
 				
 				// Pour chaque poste de travail, on crée une tâche de projet.
 				$i=1;
+				// Tableau contenant les id des tâches créées et le poste de travail associé, va servir à définir la hiérarchie des tâches
+				$TTaskWS = array();
 				foreach($n->TNomenclatureWorkstation as $ws) {
 					
 					// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
@@ -447,9 +449,15 @@ class InterfaceDoc2Projecttrigger
 					
 					$id_task = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'_'.$i, $titre, '', strtotime(date('Y-m-d')), /*strtotime(date('Y-m-d').' +1 day')*/ '', 0, ($nb_heures_preparation + $nb_heures_fabrication)*3600*$object->array_options['options_duree_prevue'], $total_ht, 1, $fk_ws, $object->socid, $p->id);
 					
+					if($id_task > 0) {
+						$TTaskWS[$ws->workstation->code] = $id_task;
+					}
+					
 					$i++;
 					
 				}
+
+				$this->_setHierarchieTaches($TTaskWS);
 				
 				// TODO Appeler le script interface.php de scrumboard en ajax pour être sûr que l'ordonnancement se fait bien à chaque commande
 				
@@ -482,4 +490,26 @@ class InterfaceDoc2Projecttrigger
 		if ($r > 0) return $r;
 		else return 0;
 	}
+	
+	private function _setHierarchieTaches(&$TTaskWS) {
+		
+		global $db;
+		
+		// On ne fait rien s'il n'y a qu'une tâche, car pas besoin de hiérarchie
+		if(count($TTaskWS) != 2) return 0;
+		
+		dol_include_once('/workstation/class/workstation.class.php');
+		
+		// La tâche parente est toujours celle qui contient le sablage
+		if(!empty($TTaskWS['sablage'])) $fk_tache_parente = $TTaskWS['sablage'];
+		
+		foreach($TTaskWS as $code_ws => $id_tache) {
+			if($code_ws !== 'sablage') {
+				$sql = 'UPDATE '.MAIN_DB_PREFIX.'projet_task SET fk_task_parent = '.$fk_tache_parente.' WHERE rowid = '.$id_tache;
+				$db->query($sql);
+			}
+		}
+
+	}
+	
 }
