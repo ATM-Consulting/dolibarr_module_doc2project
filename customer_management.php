@@ -351,10 +351,10 @@ function _get_infos_propal_rapport($PDOdb){
 	//var_dump($plageClotureProp_deb, $plageClotureProp_fin);
 	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture, co.rowid AS commId
 	FROM '.MAIN_DB_PREFIX.'societe soc 
-	INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc
-	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source=prop.rowid 
-	INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
-	INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet  
+		INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc
+		INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source=prop.rowid 
+		INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
+		INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet  
 	WHERE proj.fk_statut>0 AND el.targettype="commande" AND el.sourcetype="propal"';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
@@ -381,7 +381,7 @@ function _get_infos_propal_rapport($PDOdb){
 		$sql.= 'AND soc.rowid='.$client.' ';
 	}
 	$sql.= 'GROUP BY prop.rowid 
-	ORDER BY soc.nom';
+	ORDER BY co.ref';
 	
 	//pre($sql, true);
 	$PDOdb->Execute($sql);
