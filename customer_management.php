@@ -343,11 +343,6 @@ function _get_infos_propal_rapport($PDOdb){
 	$client               = GETPOST('socid');
 	$categ                = GETPOST('parent');
 	
-	
-	$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
-	$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
-	
-	
 	//var_dump($plageClotureProp_deb, $plageClotureProp_fin);
 	$sql = 'SELECT soc.nom AS soc_name, soc.rowid AS socId, prop.ref AS prop_ref, prop.rowid AS propId, prop.date_cloture AS prop_cloture, co.rowid AS commId
 	FROM '.MAIN_DB_PREFIX.'societe soc 
@@ -356,7 +351,7 @@ function _get_infos_propal_rapport($PDOdb){
 		INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
 		INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet ';
 		
-	if (!empty($plageEssai_deb) && !empty($plageEssai_fin)){
+	if (!empty($plageEssai_deb) || !empty($plageEssai_fin)){
 		$sql .= 'INNER JOIN '.MAIN_DB_PREFIX.'projet_task task ON task.fk_projet=proj.rowid
 		INNER JOIN '.MAIN_DB_PREFIX.'projet_task_extrafields ext ON ext.fk_object=task.rowid 
 		INNER JOIN '.MAIN_DB_PREFIX.'product prod ON prod.rowid=ext.fk_linked_product 
@@ -366,33 +361,42 @@ function _get_infos_propal_rapport($PDOdb){
 		
 	$sql .= 'WHERE proj.fk_statut>0 AND el.targettype="commande" AND el.sourcetype="propal" ';
 	
-	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
+	if(!empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
-		$plageClotureProp_fin = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_fin)));
-		
-		$sql.=' AND prop.date_cloture BETWEEN "'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'" ';
+		$sql.=' AND prop.date_cloture >= "'.$plageClotureProp_deb.'" ';
 	}
+	if (!empty($plageClotureProp_fin)){
+		$plageClotureProp_fin = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_fin)));
+		$sql.=' AND prop.date_cloture <= "'.$plageClotureProp_fin.'" ';
+	}
+
 	//A REMPLIR POUR FILTRE SUR PLAFE RECEPTION ENQUETE DE SATISFACTION
-	if (!empty($plageReception_deb) && !empty($plageReception_fin)){
+	if (!empty($plageReception_deb)){
 		$plageReception_deb   = date("Y-m-d", strtotime(str_replace('/', '-', $plageReception_deb)));
+		$sql.='';
+	}	
+	if(!empty($plageReception_fin)){
 		$plageReception_fin   = date("Y-m-d", strtotime(str_replace('/', '-', $plageReception_fin)));
-		
 		$sql.='';
 	}
+
 	// A REMPLIR POUR FILTRE SUR REALISATION DES ESSAIS
-	if (!empty($plageEssai_deb) && !empty($plageEssai_fin)){
+	if (!empty($plageEssai_deb)){
 		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
-		$plageEssai_fin       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_fin)));
-	
-		$sql.=' AND task.dateo BETWEEN "'.$plageEssai_deb.'" AND "'.$plageEssai_fin.'"';
+		$sql.=' AND task.dateo >= "'.$plageEssai_deb.'" ';
 	}
+	if (!empty($plageEssai_fin)){
+		$plageEssai_fin       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_fin)));
+		$sql.=' AND task.dateo <= "'.$plageEssai_fin.'" ';
+	}
+	
 	if (!empty($client)){
 		$sql.= 'AND soc.rowid='.$client.' ';
 	}
-	$sql.= 'GROUP BY prop.rowid 
+	$sql.= ' GROUP BY prop.rowid 
 	ORDER BY co.ref';
 	
-	//pre($sql, true);
+	pre($sql, true);
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
