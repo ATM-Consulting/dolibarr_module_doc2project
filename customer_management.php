@@ -354,14 +354,23 @@ function _get_infos_propal_rapport($PDOdb){
 		INNER JOIN '.MAIN_DB_PREFIX.'propal prop ON soc.rowid=prop.fk_soc
 		INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON el.fk_source=prop.rowid 
 		INNER JOIN '.MAIN_DB_PREFIX.'commande co ON co.rowid=el.fk_target 
-		INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet  
-	WHERE proj.fk_statut>0 AND el.targettype="commande" AND el.sourcetype="propal"';
+		INNER JOIN '.MAIN_DB_PREFIX.'projet proj  ON proj.rowid = co.fk_projet ';
+		
+	if (!empty($plageEssai_deb) && !empty($plageEssai_fin)){
+		$sql .= 'INNER JOIN '.MAIN_DB_PREFIX.'projet_task task ON task.fk_projet=proj.rowid
+		INNER JOIN '.MAIN_DB_PREFIX.'projet_task_extrafields ext ON ext.fk_object=task.rowid 
+		INNER JOIN '.MAIN_DB_PREFIX.'product prod ON prod.rowid=ext.fk_linked_product 
+		INNER JOIN '.MAIN_DB_PREFIX.'categorie_product catp ON catp.fk_product=prod.rowid 
+		INNER JOIN '.MAIN_DB_PREFIX.'categorie cat ON (catp.fk_categorie=cat.rowid AND cat.fk_parent=73)';
+	}
+		
+	$sql .= 'WHERE proj.fk_statut>0 AND el.targettype="commande" AND el.sourcetype="propal" ';
 	
 	if (!empty($plageClotureProp_fin) && !empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
 		$plageClotureProp_fin = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_fin)));
 		
-		$sql.='AND prop.date_cloture BETWEEN "'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'" ';
+		$sql.=' AND prop.date_cloture BETWEEN "'.$plageClotureProp_deb.'" AND "'.$plageClotureProp_fin.'" ';
 	}
 	//A REMPLIR POUR FILTRE SUR PLAFE RECEPTION ENQUETE DE SATISFACTION
 	if (!empty($plageReception_deb) && !empty($plageReception_fin)){
@@ -373,9 +382,9 @@ function _get_infos_propal_rapport($PDOdb){
 	// A REMPLIR POUR FILTRE SUR REALISATION DES ESSAIS
 	if (!empty($plageEssai_deb) && !empty($plageEssai_fin)){
 		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
-		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
+		$plageEssai_fin       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_fin)));
 	
-		$sql.='';
+		$sql.=' AND task.dateo BETWEEN "'.$plageEssai_deb.'" AND "'.$plageEssai_fin.'"';
 	}
 	if (!empty($client)){
 		$sql.= 'AND soc.rowid='.$client.' ';
