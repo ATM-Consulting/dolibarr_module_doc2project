@@ -358,16 +358,16 @@ class ActionsDoc2Project
 			$t->description = $line->desc;
 			
 			$t->fk_task_parent = $fk_parent;
-			$t->date_start = $start;
+			//$t->date_start = $start;
 			if($isParent)
 			{
-				$t->date_end = $start;
+				//$t->date_end = $start;
 				$t->planned_workload = 1;
 				$t->progress = 100;
 			}
 			else
 			{
-				$t->date_end = $end;
+				//$t->date_end = $end;
 				$t->planned_workload = $durationInSec;
 			}
 			$t->array_options['options_soldprice'] = $line->total_ht;
