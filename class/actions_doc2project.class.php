@@ -214,9 +214,11 @@ class ActionsDoc2Project
 			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 			
 			// CREATION DES TACHES
-			foreach($object->lines as $line) {
+			foreach($object->lines as &$line) {
 				$fk_parent = 0;
 				if(!empty($line->fk_product) && $line->fk_product_type == 1) { // On ne créé que les tâches correspondant à des services
+				
+					if ($this->isExclude($line)) continue;
 				
 					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS)
 					{
@@ -311,6 +313,16 @@ class ActionsDoc2Project
 		}
 		
 		return 0;
+	}
+
+	function isExclude(&$line)
+	{
+		global $conf;
+		
+		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
+		
+		if (in_array($line->ref, $TExclude)) return true;
+		else return false;
 	}
 
 	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){

@@ -32,8 +32,8 @@ Doc2ProjectErrorProjectNotFound=Aucun projet lié
 Doc2ProjectErrorProjectCantBeClose=Impossible de clôturer le projet %s
 Doc2ProjectProjectAlreadyClose=Projet (%s) déjà clot
 Doc2ProjectProjectAsBeenClose=Le projet (%s) a été clôturé
-Doc2ProjectExcludedProducts=Ne pas convertir les produits / services suivants
-Doc2ProjectExcludedProductsDesc=Renseigner les référence des produits / services à exclure, séparés par un point virgule
+Doc2ProjectExcludedProducts=Ne pas convertir les services suivants
+Doc2ProjectExcludedProductsDesc=Renseigner les référence des services à exclure, séparés par un point virgule
 
 SoldPrice=Prix vendu
 CostEffective=Coût effectif (temps consommé)
