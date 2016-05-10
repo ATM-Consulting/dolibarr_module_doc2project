@@ -341,6 +341,14 @@ if($ok) {
 	print '</form>';
 	print '</td></tr>';
 	
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectDoNotConvertServiceWithPriceToZero"), $langs->transnoentitiesnoconv("Doc2ProjectDoNotConvertServiceWithPriceToZeroDesc")).'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print ajax_constantonoff('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO');
+	print '</td></tr>';
+	
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
 }

@@ -34,6 +34,8 @@ Doc2ProjectProjectAlreadyClose=Projet (%s) déjà clot
 Doc2ProjectProjectAsBeenClose=Le projet (%s) a été clôturé
 Doc2ProjectExcludedProducts=Ne pas convertir les services suivants
 Doc2ProjectExcludedProductsDesc=Renseigner les référence des services à exclure, séparés par un point virgule
+Doc2ProjectDoNotConvertServiceWithPriceToZero=Ne pas convertir les services dont le prix est à 0 (option)
+Doc2ProjectDoNotConvertServiceWithPriceToZeroDesc=Les services avec remise à 100&#37; ne sont pas pris en compte
 
 SoldPrice=Prix vendu
 CostEffective=Coût effectif (temps consommé)
