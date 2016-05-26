@@ -396,7 +396,7 @@ function _get_infos_propal_rapport($PDOdb){
 	$sql.= ' GROUP BY prop.rowid 
 	ORDER BY co.ref';
 	
-	pre($sql, true);
+	//pre($sql, true);
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
@@ -496,7 +496,7 @@ function _get_factures_from_propale($PDOdb, $id){
 	
 	$sql= 'SELECT fac.rowid AS facid, fac.facnumber AS facref FROM '.MAIN_DB_PREFIX.'facture fac 
 	INNER JOIN '.MAIN_DB_PREFIX.'element_element el ON fac.rowid=el.fk_target 
-	WHERE el.sourcetype= "propal" AND el.fk_source='.$id.' ';
+	WHERE el.sourcetype= "propal" AND el.targettype= "facture" AND el.fk_source='.$id.' ';
 	
 	//var_dump($sql);
 	$PDOdb->Execute($sql);
