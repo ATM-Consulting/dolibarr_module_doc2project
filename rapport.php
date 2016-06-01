@@ -456,19 +456,20 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
     $vente = $achat = $ndf = 0;
        
      $sqlClient = "
-        SELECT SUM(DISTINCT(f.total)) as total
+        SELECT DISTINCT(f.rowid), f.total as total
         FROM ".MAIN_DB_PREFIX."facture as f LEFT JOIN ".MAIN_DB_PREFIX."element_element el ON (el.fk_source=f.rowid)
         WHERE (f.fk_projet = ".$fk_projet." OR (el.fk_target=".$fk_projet." AND el.sourcetype LIKE 'facture' AND el.targettype LIKE 'project'))
         ".($t_deb>0 && $t_fin>0 ? " AND f.datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  );
 
     $PDOdb2= new TPDOdb;
     $PDOdb2->Execute($sqlClient);
-
-    $obj = $PDOdb2->Get_line();
-    $vente = $obj->total;
+	
+	$vente = 0;
+    while($obj = $PDOdb2->Get_line()){
+    	$vente = $obj->total;	
+    }    
     
-    
-    $sqlAchat='SELECT SUM(DISTINCT(f.total_ht)) AS total 
+    $sqlAchat='SELECT DISTINCT(f.rowid),f.total_ht AS total 
     FROM '.MAIN_DB_PREFIX.'facture_fourn f LEFT JOIN '.MAIN_DB_PREFIX.'element_element el ON (el.fk_source=f.rowid)
     WHERE 1 
     AND f.fk_projet = '.$fk_projet.' OR (el.fk_target='.$fk_projet.' AND el.sourcetype LIKE "facturefournisseur" AND el.targettype LIKE "project")  
@@ -476,9 +477,11 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
     //var_dump($sql);
     
     $PDOdb2->Execute($sqlAchat);
-    $obj2 = $PDOdb2->Get_line();
-    $achat=$obj2->total;
     
+    $achat = 0;
+    while($obj2 = $PDOdb2->Get_line()){
+    	$achat=$obj2->total;
+	}    
     
      if($conf->ndfp->enabled){
         $sqlNdf=" , (
