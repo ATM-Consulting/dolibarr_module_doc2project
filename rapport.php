@@ -466,7 +466,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 	
 	$vente = 0;
     while($obj = $PDOdb2->Get_line()){
-    	$vente = $obj->total;	
+    	$vente += $obj->total;	
     }    
     
     $sqlAchat='SELECT DISTINCT(f.rowid),f.total_ht AS total 
@@ -480,7 +480,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
     
     $achat = 0;
     while($obj2 = $PDOdb2->Get_line()){
-    	$achat=$obj2->total;
+    	$achat+=$obj2->total;
 	}    
     
      if($conf->ndfp->enabled){
