@@ -359,7 +359,7 @@ function _get_infos_propal_rapport($PDOdb){
 		INNER JOIN '.MAIN_DB_PREFIX.'categorie cat ON (catp.fk_categorie=cat.rowid AND cat.fk_parent=73)';
 	}
 		
-	$sql .= 'WHERE proj.fk_statut>0 AND el.targettype="commande" AND el.sourcetype="propal" ';
+	$sql .= 'WHERE el.targettype="commande" AND el.sourcetype="propal" ';
 	
 	if(!empty($plageClotureProp_deb)){
 		$plageClotureProp_deb = date("Y-m-d", strtotime(str_replace('/', '-', $plageClotureProp_deb)));
@@ -380,6 +380,10 @@ function _get_infos_propal_rapport($PDOdb){
 		$sql.='';
 	}
 
+	if(GETPOST('etat') && GETPOST('etat') != '-1'){
+		$sql.=' AND proj.fk_statut = '.GETPOST('etat');
+	}
+
 	// A REMPLIR POUR FILTRE SUR REALISATION DES ESSAIS
 	if (!empty($plageEssai_deb)){
 		$plageEssai_deb       = date("Y-m-d", strtotime(str_replace('/', '-', $plageEssai_deb)));
@@ -396,7 +400,7 @@ function _get_infos_propal_rapport($PDOdb){
 	$sql.= ' GROUP BY prop.rowid 
 	ORDER BY co.ref';
 	
-	//pre($sql, true);
+	pre($sql, true);exit;
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {

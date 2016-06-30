@@ -15,6 +15,17 @@ function _print_filtre_fournisseur(&$form,&$PDOdb){
 		</tr>
 	<?php
 }
+
+function _print_filtre_etat_projet(&$form,&$PDOdb){
+
+	?>
+		<tr>
+			<td>Etat : </td>
+			<td><?php echo $form->combo('', 'etat', array('-1'=>' ','0'=>'Brouillon','1'=>'Ouvert','2'=>'Clôturé'), ($_REQUEST['etat'])? $_REQUEST['etat'] : '1'); ?></td>
+		</tr>
+	<?php
+}
+
 function _print_filtre_societe(&$form,&$PDOdb){
 	
 	$PDOdb->Execute("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe WHERE 1 ORDER BY nom");
@@ -147,6 +158,12 @@ function _print_filtre_customer_management(&$PDOdb, &$formcore){
 				<td><b>Client</b></td>
 		   </tr>';
 		   _print_filtre_societe($formcore, $PDOdb);
+	
+	print '<tr>
+				<td><b>Projet</b></td>
+		   </tr>';
+		   _print_filtre_etat_projet($formcore, $PDOdb);
+	
 	/*print '<tr>';
 	print '		<td>Société : </td>';
 	print '		<td>'.$formcore->combo('', 'socid', $TSoc, ($_REQUEST['socid'])? $_REQUEST['socid'] : '').'</td>';

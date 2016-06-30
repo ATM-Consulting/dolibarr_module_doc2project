@@ -230,7 +230,7 @@ class modDoc2Project extends DolibarrModules
 								'titre'=>'gestion client',
 								'mainmenu'=>'doc2project',
 								'leftmenu'=>'statistiques',
-								'url'=>'/doc2project/customer_management.php',
+								'url'=>'/doc2project/customer_management.php?etat=1',
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>167,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
