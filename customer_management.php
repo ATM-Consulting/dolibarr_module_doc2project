@@ -400,7 +400,7 @@ function _get_infos_propal_rapport($PDOdb){
 	$sql.= ' GROUP BY prop.rowid 
 	ORDER BY co.ref';
 	
-	pre($sql, true);exit;
+	//pre($sql, true);exit;
 	$PDOdb->Execute($sql);
 	$TInfosPropal = array();
 	while ($PDOdb->Get_line()) {
