@@ -422,8 +422,13 @@ function _get_infos_propal_rapport($PDOdb){
  * Recupere toutes les catégories de produits/services existantes
 */
 function _select_categ($PDOdb){
-	$sql = 'SELECT cat.rowid AS rowid, cat.label AS label FROM '.MAIN_DB_PREFIX.'categorie cat WHERE cat.fk_parent=73';
-	
+	$sql = 'SELECT cat.rowid AS rowid, cat.label AS label 
+			FROM '.MAIN_DB_PREFIX.'categorie cat
+			LEFT JOIN '.MAIN_DB_PREFIX.'categories_extrafields extracat ON (extracat.fk_object = cat.rowid)
+			WHERE cat.fk_parent=73
+				AND extracat.corp_epreuve_categorie = 1
+			';
+	//echo $sql;
 	$PDOdb->Execute($sql);
 	$TCategs = array();
 	while ($PDOdb->Get_line()) {
@@ -463,7 +468,7 @@ function _print_infos_categories($PDOdb, $TReport,$refcommande){
 	foreach ($TReport as $categ){
 		
 		$TAsset=_get_equipement($PDOdb, $categ['rowid'],$refcommande);
-		//var_dump($TAsset);
+		
 		print '<td><div>';
 		foreach ($TAsset as $TVal) {
 			print '<div>';
@@ -589,7 +594,7 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 				INNER JOIN '.MAIN_DB_PREFIX.'categorie_product cat ON (cat.fk_product=prod.rowid )
 				INNER JOIN '.MAIN_DB_PREFIX.'commande as co ON (co.rowid = ass.fk_commande) 
 			WHERE cat.fk_categorie='.$idCateg.' AND co.ref = "'.$refcommande.'"';
-	
+	//if($refcommande == 'CO1602-0037'){ echo $sql; exit;}
 	//var_dump($sql);
 	$PDOdb->Execute($sql);
 	$TAsset = array();
