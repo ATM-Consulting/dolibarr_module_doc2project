@@ -190,9 +190,10 @@ function _print_rapport(&$PDOdb){
 					<?php
 					$TCateg = _select_categ($PDOdb);
 					$colspan = count($TCateg) + 8;
+					$TCateg = _select_categ($PDOdb,true);
 					
 					print '<td colspan='.$colspan.'></td>';
-					
+					$NbCategTotal = count($TCateg);
 					foreach ($TCateg as $categ) {
 						print '<td colspan=8>'.$categ['label'].'</td>';						
 					}
@@ -208,14 +209,16 @@ function _print_rapport(&$PDOdb){
 					<th class="liste_titre">Commande</th>
 					<th class="liste_titre">Délais</th>
 					<th class="liste_titre">Projet</th>
-					<?php					
+					<?php
+					$TCateg = _select_categ($PDOdb);
 					foreach ($TCateg as $categ) {
 						print '<th class="liste_titre">'.$categ['label'].'</th>';						
 					}
 					?>
 					<td class="liste_titre">commentaires</td>
 					<?php
-						_print_titre_categories($TCateg); //ATTRIBUTS A REDEFINIR						
+						$TCateg = _select_categ($PDOdb,true);
+						_print_titre_categories($TCateg); //ATTRIBUTS A REDEFINIR
 					?>
 				</tr>
 			</thead>
@@ -273,10 +276,10 @@ function _print_rapport(&$PDOdb){
 					print '<td>'.$commande->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->array_options['options_delai_realisation'].'</td>';
 					print '<td>'.$projet->getNomUrl(1,'');
-						
+					
 					$TCateg_task=_get_categ_from_tasks($PDOdb, $projet->id);
 					//var_dump($TCateg_task);
-					
+					$TCateg = _select_categ($PDOdb);
 					foreach ($TCateg as $categ) {
 						print '<td>';
 
@@ -289,6 +292,7 @@ function _print_rapport(&$PDOdb){
 						
 						print '</td>';
 					}
+					$TCateg = _select_categ($PDOdb,true);
 					
 					$TPrestations["realisees"] += $TCateg_task['total_realise'];
 					$TPrestations["programmees"] += $TCateg_task['total_programme'];
@@ -425,13 +429,18 @@ function _get_infos_propal_rapport($PDOdb){
 /*
  * Recupere toutes les catégories de produits/services existantes
 */
-function _select_categ($PDOdb){
+function _select_categ($PDOdb,$withCorpsEpreuve=false){
 	$sql = 'SELECT cat.rowid AS rowid, cat.label AS label 
-			FROM '.MAIN_DB_PREFIX.'categorie cat
-			LEFT JOIN '.MAIN_DB_PREFIX.'categories_extrafields extracat ON (extracat.fk_object = cat.rowid)
-			WHERE cat.fk_parent=73
-				AND extracat.corp_epreuve_categorie = 1
-			';
+			FROM '.MAIN_DB_PREFIX.'categorie cat';
+	
+	if($withCorpsEpreuve)
+		$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'categories_extrafields extracat ON (extracat.fk_object = cat.rowid)';
+	
+	$sql .= ' WHERE cat.fk_parent=73';
+	
+	if($withCorpsEpreuve)
+		$sql .= ' AND extracat.corp_epreuve_categorie = 1';
+	
 	//echo $sql;
 	$PDOdb->Execute($sql);
 	$TCategs = array();
