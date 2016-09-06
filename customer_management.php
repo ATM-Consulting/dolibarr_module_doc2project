@@ -478,9 +478,11 @@ function _print_titre_categories($TReport){
 */
 function _print_infos_categories($PDOdb, $TReport,$refcommande){
 	
+	$TAsset = array();
+	
 	foreach ($TReport as $categ){
 		
-		$TAsset=_get_equipement($PDOdb, $categ['rowid'],$refcommande);
+		$TAsset = _get_equipement($PDOdb, $categ['rowid'],$refcommande);
 		
 		print '<td><div>';
 		foreach ($TAsset as $TVal) {
