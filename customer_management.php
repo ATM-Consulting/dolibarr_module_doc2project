@@ -399,7 +399,7 @@ function _get_infos_propal_rapport($PDOdb){
 	}
 	
 	if (!empty($client)){
-		$sql.= 'AND soc.rowid='.$client.' ';
+		$sql.= ' AND soc.rowid='.$client.' ';
 	}
 	$sql.= ' GROUP BY prop.rowid 
 	ORDER BY co.ref';
