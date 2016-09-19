@@ -220,7 +220,8 @@ class ActionsDoc2Project
 
 					if ($this->isExclude($line)) continue;
 					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) continue;
-
+					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) continue;
+					
 					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS)
 					{
 
@@ -389,6 +390,9 @@ class ActionsDoc2Project
 			}
 
 			$t->create($user);
+		}else {
+			$t->fk_project = $p->id;
+			$t->update($user);
 		}
 
 		$start = strtotime('+1 weekday', $end);
