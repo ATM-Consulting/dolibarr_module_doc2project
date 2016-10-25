@@ -379,7 +379,7 @@ class ActionsDoc2Project
 
 			//echo $defaultref.'<br>';
 			//Pour les tâches libres
-			if($line->ref == null && $line->desc !=null){
+			if($line->ref == null && $line->desc !=null && $conf->global->DOC2PROJECT_ALLOW_FREE_LINE){
 				$t->ref = $defaultref;
 				$t->label = $line->desc;
 				$t->description = $line->desc;
