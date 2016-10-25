@@ -212,17 +212,21 @@ class ActionsDoc2Project
 			}
 
 			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
-
+			
 			// CREATION DES TACHES
 			foreach($object->lines as &$line) {
 				$fk_parent = 0;
-				if(!empty($line->fk_product) && $line->fk_product_type == 1) { // On ne créé que les tâches correspondant à des services
-
-					if ($this->isExclude($line)) continue;
+					
+				if($line->fk_product>=0 && $line->product_type == 1) { // On ne créé que les tâches correspondant à des services
+					
+					if(!empty($line->ref)){//Test pour voir si c'est une saisie libre
+						if ($this->isExclude($line)) continue;
+					}
 					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) continue;
 					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) continue;
+										
 					
-					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS)
+					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS && ($line->ref != null))
 					{
 
 						$s = new Product($db);
@@ -303,7 +307,6 @@ class ActionsDoc2Project
 					}
 				}
 			}
-
 			// LIEN OBJECT / PROJECT
 			$p->date_end = $end;
 			if($resetProjet) $p->statut = 0;
@@ -322,7 +325,6 @@ class ActionsDoc2Project
 		global $conf;
 
 		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
-
 		if (in_array($line->ref, $TExclude)) return true;
 		else return false;
 	}
@@ -331,20 +333,31 @@ class ActionsDoc2Project
 		global $conf,$langs,$db,$user;
 
 		$s = new Product($db);
-		$s->fetch($line->fk_product);
-
-		// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-		$durationInSec = $line->qty * $s->duration_value * 3600;
-		$nbDays = 0;
-		if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-			$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-			$nbDays = $line->qty * $s->duration_value;
-		} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-			$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+		if($line->ref!=null){
+			$s->fetch($line->fk_product);
+		
+			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
+			
+			$durationInSec = $line->qty * $s->duration_value * 3600;
+			
+			$nbDays = 0;
+			if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+				$nbDays = $line->qty * $s->duration_value;
+			} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+				$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+			}
+		} else {
+			
+			$durationInSec = $line->qty *$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY* 3600;
+			
+			$nbDays = 0;
+			
+			$nbDays = $line->qty;
+			
 		}
-
 		$end = strtotime('+'.$nbDays.' weekdays', $start);
-
+		
 		$t = new Task($db);
 		$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 		//echo $ref.'<br>';
@@ -365,30 +378,54 @@ class ActionsDoc2Project
 			}
 
 			//echo $defaultref.'<br>';
-
-			$t->ref = $defaultref;
-			$t->label = $line->product_label;
-			$t->description = $line->desc;
-
-			$t->fk_task_parent = $fk_parent;
-			$t->date_start = $start;
-			if($isParent)
-			{
-				$t->date_end = $start;
-				$t->planned_workload = 1;
-				$t->progress = 100;
+			//Pour les tâches libres
+			if($line->ref == null && $line->desc !=null){
+				$t->ref = $defaultref;
+				$t->label = $line->desc;
+				$t->description = $line->desc;
+				$t->fk_task_parent = $fk_parent;
+				$t->date_start = $start;
+				
+				if($isParent)
+				{
+					$t->date_end = $start;
+					$t->progress = 100;
+				}
+				else
+				{
+					$t->date_end = $end;
+					$t->planned_workload = $durationInSec;
+				}
+				$t->array_options['options_soldprice'] = $line->total_ht;
+	
+				if($fk_workstation){
+					$t->array_options['options_fk_workstation'] = $fk_workstation;
+				}
+			}else if($line->ref != null) {
+				$t->ref = $defaultref;
+				$t->label = $line->product_label;
+				$t->description = $line->desc;
+	
+				$t->fk_task_parent = $fk_parent;
+				$t->date_start = $start;
+				if($isParent)
+				{
+					$t->date_end = $start;
+					$t->planned_workload = 1;
+					$t->progress = 100;
+				}
+				else
+				{
+					$t->date_end = $end;
+					$t->planned_workload = $durationInSec;
+				}
+				$t->array_options['options_soldprice'] = $line->total_ht;
+	
+				if($fk_workstation){
+					$t->array_options['options_fk_workstation'] = $fk_workstation;
+				}
 			}
-			else
-			{
-				$t->date_end = $end;
-				$t->planned_workload = $durationInSec;
-			}
-			$t->array_options['options_soldprice'] = $line->total_ht;
-
-			if($fk_workstation){
-				$t->array_options['options_fk_workstation'] = $fk_workstation;
-			}
-
+		
 			$t->create($user);
 		}else {
 			$t->fk_project = $p->id;
