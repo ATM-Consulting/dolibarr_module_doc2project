@@ -217,16 +217,16 @@ class ActionsDoc2Project
 			foreach($object->lines as &$line) {
 				$fk_parent = 0;
 					
-				if($line->fk_product>=0 && $line->product_type == 1) { // On ne créé que les tâches correspondant à des services
+				if($line->product_type == 1) { // On ne créé que les tâches correspondant à des services
 					
-					if(!empty($line->ref)){//Test pour voir si c'est une saisie libre
-						if ($this->isExclude($line)) continue;
+					if(!empty($line->ref) && $this->isExclude($line)){//Test pour voir si c'est une saisie libre
+						continue;
 					}
 					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) continue;
 					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) continue;
 										
 					
-					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS && ($line->ref != null))
+					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS && !is_null($line_ref))
 					{
 
 						$s = new Product($db);
@@ -350,9 +350,6 @@ class ActionsDoc2Project
 		} else {
 			
 			$durationInSec = $line->qty *$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY* 3600;
-			
-			$nbDays = 0;
-			
 			$nbDays = $line->qty;
 			
 		}
@@ -379,7 +376,7 @@ class ActionsDoc2Project
 
 			//echo $defaultref.'<br>';
 			//Pour les tâches libres
-			if($line->ref == null && $line->desc !=null && $conf->global->DOC2PROJECT_ALLOW_FREE_LINE){
+			if($line->ref == null && $line->desc !=null &&!empty( $conf->global->DOC2PROJECT_ALLOW_FREE_LINE )){
 				$t->ref = $defaultref;
 				$t->label = $line->desc;
 				$t->description = $line->desc;
