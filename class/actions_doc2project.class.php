@@ -314,7 +314,7 @@ class ActionsDoc2Project
 			$object->setProject($p->id);
 			if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $p->add_contact($user->id,'PROJECTLEADER','internal');
 			//exit;
-			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$p->id,2));
+			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$p->id,1));
 		}
 
 		return 0;
