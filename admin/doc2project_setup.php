@@ -357,6 +357,22 @@ if($ok) {
 	print ajax_constantonoff('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO');
 	print '</td></tr>';
 	
+		// Excluded products
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectConversionRule"), $langs->transnoentitiesnoconv("Doc2ProjectConversionRuleDesc")).'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CONVERSION_RULE">';
+	print '<input type="text" class="flat" name="DOC2PROJECT_CONVERSION_RULE" value="'.$conf->global->DOC2PROJECT_CONVERSION_RULE.'">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print '</td></tr>';
+	
+	
+	
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
 }

@@ -54,3 +54,7 @@ Doc2ProjectGlobalTaskLabel=Tâche global
 Doc2ProjectGlobalTaskDesc=Utilisée pour la saisie de temps
 Doc2ProjectCreateTaskWithSubtotal=Créer des tâches correspondant aux titres afin de garder une hiérarchie (module "Subtotal" requis)
 Doc2ProjectCreateTaskWithSubtotalTooltip=Attention : la bonne hiérarchisation des tâches, nécessite que les niveaux de titre se suivent (pas de titre 1 puis subitement un titre 3) et que des sous-totaux soient présents en tant que délimiteur
+
+
+Doc2ProjectConversionRule=Règle de conversion de temps des services en tâche
+Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si vide prendra la durée du service. {qty} quantité de la ligne, {totalht} total HT de la ligne
