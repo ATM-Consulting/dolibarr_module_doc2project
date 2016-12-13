@@ -382,6 +382,11 @@ class ActionsDoc2Project
 			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 		}
 		
+		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
+			$fk_workstation = $line->array_options['options_fk_workstation'];
+		}
+		
+		
 		if(!empty($defaultref)) $t->fetch(0, $defaultref);
 		if($t->id==0) {
 
