@@ -148,30 +148,37 @@ class ActionsDoc2Project
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
 
-			if((float)DOL_VERSION>=3.6) {
-				$thm = $object->thm;
+			if((float)DOL_VERSION>=4.0) { //TODO check version à partir de laquelle c'est dispo
+				null;
 			}
 			else{
-				$resql = $db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->id);
-				$res = $db->fetch_object($resql);
-				$thm = $res->thm;
+				if((float)DOL_VERSION>=3.6) {
+					$thm = $object->thm;
+				}
+				else{
+					$resql = $db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->id);
+					$res = $db->fetch_object($resql);
+					$thm = $res->thm;
+				}
+				?>
+				<tr>
+					<td><?php echo $langs->trans('THM'); ?></td>
+					<td><?php
+	
+						if($action=='edit') {
+							echo '<input id="thm" type="text" value="'.$thm.'" maxlength="11" size="9" name="thm">';
+						}
+						else{
+							echo price($thm);
+						}
+	
+					?></td>
+	
+				</tr>
+				<?php
+				
 			}
-			?>
-			<tr>
-				<td><?php echo $langs->trans('THM'); ?></td>
-				<td><?php
 
-					if($action=='edit') {
-						echo '<input id="thm" type="text" value="'.$thm.'" maxlength="11" size="9" name="thm">';
-					}
-					else{
-						echo price($thm);
-					}
-
-				?></td>
-
-			</tr>
-			<?php
 		}
 
 	}
@@ -333,7 +340,21 @@ class ActionsDoc2Project
 		global $conf,$langs,$db,$user;
 
 		$s = new Product($db);
-		if($line->ref!=null){
+		
+		if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
+			
+			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,array(
+			
+				'{qty}'=>$line->qty
+				,'{totalht}'=>$line->total_ht
+			
+			));
+			
+			$durationInSec = eval('return ('.$eval.');') * 3600;
+			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+			
+		}
+		else if($line->ref!=null){
 			$s->fetch($line->fk_product);
 		
 			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
@@ -356,22 +377,31 @@ class ActionsDoc2Project
 		$end = strtotime('+'.$nbDays.' weekdays', $start);
 		
 		$t = new Task($db);
-		$ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-		//echo $ref.'<br>';
-
-		$t->fetch(0, $ref);
+		$defaultref='';
+		if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
+			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
+		}
+		
+		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
+			$fk_workstation = $line->array_options['options_fk_workstation'];
+		}
+		
+		
+		if(!empty($defaultref)) $t->fetch(0, $defaultref);
 		if($t->id==0) {
 
 			$t->fk_project = $p->id;
-
-			$defaultref='';
-			$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
-			if (! empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.".php"))
-			{
-				$soc = new stdClass;
-				require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
-				$modTask = new $obj;
-				$defaultref = $modTask->getNextValue($soc,$p);
+			
+			if(empty($defaultref)) {
+				$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
+				if (! empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.".php"))
+				{
+					$soc = new stdClass;
+					require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
+					$modTask = new $obj;
+					$defaultref = $modTask->getNextValue($soc,$p);
+				}
+				
 			}
 
 			//echo $defaultref.'<br>';
@@ -425,6 +455,7 @@ class ActionsDoc2Project
 		
 			$t->create($user);
 		}else {
+			$t->planned_workload = $durationInSec;
 			$t->fk_project = $p->id;
 			$t->update($user);
 		}
