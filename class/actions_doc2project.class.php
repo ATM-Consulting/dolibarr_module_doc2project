@@ -244,7 +244,7 @@ class ActionsDoc2Project
 						if(!empty($TProdArbo)){
 
 							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT){
-								$fk_parent = $this->create_task($line,$p,$start,0,true);
+								$fk_parent = $this->create_task($object, $line,$p,$start,0,true);
 
 								if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 									dol_include_once('/workstation/class/workstation.class.php');
@@ -264,7 +264,7 @@ class ActionsDoc2Project
 										$line->desc = '';
 										$line->total_ht = 0;
 
-										$this->create_task($line, $p, $start,$fk_parent,false,$TWorkstation->rowid);
+										$this->create_task($object,$line, $p, $start,$fk_parent,false,$TWorkstation->rowid);
 									}
 								}
 							}
@@ -281,7 +281,7 @@ class ActionsDoc2Project
 									$line->desc = ($ss->description) ? $ss->description : '';
 									$line->total_ht = $ss->price;
 
-									$new_fk_parent = $this->create_task($line,$p,$start,$fk_parent);
+									$new_fk_parent = $this->create_task($object,$line,$p,$start,$fk_parent);
 
 									if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 										dol_include_once('/workstation/class/workstation.class.php');
@@ -301,16 +301,16 @@ class ActionsDoc2Project
 											$line->desc = '';
 											$line->total_ht = 0;
 
-											$this->create_task($line, $p, $start,$new_fk_parent,false,$TWorkstation->rowid);
+											$this->create_task($object,$line, $p, $start,$new_fk_parent,false,$TWorkstation->rowid);
 										}
 									}
 								}
 							}
 						}else{
-							$this->create_task($line,$p,$start);
+							$this->create_task($object,$line,$p,$start);
 						}
 					}else{
-						$this->create_task($line,$p,$start);
+						$this->create_task($object,$line,$p,$start);
 					}
 				}
 			}
@@ -336,11 +336,11 @@ class ActionsDoc2Project
 		else return false;
 	}
 
-	function create_task(&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){
+	function create_task(&$object,&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){
 		global $conf,$langs,$db,$user;
 
 		$s = new Product($db);
-		
+		var_dump($conf->global->DOC2PROJECT_CONVERSION_RULE);exit;
 		if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
 			
 			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,array(
@@ -386,6 +386,10 @@ class ActionsDoc2Project
 			$fk_workstation = $line->array_options['options_fk_workstation'];
 		}
 		
+               if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
+                        $fk_workstation = $object->array_options['options_fk_workstation'];
+                }
+
 		
 		if(!empty($defaultref)) $t->fetch(0, $defaultref);
 		if($t->id==0) {
