@@ -203,26 +203,24 @@ class ActionsDoc2Project
 			
 			$PDOdb = new TPDOdb;
 
-			$p = new Project($db);
-
 			// CREATION OU CHARGEMENT DU PROJET
 			if(empty($object->fk_project)) {
 
-				// Création du projet
-				$p->title			= (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-				$p->socid			= $object->socid;
-				$p->statut			= 0;
-				$p->date_start		= dol_now();
-				$p->ref				= Doc2Project::get_project_ref($p);
-				$p->create($user);
+				$project = Doc2Project::createProject($object);
+
 			} else {
-				$p->fetch($object->fk_project);
+
+				$project = new Project($db);
+				$project->fetch($object->fk_project);
+
 			}
 
 			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 			
+			Doc2Project::createTask($object, $project, $start);
+			
 			// CREATION DES TACHES
-			foreach($object->lines as &$line) {
+			/*foreach($object->lines as &$line) {
 				$fk_parent = 0;
 					
 				if($line->product_type == 1) { // On ne créé que les tâches correspondant à des services
@@ -315,14 +313,16 @@ class ActionsDoc2Project
 					}
 				}
 			}
+			*/
 			// LIEN OBJECT / PROJECT
-			$p->date_end = $end;
-			if($resetProjet) $p->statut = 0;
-			$p->update($user);
-			$object->setProject($p->id);
-			if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $p->add_contact($user->id,'PROJECTLEADER','internal');
+			$project->date_end = $end;
+			if($resetProjet) $project->statut = 0;
+			$project->update($user);
+			
+			$object->setProject($project->id);
+			if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $project->add_contact($user->id,'PROJECTLEADER','internal');
 			//exit;
-			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$p->id,1));
+			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$project->id,1));
 		}
 
 		return 0;

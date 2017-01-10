@@ -161,6 +161,7 @@ class InterfaceDoc2Projecttrigger
 			
 			if($project = Doc2Project::createProject($object)) {
 			
+				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 				Doc2Project::createTask2($db, $object, $project, $user, $conf);
 				$project->setValid($user);
 			
