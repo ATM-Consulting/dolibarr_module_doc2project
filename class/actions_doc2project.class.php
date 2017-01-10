@@ -1,4 +1,5 @@
 <?php
+
 class ActionsDoc2Project
 {
 	// Affichage du bouton d'action => 3.6 uniquement.....
@@ -198,8 +199,8 @@ class ActionsDoc2Project
 			dol_include_once('/doc2project/config.php');
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
-
-
+			dol_include_once('/doc2project/class/doc2project.class.php');
+			
 			$PDOdb = new TPDOdb;
 
 			$p = new Project($db);
@@ -212,7 +213,7 @@ class ActionsDoc2Project
 				$p->socid			= $object->socid;
 				$p->statut			= 0;
 				$p->date_start		= dol_now();
-				$p->ref				= $this->_get_project_ref($p);
+				$p->ref				= Doc2Project::get_project_ref($p);
 				$p->create($user);
 			} else {
 				$p->fetch($object->fk_project);
@@ -327,177 +328,5 @@ class ActionsDoc2Project
 		return 0;
 	}
 
-	function isExclude(&$line)
-	{
-		global $conf;
-
-		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
-		if (in_array($line->ref, $TExclude)) return true;
-		else return false;
-	}
-
-	function create_task(&$object,&$line,&$p,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){
-		global $conf,$langs,$db,$user;
-
-		$s = new Product($db);
-		var_dump($conf->global->DOC2PROJECT_CONVERSION_RULE);exit;
-		if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
-			
-			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,array(
-			
-				'{qty}'=>$line->qty
-				,'{totalht}'=>$line->total_ht
-			
-			));
-			
-			$durationInSec = eval('return ('.$eval.');') * 3600;
-			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
-			
-		}
-		else if($line->ref!=null){
-			$s->fetch($line->fk_product);
-		
-			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-			
-			$durationInSec = $line->qty * $s->duration_value * 3600;
-			
-			$nbDays = 0;
-			if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-				$nbDays = $line->qty * $s->duration_value;
-			} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-				$nbDays = ceil($line->qty * $s->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
-			}
-		} else {
-			
-			$durationInSec = $line->qty *$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY* 3600;
-			$nbDays = $line->qty;
-			
-		}
-		$end = strtotime('+'.$nbDays.' weekdays', $start);
-		
-		$t = new Task($db);
-		$defaultref='';
-		if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
-			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-		}
-		
-		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
-			$fk_workstation = $line->array_options['options_fk_workstation'];
-		}
-		
-               if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
-                        $fk_workstation = $object->array_options['options_fk_workstation'];
-                }
-
-		
-		if(!empty($defaultref)) $t->fetch(0, $defaultref);
-		if($t->id==0) {
-
-			$t->fk_project = $p->id;
-			
-			if(empty($defaultref)) {
-				$obj = empty($conf->global->PROJECT_TASK_ADDON)?'mod_task_simple':$conf->global->PROJECT_TASK_ADDON;
-				if (! empty($conf->global->PROJECT_TASK_ADDON) && is_readable(DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.".php"))
-				{
-					$soc = new stdClass;
-					require_once DOL_DOCUMENT_ROOT ."/core/modules/project/task/".$conf->global->PROJECT_TASK_ADDON.'.php';
-					$modTask = new $obj;
-					$defaultref = $modTask->getNextValue($soc,$p);
-				}
-				
-			}
-
-			//echo $defaultref.'<br>';
-			//Pour les tâches libres
-			if($line->ref == null && $line->desc !=null &&!empty( $conf->global->DOC2PROJECT_ALLOW_FREE_LINE )){
-				$t->ref = $defaultref;
-				$t->label = $line->desc;
-				$t->description = $line->desc;
-				$t->fk_task_parent = $fk_parent;
-				$t->date_start = $start;
-				
-				if($isParent)
-				{
-					$t->date_end = $start;
-					$t->progress = 100;
-				}
-				else
-				{
-					$t->date_end = $end;
-					$t->planned_workload = $durationInSec;
-				}
-				$t->array_options['options_soldprice'] = $line->total_ht;
 	
-				if($fk_workstation){
-					$t->array_options['options_fk_workstation'] = $fk_workstation;
-				}
-			}else if($line->ref != null) {
-				$t->ref = $defaultref;
-				$t->label = $line->product_label;
-				$t->description = $line->desc;
-	
-				$t->fk_task_parent = $fk_parent;
-				$t->date_start = $start;
-				if($isParent)
-				{
-					$t->date_end = $start;
-					$t->planned_workload = 1;
-					$t->progress = 100;
-				}
-				else
-				{
-					$t->date_end = $end;
-					$t->planned_workload = $durationInSec;
-				}
-				$t->array_options['options_soldprice'] = $line->total_ht;
-	
-				if($fk_workstation){
-					$t->array_options['options_fk_workstation'] = $fk_workstation;
-				}
-			}
-		
-			$t->create($user);
-		}else {
-			$t->planned_workload = $durationInSec;
-			$t->fk_project = $p->id;
-			$t->update($user);
-		}
-
-		$start = strtotime('+1 weekday', $end);
-
-		return $t->id;
-	}
-
-	function _get_project_ref(&$project) {
-		global $conf;
-		$project->fetch_thirdparty();
-
-		$defaultref='';
-		$modele = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
-
-		// Search template files
-		$file=''; $classname=''; $filefound=0;
-		$dirmodels=array_merge(array('/'),(array) $conf->modules_parts['models']);
-		foreach($dirmodels as $reldir)
-		{
-			$file=dol_buildpath($reldir."core/modules/project/".$modele.'.php',0);
-			if (file_exists($file))
-			{
-				$filefound=1;
-				$classname = $modele;
-				break;
-			}
-		}
-
-		if ($filefound)
-		{
-			$result=dol_include_once($reldir."core/modules/project/".$modele.'.php');
-			$modProject = new $classname;
-
-			$defaultref = $modProject->getNextValue($project->thirdparty,$project);
-		}
-
-		return $defaultref;
-	}
 }
