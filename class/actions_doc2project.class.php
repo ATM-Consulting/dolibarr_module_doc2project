@@ -216,104 +216,10 @@ class ActionsDoc2Project
 			}
 
 			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
+			$end = '';
 			
-			Doc2Project::createTask($object, $project, $start);
+			Doc2Project::parseLines($object, $project, $start,$end);
 			
-			// CREATION DES TACHES
-			/*foreach($object->lines as &$line) {
-				$fk_parent = 0;
-					
-				if($line->product_type == 1) { // On ne créé que les tâches correspondant à des services
-					
-					if(!empty($line->ref) && $this->isExclude($line)){//Test pour voir si c'est une saisie libre
-						continue;
-					}
-					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) continue;
-					if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) continue;
-										
-					
-					if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT && $conf->global->PRODUIT_SOUSPRODUITS && !is_null($line_ref))
-					{
-
-						$s = new Product($db);
-						$s->fetch($line->fk_product);
-						$s->get_sousproduits_arbo();
-						$TProdArbo = $s->get_arbo_each_prod();
-
-						if(!empty($TProdArbo)){
-
-							if($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT){
-								$fk_parent = $this->create_task($object, $line,$p,$start,0,true);
-
-								if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
-									dol_include_once('/workstation/class/workstation.class.php');
-
-									$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
-
-									foreach ($Tids as $workstationProductid) {
-										$TWorkstationProduct = new TWorkstationProduct;
-										$TWorkstationProduct->load($PDOdb, $workstationProductid);
-
-										$TWorkstation = new TWorkstation;
-										$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-
-										$line->fk_product = $line->fk_product;
-										//$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-										$line->product_label = $TWorkstation->name;
-										$line->desc = '';
-										$line->total_ht = 0;
-
-										$this->create_task($object,$line, $p, $start,$fk_parent,false,$TWorkstation->rowid);
-									}
-								}
-							}
-
-							foreach($TProdArbo as $prod){
-
-								if($prod['type'] == 1){ //Uniquement les services
-
-									$ss = new Product($db);
-									$ss->fetch($prod['id']);
-									$line->fk_product = $ss->id;
-									$line->qty = $line->qty * $prod['nb'];
-									$line->product_label = $prod['label'];
-									$line->desc = ($ss->description) ? $ss->description : '';
-									$line->total_ht = $ss->price;
-
-									$new_fk_parent = $this->create_task($object,$line,$p,$start,$fk_parent);
-
-									if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
-										dol_include_once('/workstation/class/workstation.class.php');
-
-										$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
-
-										foreach ($Tids as $workstationProductid) {
-											$TWorkstationProduct = new TWorkstationProduct;
-											$TWorkstationProduct->load($PDOdb, $workstationProductid);
-
-											$TWorkstation = new TWorkstation;
-											$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-
-											$line->fk_product = $ss->id;
-											$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-											$line->product_label = $TWorkstation->name;
-											$line->desc = '';
-											$line->total_ht = 0;
-
-											$this->create_task($object,$line, $p, $start,$new_fk_parent,false,$TWorkstation->rowid);
-										}
-									}
-								}
-							}
-						}else{
-							$this->create_task($object,$line,$p,$start);
-						}
-					}else{
-						$this->create_task($object,$line,$p,$start);
-					}
-				}
-			}
-			*/
 			// LIEN OBJECT / PROJECT
 			$project->date_end = $end;
 			if($resetProjet) $project->statut = 0;

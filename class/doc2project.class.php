@@ -92,7 +92,72 @@ class Doc2Project {
 		
 	}
 	
-	public static function createTask(&$object,&$project,&$start,$fk_parent=0,$isParent=false,$fk_workstation=0){
+	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {
+		
+		global $conf,$langs,$db,$user;
+		
+		$product = new Product($db);
+		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
+		$durationInSec = $end = '';
+		if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
+		
+			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,array(
+		
+					'{qty}'=>$line->qty
+					,'{totalht}'=>$line->total_ht
+		
+			));
+		
+			$durationInSec = eval('return ('.$eval.');') * 3600;
+			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+		
+		}
+		else if($line->ref!=null){
+			$s->fetch($line->fk_product);
+		
+			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
+		
+			$durationInSec = $line->qty * $product->duration_value * 3600;
+		
+			$nbDays = 0;
+			if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+				$nbDays = $line->qty * $product->duration_value;
+			} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+				$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+			}
+		} else {
+		
+			$durationInSec = $line->qty *$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY* 3600;
+			$nbDays = $line->qty;
+		
+		}
+		
+		$end = strtotime('+'.$nbDays.' weekdays', $start);
+		
+		$t = new Task($db);
+		$defaultref='';
+		if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
+			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
+		}
+		
+		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
+			$fk_workstation = $line->array_options['options_fk_workstation'];
+		}
+		
+		if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
+			$fk_workstation = $object->array_options['options_fk_workstation'];
+		}
+		
+		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
+		
+		
+		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation);
+		
+		
+	}
+	
+	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
 		global $conf,$langs,$db,$user;
 	
@@ -106,14 +171,14 @@ class Doc2Project {
 		// Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
 		$TTask_id_parent = array();
 		$index = 1;
-	
+		
 		$fk_task_parent = 0;
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
 			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
 			else if ($line->product_type == 9) continue;
-				
+			
 			if ($line->product_type == 9)
 			{
 				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
@@ -141,89 +206,137 @@ class Doc2Project {
 			// => ligne de type service										=> ligne libre
 			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
 			{ // On ne créé que les tâches correspondant à des services
-				$product = new Product($db);
-				if (!empty($line->fk_product)) $product->fetch($line->fk_product);
-	
-				$durationInSec = $start = $end = '';
-				if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
 				
-					$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,array(
+				if(self::isExclude($line)) continue;
 				
-							'{qty}'=>$line->qty
-							,'{totalht}'=>$line->total_ht
+				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
+				{
 				
-					));
-				
-					$durationInSec = eval('return ('.$eval.');') * 3600;
-					$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
-				
-				}
-				else if($line->ref!=null){
+					$s = new Product($db);
 					$s->fetch($line->fk_product);
+					$s->get_sousproduits_arbo();
+					$TProdArbo = $s->get_arbo_each_prod();
 				
-					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
+					if(!empty($TProdArbo)){
 				
-					$durationInSec = $line->qty * $product->duration_value * 3600;
+						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
+							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true);
 				
-					$nbDays = 0;
-					if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-						$nbDays = $line->qty * $product->duration_value;
-					} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-						$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+							if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
+								dol_include_once('/workstation/class/workstation.class.php');
+				
+								$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
+				
+								foreach ($Tids as $workstationProductid) {
+									$TWorkstationProduct = new TWorkstationProduct;
+									$TWorkstationProduct->load($PDOdb, $workstationProductid);
+				
+									$TWorkstation = new TWorkstation;
+									$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+				
+									$line->fk_product = $line->fk_product;
+									//$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+									$line->product_label = $TWorkstation->name;
+									$line->desc = '';
+									$line->total_ht = 0;
+				
+									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid);
+								}
+							}
+						}
+				
+						foreach($TProdArbo as $prod){
+				
+							if($prod['type'] == 1){ //Uniquement les services
+				
+								$ss = new Product($db);
+								$ss->fetch($prod['id']);
+								$line->fk_product = $ss->id;
+								$line->qty = $line->qty * $prod['nb'];
+								$line->product_label = $prod['label'];
+								$line->desc = ($ss->description) ? $ss->description : '';
+								$line->total_ht = $ss->price;
+				
+								$new_fk_parent = $this->create_task($object,$line,$project,$start,$end,$fk_parent);
+				
+								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
+									dol_include_once('/workstation/class/workstation.class.php');
+				
+									$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
+									if(!empty($Tids)) {
+										foreach ($Tids as $workstationProductid) {
+											$TWorkstationProduct = new TWorkstationProduct;
+											$TWorkstationProduct->load($PDOdb, $workstationProductid);
+					
+											$TWorkstation = new TWorkstation;
+											$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+					
+											$line->fk_product = $ss->id;
+											$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+											$line->product_label = $TWorkstation->name;
+											$line->desc = '';
+											$line->total_ht = 0;
+					
+											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid);
+										}
+									}
+								}
+							}
+						}
+					}else{
+						
+						self::lineToTask($object,$line,$project,$start,$end);
 					}
-				} else {
-				
-					$durationInSec = $line->qty *$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY* 3600;
-					$nbDays = $line->qty;
-				
+				}
+				else{
+					
+					self::lineToTask($object,$line,$project,$start,$end);
 				}
 				
-				$end = strtotime('+'.$nbDays.' weekdays', $start);
-	
-				$t = new Task($db);
-				$defaultref='';
-				if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
-					$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-				}
 				
-				if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
-					$fk_workstation = $line->array_options['options_fk_workstation'];
-				}
-				
-				if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
-					$fk_workstation = $object->array_options['options_fk_workstation'];
-				}
-				
-				$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-				self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation);
-	
 			}
 				
 		}
 	}
+	
 	
 	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0)
 	{
 		global $conf,$langs,$db,$user;
 		
 		$task = new Task($db);
-	
-		$task->fk_project = $fk_project;
-		$task->ref = $ref;
-		$task->label = $label;
-		$task->description = $desc;
-	
-		$task->date_start = $start;
-		$task->date_end = $end;
-		$task->fk_task_parent = $fk_task_parent;
-		$task->planned_workload = $planned_workload;
-	
-		if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-		$task->array_options['options_soldprice'] = $total_ht;
-	
-		$r = $task->create($user);
-		if ($r > 0) return $r;
-		else return 0;
+		
+		if($task->fetch('',$ref)>0) {
+			
+			$t->planned_workload = $durationInSec;
+			$t->fk_project = $p->id;
+			
+			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+			$task->array_options['options_soldprice'] = $total_ht;
+			
+			$t->update($user);
+			
+		}
+		else{
+			$task->fk_project = $fk_project;
+			$task->ref = $ref;
+			$task->label = $label;
+			$task->description = $desc;
+			
+			$task->date_start = $start;
+			$task->date_end = $end;
+			$task->fk_task_parent = (int)$fk_task_parent;
+			$task->planned_workload = $planned_workload;
+			
+			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+			$task->array_options['options_soldprice'] = $total_ht;
+			
+			$r = $task->create($user);
+			if ($r > 0) return $r;
+			
+			var_dump($ref,$task);exit;
+				
+		}
+		return 0;
 	}
 }
