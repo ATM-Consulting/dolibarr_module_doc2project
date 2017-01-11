@@ -61,8 +61,28 @@ class Doc2Project {
 	
 		$project = new Project($db);
 		
-		$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-		$project->title			 = $langs->trans('Doc2ProjectTitle', $title);
+		if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
+			$Trans=array(
+				'{ref_client}'=>	$object->ref_client
+				,'{thirdparty_name}'=>$object->thirdparty->name
+				,'{ref}'=>$object->ref
+			);
+			
+			if(!empty($object->array_options )) {
+				foreach($object->array_options as $k=>$v) {
+					$Trans['{'.$k.'}'] = $v;	
+				}
+			}
+			
+			$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
+						
+		}
+		else{
+			$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+			$title = $langs->trans('Doc2ProjectTitle', $title);
+		}
+		
+		$project->title			 = $title;
 		$project->socid          = $object->socid;
 		$project->description    = '';
 		$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
@@ -308,14 +328,15 @@ class Doc2Project {
 		
 		if($task->fetch('',$ref)>0) {
 			
-			$t->planned_workload = $durationInSec;
-			$t->fk_project = $p->id;
+			$task->planned_workload = $planned_workload;
+			$task->fk_project = $fk_project;
 			
 			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
 			$task->array_options['options_soldprice'] = $total_ht;
 			
-			$t->update($user);
+			$task->update($user);
 			
+			return $task->id;
 		}
 		else{
 			$task->fk_project = $fk_project;

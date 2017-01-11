@@ -22,6 +22,8 @@ Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-servi
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
 Doc2projectWithWorkstation=Créer autant de tâche qu'il y a de poste de travail associé au produit/service
 Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
+DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
+DOC2PROJECT_TITLE_PROJECT_info=Clef de remplacement {ref_client},{ref},{thirdparty_name}, {options_...}, ...
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé

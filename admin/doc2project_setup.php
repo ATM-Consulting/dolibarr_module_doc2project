@@ -138,7 +138,19 @@ if($ok) {
 		print '</form>';
 		print '</td></tr>';
 	}
-
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("DOC2PROJECT_TITLE_PROJECT").img_info($langs->trans('DOC2PROJECT_TITLE_PROJECT_info')).'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="set_DOC2PROJECT_TITLE_PROJECT">';
+	print '<input name="DOC2PROJECT_TITLE_PROJECT" value="'.$conf->global->DOC2PROJECT_TITLE_PROJECT.'" placeholder="'.$langs->trans('Doc2ProjectTitle', '{refclient/ref}').' '.$langs->trans('DocConverted').'" size="50" />';
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print '</td></tr>';
+	
 	// Task prefix
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
