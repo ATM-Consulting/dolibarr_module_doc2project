@@ -118,17 +118,41 @@ class Doc2Project {
 		
 		$product = new Product($db);
 		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
+		
+		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
+			$fk_workstation = $line->array_options['options_fk_workstation'];
+		}
+		
+		if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
+			$fk_workstation = $object->array_options['options_fk_workstation'];
+		}
+		
+		
 		$durationInSec = $end = '';
 		if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
 		
-			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,array(
-		
+			$Trans = array(
 					'{qty}'=>$line->qty
 					,'{totalht}'=>$line->total_ht
-		
-			));
-		
-			$durationInSec = eval('return ('.$eval.');') * 3600;
+					,'{fk_workstation}'=>$fk_workstation
+					
+			);
+			
+			if(!empty($conf->workstation->enabled) && $fk_workstation>0) {
+				define('INC_FROM_DOLIBARR',true);
+				dol_include_once('/workstation/config.php');
+				dol_include_once('/workstation/class/workstation.class.php');
+				$PDOdb=new TPDOdb;
+				$ws = new TWorkstation;
+				$ws->load($PDOdb, $fk_workstation);
+				$Trans['{workstation_code}']=$ws->code;
+			}
+			
+			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,$Trans);
+			
+			if(strpos($eval,'return ')===false)$eval = 'return ('.$eval.');';
+			
+			$durationInSec = eval($eval) * 3600;
 			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 		
 		}
@@ -159,14 +183,6 @@ class Doc2Project {
 		$defaultref='';
 		if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
-		}
-		
-		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
-			$fk_workstation = $line->array_options['options_fk_workstation'];
-		}
-		
-		if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
-			$fk_workstation = $object->array_options['options_fk_workstation'];
 		}
 		
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;

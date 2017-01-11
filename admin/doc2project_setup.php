@@ -378,7 +378,7 @@ if($ok) {
 	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CONVERSION_RULE">';
-	print '<input type="text" class="flat" name="DOC2PROJECT_CONVERSION_RULE" value="'.$conf->global->DOC2PROJECT_CONVERSION_RULE.'">';
+	print '<textarea class="flat" name="DOC2PROJECT_CONVERSION_RULE" rows="5" cols="50">'.$conf->global->DOC2PROJECT_CONVERSION_RULE.'</textarea>';
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print '</form>';
 	print '</td></tr>';
