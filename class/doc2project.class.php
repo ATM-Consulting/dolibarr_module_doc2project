@@ -5,7 +5,10 @@ class Doc2Project {
 	public static function isExclude(&$line)
 	{
 		global $conf;
-	
+
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) return true;
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) return true;
+
 		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
 		if (in_array($line->ref, $TExclude)) return true;
 		else return false;
@@ -49,12 +52,13 @@ class Doc2Project {
 		
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
-		
 		if (!empty($object->fk_project))
 		{
 			$project = new Project($db);
 			$r = $project->fetch($object->fk_project);
-			if ($r > 0) return false;
+
+			if($project->id>0) return $project;
+			else return false;
 		}
 
 		$langs->load('doc2project@doc2project');
@@ -214,7 +218,7 @@ class Doc2Project {
 		{
 			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
 			else if ($line->product_type == 9) continue;
-			
+
 			if ($line->product_type == 9)
 			{
 				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
@@ -243,6 +247,7 @@ class Doc2Project {
 			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
 			{ // On ne créé que les tâches correspondant à des services
 				
+//var_dump(self::isExclude($line), $line->desc);
 				if(self::isExclude($line)) continue;
 //var_dump($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT,$line);exit;				
 				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
@@ -332,6 +337,7 @@ class Doc2Project {
 			}
 				
 		}
+//exit('LA');
 	}
 	
 	
