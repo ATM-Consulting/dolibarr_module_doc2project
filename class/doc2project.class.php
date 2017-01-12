@@ -115,7 +115,7 @@ class Doc2Project {
 	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {
 		
 		global $conf,$langs,$db,$user;
-		
+//var_dump($line);exit;		
 		$product = new Product($db);
 		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 		
@@ -187,7 +187,7 @@ class Doc2Project {
 		
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
-		
+//var_dump($defaultref, $label,  $project->id);exit;		
 		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation);
 		
 		
@@ -207,7 +207,7 @@ class Doc2Project {
 		// Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
 		$TTask_id_parent = array();
 		$index = 1;
-		
+//var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
@@ -244,7 +244,7 @@ class Doc2Project {
 			{ // On ne créé que les tâches correspondant à des services
 				
 				if(self::isExclude($line)) continue;
-				
+//var_dump($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT,$line);exit;				
 				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
 				{
 				
@@ -325,7 +325,6 @@ class Doc2Project {
 					}
 				}
 				else{
-					
 					self::lineToTask($object,$line,$project,$start,$end);
 				}
 				
@@ -341,15 +340,14 @@ class Doc2Project {
 		global $conf,$langs,$db,$user;
 		
 		$task = new Task($db);
-		
-		if($task->fetch('',$ref)>0) {
-			
+		$task->fetch('',$ref);
+		if($task->id>0) {
 			$task->planned_workload = $planned_workload;
 			$task->fk_project = $fk_project;
 			
 			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
 			$task->array_options['options_soldprice'] = $total_ht;
-			
+			$task->progress = (int)$task->progress;
 			$task->update($user);
 			
 			return $task->id;
@@ -369,6 +367,9 @@ class Doc2Project {
 			$task->array_options['options_soldprice'] = $total_ht;
 			
 			$r = $task->create($user);
+//var_dump($task);
+//exit('create');
+
 			if ($r > 0) return $r;
 			
 			var_dump($ref,$task);exit;
