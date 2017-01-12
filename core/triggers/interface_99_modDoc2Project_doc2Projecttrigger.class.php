@@ -158,6 +158,11 @@ class InterfaceDoc2Projecttrigger
 		}
 		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
 		{
+			define('INC_FROM_DOLIBARR', true);
+			dol_include_once('/doc2project/config.php');
+			dol_include_once('/projet/class/project.class.php');
+			dol_include_once('/projet/class/task.class.php');
+			dol_include_once('/doc2project/class/doc2project.class.php');
 			
 			if($project = Doc2Project::createProject($object)) {
 			
