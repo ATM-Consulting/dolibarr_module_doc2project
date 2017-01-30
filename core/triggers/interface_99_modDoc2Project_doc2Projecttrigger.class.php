@@ -158,70 +158,22 @@ class InterfaceDoc2Projecttrigger
 		}
 		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
 		{
-			if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
-			if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
-		
-			if (!empty($object->fk_project))
-			{
-				$project = new Project($db);
-				$r = $project->fetch($object->fk_project);
-				if ($r > 0) return 0;
-			}
+			define('INC_FROM_DOLIBARR', true);
+			dol_include_once('/doc2project/config.php');
+			dol_include_once('/projet/class/project.class.php');
+			dol_include_once('/projet/class/task.class.php');
+			dol_include_once('/doc2project/class/doc2project.class.php');
 			
-			$defaultref='';
-    		$modele = empty($conf->global->PROJECT_ADDON)?'mod_project_simple':$conf->global->PROJECT_ADDON;
+			if($project = Doc2Project::createProject($object)) {
 			
-			$file=''; $classname=''; $filefound=0;
-		    $dirmodels=array_merge(array('/'),(array) $conf->modules_parts['models']);
-		    foreach($dirmodels as $reldir)
-		    {
-		    	$file=dol_buildpath($reldir."core/modules/project/".$modele.'.php',0);
-		    	if (file_exists($file))
-		    	{
-		    		$filefound=1;
-		    		$classname = $modele;
-		    		break;
-		    	}
-		    }
-	
-			if ($filefound)
-		    {
-		    	$langs->load('doc2project@doc2project');
+				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
+				$end = '';
 				
-		    	$project = new Project($db);
-				$thirdparty=new Societe($db);
-				
-			    dol_include_once($reldir."core/modules/project/".$modele.'.php');
-			    $modProject = new $classname;
-		
-		    	$project->ref 			 = $modProject->getNextValue($thirdparty, $project);
-				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-				$project->title			 = $langs->trans('Doc2ProjectTitle', $title);
-				$project->socid          = $object->socid;
-		        $project->description    = '';
-		        $project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
-		        $project->datec			 = dol_now();
-		        $project->date_start	 = $object->date_livraison;
-		        $project->date_end		 = null;
-				
-				$r = $project->create($user);
-				if ($r > 0) 
-				{
-					$object->setProject($r);
-					$this->_createTask($db, $object, $project, $user, $conf);
-					$project->setValid($user);
-					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
-				}
-				else 
-				{
-					setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
-				}
-				
-		    }
-			else
-			{
-				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorClassNotFoundProject', $file), 'errors');
+				Doc2Project::parseLines($object, $project, $start, $end);
+				$project->setValid($user);
+			
 			}
+				
 	
 		}
 		else if ($action == 'SHIPPING_VALIDATE' && !empty($conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION))
@@ -286,103 +238,5 @@ class InterfaceDoc2Projecttrigger
         return 0;
     }
 
-	private function _createTask(&$db, &$object, &$project, &$user, &$conf)
-	{
-		global $langs;
-		
-		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
-		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
-		{
-			$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'GLOBAL', $langs->trans('Doc2ProjectGlobalTaskLabel'), $langs->trans('Doc2ProjectGlobalTaskDesc'));
-		}
-		
-		// Tableau qui va contenir à chaque indice (niveau du titre) l'id de la dernier tache parent
-		// Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
-		$TTask_id_parent = array();
-		$index = 1;
-		
-		$fk_task_parent = 0;
-		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
-		foreach($object->lines as $line) 
-		{
-			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
-			else if ($line->product_type == 9) continue;
-			
-			if ($line->product_type == 9)
-			{
-				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
-				{
-					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
-					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
-					
-					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-					$fk_task_parent = $this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
-					
-					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
-				}
-				else // SOUS-TOTAL
-				{
-					$index = 100 - $line->qty - 1;
-					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
-				}
-				
-			}
-			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
-			{
-				//$this->_createOneTask(...); //Avec les postes de travails liés à la nomenclature 
-			}
-			
-			        // => ligne de type service										=> ligne libre
-			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) ) 
-			{ // On ne créé que les tâches correspondant à des services
-				$product = new Product($db);
-				if (!empty($line->fk_product)) $product->fetch($line->fk_product);
-				
-				$durationInSec = $start = $end = '';
-				$duration = trim($product->duration_value);
-				if (!empty($duration))
-				{
-					// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-					$durationInSec = $line->qty * $product->duration_value * 3600;
-					$nbDays = 0;
-					if($product->duration_unit == 'd') 
-					{ // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-						$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-						$nbDays = $line->qty * $product->duration_value;
-					} else if($product->duration_unit == 'h') 
-					{ // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
-						$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
-					}
-					
-					$end = strtotime('+'.$nbDays.' weekdays', $start);
-				}
-				
-				$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-				$this->_createOneTask($db, $user, $project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht);
-				
-			}
-			
-		}
-	}
-
-	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='')
-	{
-		$task = new Task($db);
-		
-		$task->fk_project = $fk_project;
-		$task->ref = $ref;
-		$task->label = $label;
-		$task->description = $desc;
-		
-		$task->date_start = $start;
-		$task->date_end = $end;
-		$task->fk_task_parent = $fk_task_parent;
-		$task->planned_workload = $planned_workload;
-		
-		$task->array_options['options_soldprice'] = $total_ht;
-		
-		$r = $task->create($user);
-		if ($r > 0) return $r;
-		else return 0;
-	}
+	
 }
