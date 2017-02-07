@@ -161,17 +161,17 @@ class Doc2Project {
 		
 		}
 		else if($line->ref!=null){
-			$s->fetch($line->fk_product);
+			$product->fetch($line->fk_product);
 		
 			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
 		
 			$durationInSec = $line->qty * $product->duration_value * 3600;
 		
 			$nbDays = 0;
-			if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+			if($product->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
 				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
 				$nbDays = $line->qty * $product->duration_value;
-			} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 			}
 		} else {
@@ -363,7 +363,7 @@ class Doc2Project {
 			$task->ref = $ref;
 			$task->label = $label;
 			$task->description = $desc;
-			
+			$task->date_c=dol_now();
 			$task->date_start = $start;
 			$task->date_end = $end;
 			$task->fk_task_parent = (int)$fk_task_parent;
@@ -376,9 +376,11 @@ class Doc2Project {
 //var_dump($task);
 //exit('create');
 
-			if ($r > 0) return $r;
-			
-			var_dump($ref,$task);exit;
+			if ($r > 0) {
+				return $r;
+			} else {
+				dol_print_error($db);
+			}
 				
 		}
 		return 0;
