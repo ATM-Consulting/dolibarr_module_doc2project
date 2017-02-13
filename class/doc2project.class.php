@@ -52,9 +52,22 @@ class Doc2Project {
 		
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
-		if (!empty($object->fk_project))
+		
+		if(empty($object->thirdparty)) $object->fetch_thirdparty();
+		
+		$project = new Project($db);
+		
+		if(!empty($conf->global->DOC2PROJECT_SEARCH_CUSTOMER_PROJECT) && $object->thirdparty->has_projects()) {
+			$fk_projet = self::getCustomerProject($object->thirdparty);
+			$project->fetch($fk_projet);
+			
+			$object->setProject($project->id);
+
+			if($project->id>0) return $project;
+			else return false;
+		}
+		elseif (!empty($object->fk_project))
 		{
-			$project = new Project($db);
 			$r = $project->fetch($object->fk_project);
 
 			if($project->id>0) return $project;
@@ -62,8 +75,6 @@ class Doc2Project {
 		}
 
 		$langs->load('doc2project@doc2project');
-	
-		$project = new Project($db);
 		
 		if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
 			$Trans=array(
@@ -113,6 +124,20 @@ class Doc2Project {
 		
 		
 		return false;
+		
+	}
+
+	public static function getCustomerProject(&$soc) {
+		
+		global $db;
+		
+		$sql = 'SELECT rowid
+				FROM '.MAIN_DB_PREFIX.'projet
+				WHERE fk_soc = '.$soc->id;
+		$resql = $db->query($sql);
+		$res = $db->fetch_object($resql);
+		
+		return $res->rowid;
 		
 	}
 	
