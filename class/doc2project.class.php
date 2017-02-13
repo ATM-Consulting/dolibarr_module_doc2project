@@ -238,6 +238,7 @@ class Doc2Project {
 		$index = 1;
 //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
+		$object->fetch_lines();
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
