@@ -369,7 +369,9 @@ class Doc2Project {
 	
 	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0)
 	{
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$hookmanager;
+		
+		$hookmanager->initHooks(array('doc2projecttaskcard','globalcard'));
 		
 		$task = new Task($db);
 		$task->fetch('',$ref);
@@ -385,6 +387,10 @@ class Doc2Project {
 			return $task->id;
 		}
 		else{
+			
+			$action = 'create_task';
+			$reshook = $hookmanager->executeHooks('doActions', array('id_project'=>$fk_project), $task, $action);
+			
 			$task->fk_project = $fk_project;
 			$task->ref = $ref;
 			$task->label = $label;
