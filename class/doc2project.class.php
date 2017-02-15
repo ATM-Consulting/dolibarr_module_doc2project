@@ -389,7 +389,7 @@ class Doc2Project {
 		else{
 			
 			$action = 'create_task';
-			$reshook = $hookmanager->executeHooks('doActions', array('id_project'=>$fk_project), $task, $action);
+			$reshook = $hookmanager->executeHooks('doActions', array('id_project'=>$fk_project, 'fk_workstation'=>$fk_workstation, 'planned_workload'=>$planned_workload), $task, $action);
 			
 			$task->fk_project = $fk_project;
 			$task->ref = $ref;
