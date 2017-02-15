@@ -391,20 +391,24 @@ class Doc2Project {
 			$action = 'create_task';
 			$reshook = $hookmanager->executeHooks('doActions', array('id_project'=>$fk_project, 'fk_workstation'=>$fk_workstation, 'planned_workload'=>$planned_workload), $task, $action);
 			
-			$task->fk_project = $fk_project;
-			$task->ref = $ref;
-			$task->label = $label;
-			$task->description = $desc;
-			$task->date_c=dol_now();
-			$task->date_start = $start;
-			$task->date_end = $end;
-			$task->fk_task_parent = (int)$fk_task_parent;
-			$task->planned_workload = $planned_workload;
-			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
-			
-			$r = $task->create($user);
+			if(empty($task->id)) {
+				
+				$task->fk_project = $fk_project;
+				$task->ref = $ref;
+				$task->label = $label;
+				$task->description = $desc;
+				$task->date_c=dol_now();
+				$task->date_start = $start;
+				$task->date_end = $end;
+				$task->fk_task_parent = (int)$fk_task_parent;
+				$task->planned_workload = $planned_workload;
+				
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+				
+				$r = $task->create($user);
+				
+			} else $r = $task->id;
 //var_dump($task);
 //exit('create');
 
