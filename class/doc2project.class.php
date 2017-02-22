@@ -58,15 +58,19 @@ class Doc2Project {
 		$project = new Project($db);
 		
 		if(!empty($conf->global->DOC2PROJECT_SEARCH_CUSTOMER_PROJECT) && $object->thirdparty->has_projects()) {
-			$fk_projet = self::getCustomerProject($object->thirdparty);
-			$project->fetch($fk_projet);
-			
-			$object->setProject($project->id);
-
-			if($project->id>0) return $project;
-			else return false;
+			$fk_projet = self::getCustomerProjectEprolor($object);
+			if($fk_projet) {
+				
+				$project->fetch($fk_projet);
+				
+				$object->setProject($project->id);
+	
+				if($project->id>0) return $project;
+				
+			}
 		}
-		elseif (!empty($object->fk_project))
+		
+		if (!empty($object->fk_project))
 		{
 			$r = $project->fetch($object->fk_project);
 
@@ -97,7 +101,7 @@ class Doc2Project {
 			$title = $langs->trans('Doc2ProjectTitle', $title);
 		}
 		
-		$project->title			 = $title;
+		$project->title			 = $title.' : '.self::getRALLabel($object);
 		$project->socid          = $object->socid;
 		$project->description    = '';
 		$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
@@ -127,17 +131,48 @@ class Doc2Project {
 		
 	}
 
-	public static function getCustomerProject(&$soc) {
+	/**
+	 * Renvoie le projet dont la commande a la même RAL que celle de la commande qu'on est en train de valider
+	 */
+	public static function getCustomerProjectEprolor(&$object) {
 		
 		global $db;
 		
+		if(empty($object->lines))$object->fetch_lines();
+		
+		$ral_commande_actuelle = self::getRALLabel($object);
+		
+		// Récupération des projets du client
 		$sql = 'SELECT rowid
 				FROM '.MAIN_DB_PREFIX.'projet
-				WHERE fk_soc = '.$soc->id;
+				WHERE fk_soc = '.$object->thirdparty->id;
 		$resql = $db->query($sql);
-		$res = $db->fetch_object($resql);
 		
-		return $res->rowid;
+		while($res = $db->fetch_object($resql)) {
+			// Récupération de la ou des commandes liées au projet
+			$sql = 'SELECT rowid FROM '.MAIN_DB_PREFIX.'commande WHERE fk_projet = '.$res->rowid;
+			$resql2 = $db->query($sql);
+			while($res2 = $db->fetch_object($resql2)) {
+				$commande = new Commande($db);
+				$commande->fetch($res2->rowid);
+				$commande->fetch_lines();
+				// Parcours des lignes de la commande pour vérifier 
+				// si l'une d'elles contient la même RAL que la commande qu'on est en train de valider
+				foreach($commande->lines as $line) {
+					if($line->ref === $ral_commande_actuelle) return $res->rowid; // id project
+				}
+			}
+		}
+
+		return 0;
+		
+	}
+
+	public static function getRALLabel(&$object) {
+		
+		foreach($object->lines as $line) {
+			if(strpos($line->ref, 'RAL_') !== false) return $line->ref;
+		}
 		
 	}
 	
