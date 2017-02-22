@@ -52,9 +52,22 @@ class Doc2Project {
 		
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
-		if (!empty($object->fk_project))
+		
+		if(empty($object->thirdparty)) $object->fetch_thirdparty();
+		
+		$project = new Project($db);
+		
+		if(!empty($conf->global->DOC2PROJECT_SEARCH_CUSTOMER_PROJECT) && $object->thirdparty->has_projects()) {
+			$fk_projet = self::getCustomerProject($object->thirdparty);
+			$project->fetch($fk_projet);
+			
+			$object->setProject($project->id);
+
+			if($project->id>0) return $project;
+			else return false;
+		}
+		elseif (!empty($object->fk_project))
 		{
-			$project = new Project($db);
 			$r = $project->fetch($object->fk_project);
 
 			if($project->id>0) return $project;
@@ -62,8 +75,6 @@ class Doc2Project {
 		}
 
 		$langs->load('doc2project@doc2project');
-	
-		$project = new Project($db);
 		
 		if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
 			$Trans=array(
@@ -113,6 +124,20 @@ class Doc2Project {
 		
 		
 		return false;
+		
+	}
+
+	public static function getCustomerProject(&$soc) {
+		
+		global $db;
+		
+		$sql = 'SELECT rowid
+				FROM '.MAIN_DB_PREFIX.'projet
+				WHERE fk_soc = '.$soc->id;
+		$resql = $db->query($sql);
+		$res = $db->fetch_object($resql);
+		
+		return $res->rowid;
 		
 	}
 	
@@ -213,6 +238,7 @@ class Doc2Project {
 		$index = 1;
 //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
+		$object->fetch_lines();
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
@@ -343,7 +369,9 @@ class Doc2Project {
 	
 	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0)
 	{
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$hookmanager;
+		
+		$hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		$task = new Task($db);
 		$task->fetch('',$ref);
@@ -359,20 +387,28 @@ class Doc2Project {
 			return $task->id;
 		}
 		else{
-			$task->fk_project = $fk_project;
-			$task->ref = $ref;
-			$task->label = $label;
-			$task->description = $desc;
-			$task->date_c=dol_now();
-			$task->date_start = $start;
-			$task->date_end = $end;
-			$task->fk_task_parent = (int)$fk_task_parent;
-			$task->planned_workload = $planned_workload;
 			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
+			$action = 'create_task';
+			$reshook = $hookmanager->executeHooks('doActions', array('id_project'=>$fk_project, 'fk_workstation'=>$fk_workstation, 'planned_workload'=>$planned_workload), $task, $action);
 			
-			$r = $task->create($user);
+			if(empty($task->id)) {
+				
+				$task->fk_project = $fk_project;
+				$task->ref = $ref;
+				$task->label = $label;
+				$task->description = $desc;
+				$task->date_c=dol_now();
+				$task->date_start = $start;
+				$task->date_end = $end;
+				$task->fk_task_parent = (int)$fk_task_parent;
+				$task->planned_workload = $planned_workload;
+				
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+				
+				$r = $task->create($user);
+				
+			} else $r = $task->id;
 //var_dump($task);
 //exit('create');
 
