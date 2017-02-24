@@ -164,6 +164,10 @@ class InterfaceDoc2Projecttrigger
 			dol_include_once('/projet/class/task.class.php');
 			dol_include_once('/doc2project/class/doc2project.class.php');
 			
+			// Petit hack pour simuler la provenance de doc2project ("from" et "type" sont défini en paramètre sur le lien de création en manuel)
+			$_REQUEST['from'] = 'doc2project';
+			$_REQUEST['type'] = 'commande';
+			
 			if($project = Doc2Project::createProject($object)) {
 			
 				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
