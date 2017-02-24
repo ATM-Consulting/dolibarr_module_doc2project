@@ -48,72 +48,86 @@ class Doc2Project {
 	
 	public static function createProject(&$object) {
 		
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$hookmanager;
+		
+		$hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
-		if (!empty($object->fk_project))
-		{
-			$project = new Project($db);
-			$r = $project->fetch($object->fk_project);
-
-			if($project->id>0) return $project;
-			else return false;
-		}
-
-		$langs->load('doc2project@doc2project');
-	
+		
+		if(empty($object->thirdparty)) $object->fetch_thirdparty();
+		
 		$project = new Project($db);
 		
-		if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
-			$Trans=array(
-				'{ref_client}'=>	$object->ref_client
-				,'{thirdparty_name}'=>$object->thirdparty->name
-				,'{ref}'=>$object->ref
-			);
-			
-			if(!empty($object->array_options )) {
-				foreach($object->array_options as $k=>$v) {
-					$Trans['{'.$k.'}'] = $v;	
-				}
-			}
-			
-			$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
-						
-		}
-		else{
-			$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-			$title = $langs->trans('Doc2ProjectTitle', $title);
-		}
+		$action = 'createProject';
+		$reshook = $hookmanager->executeHooks('doActions', array('project' => &$project), $object, $action);
 		
-		$project->title			 = $title;
-		$project->socid          = $object->socid;
-		$project->description    = '';
-		$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
-		$project->datec			 = dol_now();
-		$project->date_start	 = $object->date_livraison;
-		$project->date_end		 = null;
-	
-		$project->ref 			 = self::get_project_ref($project);
-			
-		$r = $project->create($user);
-		if ($r > 0)
+		if ($reshook)
 		{
-			$object->setProject($r);
-			
-			return $project;
-			
-			setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+			return $reshook;
 		}
 		else
 		{
-			setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			if (!empty($object->fk_project))
+			{
+				$r = $project->fetch($object->fk_project);
+
+				if($project->id>0) return $project;
+				else return false;
+			}
+
+			$langs->load('doc2project@doc2project');
+
+			$project = new Project($db);
+
+			if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
+				$Trans=array(
+					'{ref_client}'=>	$object->ref_client
+					,'{thirdparty_name}'=>$object->thirdparty->name
+					,'{ref}'=>$object->ref
+				);
+
+				if(!empty($object->array_options )) {
+					foreach($object->array_options as $k=>$v) {
+						$Trans['{'.$k.'}'] = $v;	
+					}
+				}
+
+				$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
+
+			}
+			else{
+				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+				$title = $langs->trans('Doc2ProjectTitle', $title);
+			}
+
+			$project->title			 = $title;
+			$project->socid          = $object->socid;
+			$project->description    = '';
+			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
+			$project->datec			 = dol_now();
+			$project->date_start	 = $object->date_livraison;
+			$project->date_end		 = null;
+
+			$project->ref 			 = self::get_project_ref($project);
+
+			$r = $project->create($user);
+			if ($r > 0)
+			{
+				$object->setProject($r);
+
+				return $project;
+
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+			}
+			else
+			{
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			}
 		}
 		
 		
-		
 		return false;
-		
 	}
 	
 	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {

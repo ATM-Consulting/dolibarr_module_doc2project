@@ -14,7 +14,7 @@ class ActionsDoc2Project
 		{
 			if((float)DOL_VERSION>=3.6) {
 				$langs->load('doc2project@doc2project');
-				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project';
+				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element;
 				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 				print '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>';
 			}
@@ -33,7 +33,7 @@ class ActionsDoc2Project
 		)
 		{
 			$langs->load('doc2project@doc2project');
-			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project';
+			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element;
 			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 			?>
 			<script type="text/javascript">
