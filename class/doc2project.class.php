@@ -49,9 +49,9 @@ class Doc2Project {
 	public static function createProject(&$object) {
 		
 		global $conf,$langs,$db,$user,$hookmanager;
-		
+
 		$hookmanager->initHooks(array('doc2projecttaskcard'));
-		
+
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
 		
@@ -64,7 +64,7 @@ class Doc2Project {
 		
 		if ($reshook)
 		{
-			return $reshook;
+			return $project; // £project est donnée par référence et il doit avoir été soit create ou fetch
 		}
 		else
 		{
@@ -133,7 +133,7 @@ class Doc2Project {
 	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {
 		
 		global $conf,$langs,$db,$user;
-//var_dump($line);exit;		
+		
 		$product = new Product($db);
 		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 		
@@ -214,7 +214,7 @@ class Doc2Project {
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
 		global $conf,$langs,$db,$user;
-	
+		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
@@ -357,46 +357,62 @@ class Doc2Project {
 	
 	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0)
 	{
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$hookmanager;
+
+		$hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		$task = new Task($db);
-		$task->fetch('',$ref);
-		if($task->id>0) {
-			$task->planned_workload = $planned_workload;
-			$task->fk_project = $fk_project;
-			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
-			$task->progress = (int)$task->progress;
-			$task->update($user);
-			
+		
+		$action = 'createOneTask';
+		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation);
+		$reshook = $hookmanager->executeHooks('doActions', $parameters, $task, $action);	
+		
+		if ($reshook)
+		{
 			return $task->id;
 		}
-		else{
-			$task->fk_project = $fk_project;
-			$task->ref = $ref;
-			$task->label = $label;
-			$task->description = $desc;
-			$task->date_c=dol_now();
-			$task->date_start = $start;
-			$task->date_end = $end;
-			$task->fk_task_parent = (int)$fk_task_parent;
-			$task->planned_workload = $planned_workload;
-			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
-			
-			$r = $task->create($user);
-//var_dump($task);
-//exit('create');
+		else
+		{
+			$task->fetch('',$ref);
+			if($task->id>0) {
+				$task->planned_workload = $planned_workload;
+				$task->fk_project = $fk_project;
 
-			if ($r > 0) {
-				return $r;
-			} else {
-				dol_print_error($db);
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+				$task->progress = (int)$task->progress;
+				$task->update($user);
+
+				return $task->id;
 			}
-				
+			else{
+
+				$task->fk_project = $fk_project;
+				$task->ref = $ref;
+				$task->label = $label;
+				$task->description = $desc;
+				$task->date_c=dol_now();
+				$task->date_start = $start;
+				$task->date_end = $end;
+				$task->fk_task_parent = (int)$fk_task_parent;
+				$task->planned_workload = $planned_workload;
+
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+
+				$r = $task->create($user);
+	//var_dump($task);
+	//exit('create');
+
+				if ($r > 0) {
+					return $r;
+				} else {
+					dol_print_error($db);
+				}
+
+			}	
 		}
+		
 		return 0;
 	}
 }
