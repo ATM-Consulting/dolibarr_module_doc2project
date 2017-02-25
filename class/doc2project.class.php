@@ -60,10 +60,11 @@ class Doc2Project {
 		$project = new Project($db);
 		
 		$action = 'createProject';
-		$reshook = $hookmanager->executeHooks('doActions', array('project' => &$project), $object, $action);
+		$reshook = $hookmanager->executeHooks('createProject', array('project' => &$project), $object, $action);
 		
-		if ($reshook)
+		if (!empty($hookmanager->resArray))
 		{
+			$project=&$hookmanager->resArray[0];
 			return $project; // £project est donnée par référence et il doit avoir été soit create ou fetch
 		}
 		else
@@ -266,7 +267,7 @@ class Doc2Project {
 //var_dump($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT,$line);exit;				
 				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
 				{
-				
+					
 					$s = new Product($db);
 					$s->fetch($line->fk_product);
 					$s->get_sousproduits_arbo();
@@ -344,6 +345,7 @@ class Doc2Project {
 					}
 				}
 				else{
+					
 					self::lineToTask($object,$line,$project,$start,$end);
 				}
 				
@@ -365,11 +367,11 @@ class Doc2Project {
 		
 		$action = 'createOneTask';
 		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation);
-		$reshook = $hookmanager->executeHooks('doActions', $parameters, $task, $action);	
+		$reshook = $hookmanager->executeHooks('createTask', $parameters, $task, $action);	
 		
-		if ($reshook)
+		if (!empty($hookmanager->resArray))
 		{
-			return $task->id;
+			return $hookmanager->resArray[0]->id;
 		}
 		else
 		{
@@ -401,9 +403,7 @@ class Doc2Project {
 				$task->array_options['options_soldprice'] = $total_ht;
 
 				$r = $task->create($user);
-	//var_dump($task);
-	//exit('create');
-
+	
 				if ($r > 0) {
 					return $r;
 				} else {

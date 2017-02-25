@@ -172,13 +172,12 @@ class InterfaceDoc2Projecttrigger
 			
 				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 				$end = '';
-				
 				Doc2Project::parseLines($object, $project, $start, $end);
 				$project->setValid($user);
 			
 			}
 				
-	
+			
 		}
 		else if ($action == 'SHIPPING_VALIDATE' && !empty($conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION))
 		{
