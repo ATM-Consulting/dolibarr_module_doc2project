@@ -48,78 +48,93 @@ class Doc2Project {
 	
 	public static function createProject(&$object) {
 		
-		global $conf,$langs,$db,$user;
-		
+		global $conf,$langs,$db,$user,$hookmanager;
+
+		$hookmanager->initHooks(array('doc2projecttaskcard'));
+
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
-		if (!empty($object->fk_project))
-		{
-			$project = new Project($db);
-			$r = $project->fetch($object->fk_project);
-
-			if($project->id>0) return $project;
-			else return false;
-		}
-
-		$langs->load('doc2project@doc2project');
-	
+		
+		if(empty($object->thirdparty)) $object->fetch_thirdparty();
+		
 		$project = new Project($db);
 		
-		if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
-			$Trans=array(
-				'{ref_client}'=>	$object->ref_client
-				,'{thirdparty_name}'=>$object->thirdparty->name
-				,'{ref}'=>$object->ref
-			);
-			
-			if(!empty($object->array_options )) {
-				foreach($object->array_options as $k=>$v) {
-					$Trans['{'.$k.'}'] = $v;	
-				}
-			}
-			
-			$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
-						
-		}
-		else{
-			$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-			$title = $langs->trans('Doc2ProjectTitle', $title);
-		}
+		$action = 'createProject';
+		$reshook = $hookmanager->executeHooks('createProject', array('project' => &$project), $object, $action);
 		
-		$project->title			 = $title;
-		$project->socid          = $object->socid;
-		$project->description    = '';
-		$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
-		$project->datec			 = dol_now();
-		$project->date_start	 = $object->date_livraison;
-		$project->date_end		 = null;
-	
-		$project->ref 			 = self::get_project_ref($project);
-			
-		$r = $project->create($user);
-		if ($r > 0)
+		if (!empty($hookmanager->resArray))
 		{
-			$object->setProject($r);
-			
-			return $project;
-			
-			setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+			$project=&$hookmanager->resArray[0];
+			return $project; // £project est donnée par référence et il doit avoir été soit create ou fetch
 		}
 		else
 		{
-			setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			if (!empty($object->fk_project))
+			{
+				$r = $project->fetch($object->fk_project);
+
+				if($project->id>0) return $project;
+				else return false;
+			}
+
+			$langs->load('doc2project@doc2project');
+
+			$project = new Project($db);
+
+			if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
+				$Trans=array(
+					'{ref_client}'=>	$object->ref_client
+					,'{thirdparty_name}'=>$object->thirdparty->name
+					,'{ref}'=>$object->ref
+				);
+
+				if(!empty($object->array_options )) {
+					foreach($object->array_options as $k=>$v) {
+						$Trans['{'.$k.'}'] = $v;	
+					}
+				}
+
+				$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
+
+			}
+			else{
+				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+				$title = $langs->trans('Doc2ProjectTitle', $title);
+			}
+
+			$project->title			 = $title;
+			$project->socid          = $object->socid;
+			$project->description    = '';
+			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
+			$project->datec			 = dol_now();
+			$project->date_start	 = $object->date_livraison;
+			$project->date_end		 = null;
+
+			$project->ref 			 = self::get_project_ref($project);
+
+			$r = $project->create($user);
+			if ($r > 0)
+			{
+				$object->setProject($r);
+
+				return $project;
+
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+			}
+			else
+			{
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			}
 		}
 		
 		
-		
 		return false;
-		
 	}
 	
 	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {
 		
 		global $conf,$langs,$db,$user;
-//var_dump($line);exit;		
+		
 		$product = new Product($db);
 		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 		
@@ -161,17 +176,17 @@ class Doc2Project {
 		
 		}
 		else if($line->ref!=null){
-			$s->fetch($line->fk_product);
+			$product->fetch($line->fk_product);
 		
 			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
 		
 			$durationInSec = $line->qty * $product->duration_value * 3600;
 		
 			$nbDays = 0;
-			if($s->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
+			if($product->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
 				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
 				$nbDays = $line->qty * $product->duration_value;
-			} else if($s->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 			}
 		} else {
@@ -200,7 +215,7 @@ class Doc2Project {
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
 		global $conf,$langs,$db,$user;
-	
+		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
@@ -252,7 +267,7 @@ class Doc2Project {
 //var_dump($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT,$line);exit;				
 				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
 				{
-				
+					
 					$s = new Product($db);
 					$s->fetch($line->fk_product);
 					$s->get_sousproduits_arbo();
@@ -330,6 +345,7 @@ class Doc2Project {
 					}
 				}
 				else{
+					
 					self::lineToTask($object,$line,$project,$start,$end);
 				}
 				
@@ -343,44 +359,60 @@ class Doc2Project {
 	
 	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0)
 	{
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$hookmanager;
+
+		$hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		$task = new Task($db);
-		$task->fetch('',$ref);
-		if($task->id>0) {
-			$task->planned_workload = $planned_workload;
-			$task->fk_project = $fk_project;
-			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
-			$task->progress = (int)$task->progress;
-			$task->update($user);
-			
-			return $task->id;
+		
+		$action = 'createOneTask';
+		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation);
+		$reshook = $hookmanager->executeHooks('createTask', $parameters, $task, $action);	
+		
+		if (!empty($hookmanager->resArray))
+		{
+			return $hookmanager->resArray[0]->id;
 		}
-		else{
-			$task->fk_project = $fk_project;
-			$task->ref = $ref;
-			$task->label = $label;
-			$task->description = $desc;
-			
-			$task->date_start = $start;
-			$task->date_end = $end;
-			$task->fk_task_parent = (int)$fk_task_parent;
-			$task->planned_workload = $planned_workload;
-			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
-			
-			$r = $task->create($user);
-//var_dump($task);
-//exit('create');
+		else
+		{
+			$task->fetch('',$ref);
+			if($task->id>0) {
+				$task->planned_workload = $planned_workload;
+				$task->fk_project = $fk_project;
 
-			if ($r > 0) return $r;
-			
-			var_dump($ref,$task);exit;
-				
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+				$task->progress = (int)$task->progress;
+				$task->update($user);
+
+				return $task->id;
+			}
+			else{
+
+				$task->fk_project = $fk_project;
+				$task->ref = $ref;
+				$task->label = $label;
+				$task->description = $desc;
+				$task->date_c=dol_now();
+				$task->date_start = $start;
+				$task->date_end = $end;
+				$task->fk_task_parent = (int)$fk_task_parent;
+				$task->planned_workload = $planned_workload;
+
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+
+				$r = $task->create($user);
+	
+				if ($r > 0) {
+					return $r;
+				} else {
+					dol_print_error($db);
+				}
+
+			}	
 		}
+		
 		return 0;
 	}
 }
