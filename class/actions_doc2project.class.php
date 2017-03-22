@@ -363,7 +363,7 @@ class ActionsDoc2Project
 			{
 				//$t->date_end = $start;
 				$t->planned_workload = 1;
-				$t->progress = 100;
+				//$t->progress = 100; // Spécifique à retirer
 			}
 			else
 			{
