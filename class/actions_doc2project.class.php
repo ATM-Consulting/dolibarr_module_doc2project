@@ -202,6 +202,7 @@ class ActionsDoc2Project
 				
 				// Création du projet
 				$p->title			= (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+				if (strpos($p->title, $object->thirdparty->name) === false) $p->title = $object->thirdparty->name.' - '.$p->title;
 				$p->socid			= $object->socid;
 				$p->statut			= 0;
 				$p->date_start		= dol_now();
