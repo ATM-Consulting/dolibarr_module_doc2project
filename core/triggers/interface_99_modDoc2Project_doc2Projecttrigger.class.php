@@ -400,6 +400,7 @@ class InterfaceDoc2Projecttrigger
 		
 		$ATMdb = new TPDOdb;
 		//pre($TLinesServices, true);exit;
+		$TTitre = array();
 		foreach($TLinesServices as $id_product => $TLines) {
 		
 			// On va chercher la nomenclature du produit, puis on crée les tâches du projet en fonction des postes de travail trouvés.
@@ -436,6 +437,7 @@ class InterfaceDoc2Projecttrigger
 				// Tableau contenant les id des tâches créées et le poste de travail associé, va servir à définir la hiérarchie des tâches
 				$TTaskWS = array();
 				foreach($n->TNomenclatureWorkstation as $ws) {
+					$TTitre[$ws->note_private] = $ws->note_private;
 					
 					// Comparaison du tiers de la commande avec le tiers "Cibox" (uniquement pour Epoxy), si c'est le même
 					$fk_ws = $ws->workstation->rowid;
@@ -443,7 +445,7 @@ class InterfaceDoc2Projecttrigger
 					if($conf->cliepoxy->enabled && ($ws->workstation->code == 'liquide' || $no_stock)) $fk_ws = 0;
 					
 					//$titre = $ws->note_private." ".((count($TLines) > 1) ? "(x".count($TLines).")" : '')." <br />RAL : ".$p->ref;
-					$titre = $ws->note_private."<br />RAL : ".$p->ref;
+					$titre = $ws->note_private."<br />RAL : ".$ral;
 					$nb_heures_preparation = $ws->nb_hour_prepare;
 					$nb_heures_fabrication = $ws->nb_hour_manufacture;
 					
@@ -460,11 +462,15 @@ class InterfaceDoc2Projecttrigger
 				$this->_setHierarchieTaches($TTaskWS);
 				
 				// TODO Appeler le script interface.php de scrumboard en ajax pour être sûr que l'ordonnancement se fait bien à chaque commande
-				
 			}
 
 		}
-		
+
+		// Modification titre projet : ajout services + ral
+		$ral = str_replace('POUDRE_', '', $p->ref);
+		$title = implode(' + ', $TTitre) . $ral;
+		$project->title .= ' - ' . $title;
+		$project->update($user);
 	}
 
 	private function _createOneTask(&$db, &$user, $fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $afficher_sur_la_grille=0, $fk_workstation='', $fk_soc_order=0, $fk_product_ral=0)
