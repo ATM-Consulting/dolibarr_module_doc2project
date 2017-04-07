@@ -22,6 +22,8 @@ Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-servi
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
 Doc2projectWithWorkstation=Créer autant de tâche qu'il y a de poste de travail associé au produit/service
 Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
+DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
+DOC2PROJECT_TITLE_PROJECT_info=Clef de remplacement {ref_client},{ref},{thirdparty_name}, {options_...}, ...
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
@@ -54,3 +56,7 @@ Doc2ProjectGlobalTaskLabel=Tâche global
 Doc2ProjectGlobalTaskDesc=Utilisée pour la saisie de temps
 Doc2ProjectCreateTaskWithSubtotal=Créer des tâches correspondant aux titres afin de garder une hiérarchie (module "Subtotal" requis)
 Doc2ProjectCreateTaskWithSubtotalTooltip=Attention : la bonne hiérarchisation des tâches, nécessite que les niveaux de titre se suivent (pas de titre 1 puis subitement un titre 3) et que des sous-totaux soient présents en tant que délimiteur
+
+
+Doc2ProjectConversionRule=Règle de conversion de temps des services en tâche
+Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si vide prendra la durée du service. {qty} quantité de la ligne, {totalht} total HT de la ligne
