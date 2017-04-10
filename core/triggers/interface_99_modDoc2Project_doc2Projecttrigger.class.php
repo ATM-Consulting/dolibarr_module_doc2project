@@ -401,6 +401,7 @@ class InterfaceDoc2Projecttrigger
 		$ATMdb = new TPDOdb;
 		//pre($TLinesServices, true);exit;
 		$TTitre = array();
+		$ral = '';
 		foreach($TLinesServices as $id_product => $TLines) {
 		
 			// On va chercher la nomenclature du produit, puis on crée les tâches du projet en fonction des postes de travail trouvés.
@@ -422,6 +423,8 @@ class InterfaceDoc2Projecttrigger
 						if($p->stock_reel < $TLinesPeinturePoudre[0]->qty) $no_stock = true;
 					}
 				}
+				$no_stock = false; // On ne considère pas le stock pour le moment
+				$ral = str_replace('POUDRE_', '', $p->ref);
 				
 				// Récupération de l'id du ws Petite chaîne
 				$resql = $db->query('SELECT rowid FROM '.MAIN_DB_PREFIX.'workstation WHERE code = "pt_chaine"');
@@ -467,7 +470,6 @@ class InterfaceDoc2Projecttrigger
 		}
 
 		// Modification titre projet : ajout services + ral
-		$ral = str_replace('POUDRE_', '', $p->ref);
 		$title = implode(' + ', $TTitre) . $ral;
 		$project->title .= ' - ' . $title;
 		$project->update($user);

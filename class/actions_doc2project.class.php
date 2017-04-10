@@ -171,7 +171,7 @@ class ActionsDoc2Project
 				?></td>
 				
 			</tr>
-			<?
+			<?php
 		}
 
 	}
