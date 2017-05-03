@@ -231,6 +231,9 @@ class Doc2Project {
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
+			// Excluded product 
+			if(self::isExclude($line)) continue;
+			
 			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
 			else if ($line->product_type == 9) continue;
 
@@ -261,10 +264,7 @@ class Doc2Project {
 			// => ligne de type service										=> ligne libre
 			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
 			{ // On ne créé que les tâches correspondant à des services
-				
-//var_dump(self::isExclude($line), $line->desc);
-				if(self::isExclude($line)) continue;
-//var_dump($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT,$line);exit;				
+						
 				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
 				{
 					
@@ -348,12 +348,8 @@ class Doc2Project {
 					
 					self::lineToTask($object,$line,$project,$start,$end);
 				}
-				
-				
 			}
-				
 		}
-//exit('LA');
 	}
 	
 	
