@@ -72,7 +72,9 @@ class Doc2Project {
 			if (!empty($object->fk_project))
 			{
 				$r = $project->fetch($object->fk_project);
-
+				
+				if (!empty($conf->global->DOC2PROJECT_SET_PROJECT_DRAFT)) { $res = $project->setStatut(0); $project->statut = 0; }
+				
 				if($project->id>0) return $project;
 				else return false;
 			}
