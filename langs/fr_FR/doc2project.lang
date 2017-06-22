@@ -24,6 +24,7 @@ Doc2projectWithWorkstation=Créer autant de tâche qu'il y a de poste de travail
 Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
 DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
 DOC2PROJECT_TITLE_PROJECT_info=Clef de remplacement {ref_client},{ref},{thirdparty_name}, {options_...}, ...
+DOC2PROJECT_SET_PROJECT_DRAFT=Repasser le projet au statut brouillon sur la création de nouvelles tâches
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
@@ -60,3 +61,5 @@ Doc2ProjectCreateTaskWithSubtotalTooltip=Attention : la bonne hiérarchisation d
 
 Doc2ProjectConversionRule=Règle de conversion de temps des services en tâche
 Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si vide prendra la durée du service. {qty} quantité de la ligne, {totalht} total HT de la ligne
+
+Doc2ProjectErrorCanNotFetchProject=Erreur : impossible de charger ou de créer le projet

@@ -204,31 +204,30 @@ class ActionsDoc2Project
 			$PDOdb = new TPDOdb;
 
 			// CREATION OU CHARGEMENT DU PROJET
-			if(empty($object->fk_project)) {
+			$project = Doc2Project::createProject($object); // La méthode fetch déjà le projet s'il existe
+			
+			if (!empty($project->id))
+			{
+				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
+				$end = '';
 
-				$project = Doc2Project::createProject($object);
+				Doc2Project::parseLines($object, $project, $start,$end);
 
-			} else {
+				// LIEN OBJECT / PROJECT
+				$project->date_end = $end;
+				if($resetProjet) $project->statut = 0;
+				$project->update($user);
 
-				$project = new Project($db);
-				$project->fetch($object->fk_project);
-
+				$object->setProject($project->id);
+				if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $project->add_contact($user->id,'PROJECTLEADER','internal');
+				//exit;
+				header('Location:'.dol_buildpath('/projet/tasks.php?id='.$project->id,1));
 			}
-
-			$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
-			$end = '';
+			else
+			{
+				setEventMessage($langs->trans('Doc2ProjectErrorCanNotFetchProject'));
+			}
 			
-			Doc2Project::parseLines($object, $project, $start,$end);
-			
-			// LIEN OBJECT / PROJECT
-			$project->date_end = $end;
-			if($resetProjet) $project->statut = 0;
-			$project->update($user);
-			
-			$object->setProject($project->id);
-			if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $project->add_contact($user->id,'PROJECTLEADER','internal');
-			//exit;
-			header('Location:'.dol_buildpath('/projet/tasks.php?id='.$project->id,1));
 		}
 
 		return 0;
