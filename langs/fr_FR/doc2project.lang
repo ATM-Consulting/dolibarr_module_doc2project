@@ -63,3 +63,5 @@ Doc2ProjectConversionRule=Règle de conversion de temps des services en tâche
 Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si vide prendra la durée du service. {qty} quantité de la ligne, {totalht} total HT de la ligne
 
 Doc2ProjectErrorCanNotFetchProject=Erreur : impossible de charger ou de créer le projet
+
+Doc2ProjectViewStats = Voir les statistiques doc2project
