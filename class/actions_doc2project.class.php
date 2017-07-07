@@ -62,7 +62,7 @@ class ActionsDoc2Project
 				}
 			}
 			
-			$Tab = $object->get_element_list('invoice', 'invoice');
+			$Tab = $object->get_element_list('invoice', 'facture');
 			if(is_array($Tab)){
 				foreach($Tab as $id) {
 					$facture=new Facture($db);
@@ -72,7 +72,7 @@ class ActionsDoc2Project
 				}
 			}
 			
-			$Tab = $object->get_element_list('invoice_supplier', 'invoice_supplier');
+			$Tab = $object->get_element_list('invoice_supplier', 'facture_fourn');
 			if(is_array($Tab)){
 				foreach($Tab as $id) {
 				
