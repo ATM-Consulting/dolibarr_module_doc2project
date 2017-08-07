@@ -82,6 +82,11 @@ class Doc2Project {
 			$langs->load('doc2project@doc2project');
 
 			$project = new Project($db);
+			
+			// ref is still PROV if coming from VALIDATE trigger
+			if(preg_match('/^[\(]?PROV/i', $object->ref)) {
+				$object->ref = $object->newref;
+			}
 
 			if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
 				$Trans=array(
@@ -261,6 +266,7 @@ class Doc2Project {
 			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
 			{
 				//self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
+				self::lineToTask($object,$line,$project,$start,$end);
 			}
 				
 			// => ligne de type service										=> ligne libre
