@@ -200,7 +200,7 @@ function _get_statistiques_projet(&$PDOdb){
 		//echo $PDOdb->Get_field('total_temps')." ".($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
 		
 		$marge = $PDOdb->Get_field('total_vente') - ($PDOdb->Get_field('total_achat') + $PDOdb->Get_field('total_ndf') + $PDOdb->Get_field('total_cout_homme'));
-		if($marge!=0) {
+		//if($marge!=0) {
 			$TRapport[]= array(
 				"IdProject" => $PDOdb->Get_field('IdProject'),
 				"total_devis" => $PDOdb->Get_field('total_devis'),
@@ -215,7 +215,7 @@ function _get_statistiques_projet(&$PDOdb){
 			);
 			
 			
-		}
+		//}
 	}
 	
 	//pre($TRapport,true);
