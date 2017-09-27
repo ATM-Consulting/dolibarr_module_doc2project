@@ -325,6 +325,7 @@ function _print_statistiques_projet(&$TRapport){
 				}
 				else{
 					$total_marge_net = $total_marge_net - $margeBruteFraisGeneraux;
+					$total_marge = $total_marge - $margeBruteFraisGeneraux;
 				}
 				
 				?>
