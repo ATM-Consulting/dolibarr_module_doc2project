@@ -336,7 +336,7 @@ if($ok) {
 	print '</form>';
 	print '</td></tr>';
 	
-	if($conf->subtotal->enabled){
+	if($conf->subtotal->enabled && $conf->scrumboard->enabled){
 		$var=!$var;
 		print '<tr '.$bc[$var].'>';
 		print '<td>'.$langs->trans("Doc2ProjectCreateSprintFromTitle").'</td>';
