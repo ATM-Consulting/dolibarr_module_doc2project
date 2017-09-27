@@ -336,6 +336,21 @@ if($ok) {
 	print '</form>';
 	print '</td></tr>';
 	
+	if($conf->subtotal->enabled){
+		$var=!$var;
+		print '<tr '.$bc[$var].'>';
+		print '<td>'.$langs->trans("Doc2ProjectCreateSprintFromTitle").'</td>';
+		print '<td align="center" width="20">&nbsp;</td>';
+		print '<td align="right" width="300">';
+		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+		print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_SPRINT_FROM_TITLE">';
+		print $form->selectyesno('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE', $conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE, 1);
+		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+		print '</form>';
+		print '</td></tr>';
+	}
+	
 	if($conf->workstation->enabled){
 		
 		$var=!$var;

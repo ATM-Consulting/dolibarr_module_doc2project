@@ -133,7 +133,7 @@ class Doc2Project {
 		return false;
 	}
 	
-	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {
+	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0,$stories='') {
 		
 		global $conf,$langs,$db,$user;
 		
@@ -209,7 +209,7 @@ class Doc2Project {
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
 //var_dump($defaultref, $label,  $project->id);exit;		
-		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line);
+		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
 		
 		
 	}
@@ -230,9 +230,14 @@ class Doc2Project {
 		$index = 1;
 //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
+		$stories='';
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
+			
+			if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled && TSubtotal::isTitle($line)){
+				$stories .=$line->desc.',';
+			}
 			// Excluded product 
 			if(self::isExclude($line)) continue;
 			
@@ -278,7 +283,7 @@ class Doc2Project {
 					if(!empty($TProdArbo)){
 				
 						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
-							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true);
+							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$stories);
 				
 							if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 								dol_include_once('/workstation/class/workstation.class.php');
@@ -298,7 +303,7 @@ class Doc2Project {
 									$line->desc = '';
 									$line->total_ht = 0;
 				
-									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid);
+									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$stories);
 								}
 							}
 						}
@@ -335,7 +340,7 @@ class Doc2Project {
 											$line->desc = '';
 											$line->total_ht = 0;
 					
-											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid);
+											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$stories);
 										}
 									}
 								}
@@ -343,19 +348,26 @@ class Doc2Project {
 						}
 					}else{
 						
-						self::lineToTask($object,$line,$project,$start,$end);
+						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
 					}
 				}
 				else{
 					
-					self::lineToTask($object,$line,$project,$start,$end);
+					self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
 				}
 			}
+		}
+		
+		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled){
+			$stories=rtrim($stories,",");
+			$project->statut=0;
+			$project->array_options['options_stories'] = $stories;
+			$project->update($user);
 		}
 	}
 	
 	
-	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line)
+	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$stories='')
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 
@@ -373,7 +385,14 @@ class Doc2Project {
 		}
 		else
 		{
+			
+			
 			$task->fetch('',$ref);
+			if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
+				//$project = new Project($db);
+				$stories = explode(",",$stories);
+				$nbstory = count($stories)-1;				
+			}
 			if($task->id>0) {
 				$task->planned_workload = $planned_workload;
 				$task->fk_project = $fk_project;
@@ -382,6 +401,9 @@ class Doc2Project {
 				$task->array_options['options_soldprice'] = $total_ht;
 				$task->progress = (int)$task->progress;
 				$task->update($user);
+				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
+					Doc2Project::setStoryK($db, $task->id, $nbstory);
+				}
 
 				return $task->id;
 			}
@@ -401,8 +423,11 @@ class Doc2Project {
 				$task->array_options['options_soldprice'] = $total_ht;
 
 				$r = $task->create($user);
-	
+				
 				if ($r > 0) {
+					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
+						Doc2Project::setStoryK($db, $r, $nbstory);
+					}
 					return $r;
 				} else {
 					dol_print_error($db);
@@ -411,6 +436,14 @@ class Doc2Project {
 			}	
 		}
 		
+		return 0;
+	}
+	
+
+	public static function setStoryK($db,$id, $nbstory){
+		$sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
+		$resql = $db->query($sql);
+		if($resql) return 1;
 		return 0;
 	}
 }

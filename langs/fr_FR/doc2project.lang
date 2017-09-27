@@ -25,6 +25,7 @@ Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisa
 DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
 DOC2PROJECT_TITLE_PROJECT_info=Clef de remplacement {ref_client},{ref},{thirdparty_name}, {options_...}, ...
 DOC2PROJECT_SET_PROJECT_DRAFT=Repasser le projet au statut brouillon sur la création de nouvelles tâches
+Doc2ProjectCreateSprintFromTitle=Créer les sprints en fonction des lignes titres contenus dans le document
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
