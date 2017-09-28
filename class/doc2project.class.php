@@ -235,8 +235,15 @@ class Doc2Project {
 		foreach($object->lines as &$line)
 		{
 			
-			if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled && TSubtotal::isTitle($line)){
-				$stories .=$line->desc.',';
+			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
+				
+				if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
+				else {
+					$title = $line->label;
+					if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
+					
+				}
+				$stories .=$title.',';
 			}
 			// Excluded product 
 			if(self::isExclude($line)) continue;
