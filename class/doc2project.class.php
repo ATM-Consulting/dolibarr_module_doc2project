@@ -407,10 +407,17 @@ class Doc2Project {
 				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
 				$task->array_options['options_soldprice'] = $total_ht;
 				$task->progress = (int)$task->progress;
+				
+				$action = 'updateOneTask';
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
+				
 				$task->update($user);
 				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
 					Doc2Project::setStoryK($db, $task->id, $nbstory);
 				}
+				
+				
 
 				return $task->id;
 			}
@@ -428,6 +435,10 @@ class Doc2Project {
 
 				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
 				$task->array_options['options_soldprice'] = $total_ht;
+				
+				$action = 'createOneTask';
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
 				$r = $task->create($user);
 				
