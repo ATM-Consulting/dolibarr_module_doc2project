@@ -185,7 +185,10 @@ function _get_statistiques_projet(&$PDOdb){
 	) as total_cout_homme
 	
 	
-			FROM ".MAIN_DB_PREFIX."projet as p 
+			FROM ".MAIN_DB_PREFIX."projet as p
+				LEFT JOIN ".MAIN_DB_PREFIX."propal as pp2 ON (pp2.fk_projet = p.rowid)
+			WHERE p.fk_statut = 1
+				AND (pp2.fk_statut IN(2, 4) OR p.rowid = 5)
 	 ";
 	
 	$sql.=" ORDER BY p.ref";
