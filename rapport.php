@@ -155,7 +155,7 @@ function _get_statistiques_projet(&$PDOdb){
 						   FROM ".MAIN_DB_PREFIX."user u
 						   WHERE u.rowid = tt.fk_user";
 
-	$sql = "SELECT p.rowid as IdProject, p.ref, p.title
+	$sql = "SELECT DISTINCT(p.rowid) as IdProject, p.ref, p.title
 	, (
 		SELECT SUM(pp.total_ht) FROM ".MAIN_DB_PREFIX."propal as pp WHERE pp.fk_projet = p.rowid AND pp.fk_statut IN(2, 4)
 		".($t_deb>0 && $t_fin>0 ? " AND datep BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
