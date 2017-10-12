@@ -146,6 +146,11 @@ class ActionsDoc2Project
 			
 		}
 		else if(in_array('usercard',explode(':',$parameters['context']))) {
+			if((float)DOL_VERSION>=4.0) { //TODO check version à partir de laquelle c'est dispo
+				null;
+			}
+			else{
+
 			
 			if((float)DOL_VERSION>=3.6) {
 				$thm = $object->thm;
@@ -155,6 +160,7 @@ class ActionsDoc2Project
 				$res = $db->fetch_object($resql);
 				$thm = $res->thm;
 			}
+
 			?>
 			<tr>
 				<td><?php echo $langs->trans('THM'); ?></td>
@@ -171,6 +177,7 @@ class ActionsDoc2Project
 				
 			</tr>
 			<?
+			}
 		}
 
 	}
