@@ -400,6 +400,21 @@ class Doc2Project {
 				$stories = explode(",",$stories);
 				$nbstory = count($stories)-1;				
 			}
+			
+			if (!empty($line))
+			{
+				if (empty($line->array_options) && method_exists($line, 'fetch_optionals')) $line->fetch_optionals($line->id?$line->id:$line->rowid);
+				if (!class_exists('ExtraFields')) require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+
+				$extrafields = new ExtraFields($db);
+				$extralabels=$extrafields->fetch_name_optionals_label($task->table_element);
+
+				foreach ($extralabels as $key => $label)
+				{
+					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
+				}
+			}
+			
 			if($task->id>0) {
 				$task->planned_workload = $planned_workload;
 				$task->fk_project = $fk_project;
