@@ -273,6 +273,22 @@ class Doc2Project {
 			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
 			{
 				//self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
+				if(!empty($line->fk_product)) {
+					define('INC_FROM_DOLIBARR',true);
+					dol_include_once('/nomenclature/config.php');
+					dol_include_once('/nomenclature/class/nomenclature.class.php');
+					$nomenclature = new TNomenclature($db);
+					$PDOdb = new TPDOdb($db);
+					$nomenclature->loadByObjectId($PDOdb,$line->fk_product,'product');//get lines of nomenclature
+					
+					if(!empty($nomenclature->TNomenclatureDet)){
+						$detailsNomenclature=$nomenclature->getDetails($line->qty);
+						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
+						
+					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
+						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+					}
+				}
 			}
 				
 			// => ligne de type service										=> ligne libre
@@ -411,12 +427,10 @@ class Doc2Project {
 				$action = 'updateOneTask';
 				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
-				
 				$task->update($user);
 				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
 					Doc2Project::setStoryK($db, $task->id, $nbstory);
 				}
-				
 				
 
 				return $task->id;
@@ -457,11 +471,59 @@ class Doc2Project {
 		return 0;
 	}
 	
-
+//Sprint scrumboard
 	public static function setStoryK($db,$id, $nbstory){
 		$sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
 		$resql = $db->query($sql);
 		if($resql) return 1;
 		return 0;
 	}
+	
+	/* Converti une ligne de nomenclature en tache.
+	 * $detailsNomenclature => resultat de getDetails() de la classe nomenclature 
+	 * $line => ligne courante (propaldet/orderdet)
+	 * $object => objet courant (propal/order)
+	 * 
+	 */
+	public static function nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories='')
+	{
+		global $db;
+		foreach ($detailsNomenclature as &$lineNomen)
+		{
+			//Conversion du tableau en objet
+			$lineNomenclature = new stdClass();
+			foreach ($lineNomen as $key => $value)
+			{
+				$lineNomenclature->$key = $value;
+			}
+			
+			$product = new Product($db);
+			$product->fetch($lineNomenclature->fk_product);
+			//On prend les services les plus bas pour créer les taches
+			if (( $product->type == 1) && empty($lineNomenclature->childs))
+			{
+				//Le calcul des quantités est déjà fait grâce à getDetails
+				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
+				$lineNomenclature->desc = $product->description;
+				$nomenclature = new TNomenclature($db);
+				$PDOdb = new TPDOdb($db);
+				$nomenclature->loadByObjectId($PDOdb, $lineNomenclature->rowid, "product");
+				if (!empty($nomenclature->TNomenclatureWorkstation[0]->rowid))
+				{
+					$idWorkstation = $nomenclature->TNomenclatureWorkstation[0]->rowid;
+				}
+				else
+				{
+					$idWorkstation = 0;
+				}
+				
+				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$line->rowid; //To difference tasks ref
+				self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
+				
+			} elseif(!empty($lineNomenclature->childs)){
+				self::nomenclatureToTask($lineNomenclature->childs, $line,$object, $project, $start, $end,$stories);
+			}
+		}
+	}
+
 }
