@@ -82,6 +82,11 @@ class Doc2Project {
 			$langs->load('doc2project@doc2project');
 
 			$project = new Project($db);
+			
+			// ref is still PROV if coming from VALIDATE trigger
+			if(preg_match('/^[\(]?PROV/i', $object->ref)) {
+				$object->ref = $object->newref;
+			}
 
 			if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
 				$Trans=array(
