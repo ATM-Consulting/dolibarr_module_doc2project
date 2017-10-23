@@ -279,8 +279,7 @@ class Doc2Project {
 					dol_include_once('/nomenclature/class/nomenclature.class.php');
 					$nomenclature = new TNomenclature($db);
 					$PDOdb = new TPDOdb($db);
-					$nomenclature->loadByObjectId($PDOdb,$line->fk_product,'product');//get lines of nomenclature
-					
+					$nomenclature->loadByObjectId($PDOdb,$line->fk_product, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet)){
 						$detailsNomenclature=$nomenclature->getDetails($line->qty);
 						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
@@ -507,7 +506,7 @@ class Doc2Project {
 				$lineNomenclature->desc = $product->description;
 				$nomenclature = new TNomenclature($db);
 				$PDOdb = new TPDOdb($db);
-				$nomenclature->loadByObjectId($PDOdb, $lineNomenclature->rowid, "product");
+				$nomenclature->loadByObjectId($PDOdb, $lineNomenclature->rowid,$object->element, false, $lineNomenclature->fk_product);
 				if (!empty($nomenclature->TNomenclatureWorkstation[0]->rowid))
 				{
 					$idWorkstation = $nomenclature->TNomenclatureWorkstation[0]->rowid;
