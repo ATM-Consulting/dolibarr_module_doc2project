@@ -500,7 +500,7 @@ class Doc2Project {
 			$product->fetch($lineNomenclature->fk_product);
 			//On prend les services les plus bas pour créer les taches
 			
-			if (( $product->type == 1) && empty($lineNomenclature->childs))
+			if (( $product->type == 1) && (TNomenclature::isLastProduct($lineNomenclature->childs,1) || empty($lineNomenclature->childs)))
 			{
 				//Le calcul des quantités est déjà fait grâce à getDetails
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
