@@ -429,7 +429,7 @@ class Doc2Project {
 				$extrafields = new ExtraFields($db);
 				$extralabels=$extrafields->fetch_name_optionals_label($task->table_element);
 
-				foreach ($extralabels as $key => $label)
+				foreach ($extralabels as $key => $dummy)
 				{
 					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
 				}
@@ -520,10 +520,11 @@ class Doc2Project {
 			$product->fetch($lineNomenclature->fk_product);
 			//On prend les services les plus bas pour créer les taches
 			
-			if (( $product->type == 1) && empty($lineNomenclature->childs))
+			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomen['childs'],1) || empty($lineNomenclature->childs)))
 			{
 				//Le calcul des quantités est déjà fait grâce à getDetails
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
+				
 				$lineNomenclature->desc = $product->description;
 				$nomenclature = new TNomenclature($db);
 				$PDOdb = new TPDOdb($db);
