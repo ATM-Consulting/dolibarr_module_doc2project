@@ -429,7 +429,7 @@ class Doc2Project {
 				$extrafields = new ExtraFields($db);
 				$extralabels=$extrafields->fetch_name_optionals_label($task->table_element);
 
-				foreach ($extralabels as $key => $value)
+				foreach ($extralabels as $key => $dummy)
 				{
 					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
 				}
