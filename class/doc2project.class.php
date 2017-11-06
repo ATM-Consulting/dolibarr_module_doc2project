@@ -222,7 +222,7 @@ class Doc2Project {
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
 		global $conf,$langs,$db,$user;
-		
+		dol_include_once('/subtotal/class/subtotal.class.php');
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
@@ -284,11 +284,11 @@ class Doc2Project {
 					dol_include_once('/nomenclature/class/nomenclature.class.php');
 					$nomenclature = new TNomenclature($db);
 					$PDOdb = new TPDOdb($db);
-					$nomenclature->loadByObjectId($PDOdb,$line->fk_product, $object->element, false, $line->fk_product);//get lines of nomenclature
+					
+					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet)){
 						$detailsNomenclature=$nomenclature->getDetails($line->qty);
 						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
-						
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
 						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
 					}
@@ -429,7 +429,7 @@ class Doc2Project {
 				$extrafields = new ExtraFields($db);
 				$extralabels=$extrafields->fetch_name_optionals_label($task->table_element);
 
-				foreach ($extralabels as $key => $label)
+				foreach ($extralabels as $key => $dummy)
 				{
 					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
 				}
@@ -519,13 +519,16 @@ class Doc2Project {
 			$product = new Product($db);
 			$product->fetch($lineNomenclature->fk_product);
 			//On prend les services les plus bas pour créer les taches
-			if (( $product->type == 1) && empty($lineNomenclature->childs))
+			
+			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomen['childs'],1) || empty($lineNomenclature->childs)))
 			{
 				//Le calcul des quantités est déjà fait grâce à getDetails
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
+				
 				$lineNomenclature->desc = $product->description;
 				$nomenclature = new TNomenclature($db);
 				$PDOdb = new TPDOdb($db);
+				
 				$nomenclature->loadByObjectId($PDOdb, $lineNomenclature->rowid,$object->element, false, $lineNomenclature->fk_product);
 				if (!empty($nomenclature->TNomenclatureWorkstation[0]->rowid))
 				{
@@ -536,7 +539,7 @@ class Doc2Project {
 					$idWorkstation = 0;
 				}
 				
-				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$line->rowid; //To difference tasks ref
+				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
 				self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
 				
 			} elseif(!empty($lineNomenclature->childs)){
