@@ -465,6 +465,7 @@ class Doc2Project {
 				$task->date_end = $end;
 				$task->fk_task_parent = (int)$fk_task_parent;
 				$task->planned_workload = $planned_workload;
+				$task->progress='0'; // Depuis doli 6.0, nécessité de renseigner 0 en chaîne car sinon le create task met null et la tâche n'apparaît pas dans l'ordo
 
 				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
 				$task->array_options['options_soldprice'] = $total_ht;
