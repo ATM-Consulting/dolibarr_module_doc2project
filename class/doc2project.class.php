@@ -114,7 +114,7 @@ class Doc2Project {
 			$project->description    = '';
 			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
 			$project->datec			 = dol_now();
-			$project->date_start	 = $object->date_livraison;
+			$project->date_start	 = (!empty($object->date_livraison))?$object->date_livraison:dol_now();
 			$project->date_end		 = null;
 
 			$project->ref 			 = self::get_project_ref($project);
