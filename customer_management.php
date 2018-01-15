@@ -631,6 +631,88 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 	
 }
 
+?>
+<script type="text/javascript">
 
+		$(document).ready(function() {
+			  var $el = $('table#gestion_client>thead');
+			  $('table#gestion_client>thead td,table#gestion_client>thead th,table#gestion_client>tbody>tr:first>td').each(function(i,item) {
+				$item = $(item);
+				$item.css('width',$item.width());
+	                  });
+
+			$('table#gestion_client').css('width', $('table#gestion_client').width()).removeAttr('width');
+
+			  function scrollButtonsToUp() {
+			  		 var scrollTop = $(window).scrollTop();
+			  		 var scrollLeft = $(window).scrollLeft();
+				  	 var wHeight  = $( window ).height();
+
+				  	 var wWidth  = $( window ).width();
+
+						console.log('scrollTop : '+scrollTop+', wHeight : ' + wHeight + ', originalElementTop : '+originalElementTop);
+						console.log('scrollLeft : '+scrollLeft+', wWidth : ' + wWidth + ', originalElementLeft : '+originalElementLeft);
+
+				  	  if((scrollTop > originalElementTop)) {
+				  	  	console.log("tabsAction not in screen ");
+				  	  	var width = $el.width();
+				  	  	var height = $el.height();
+				  	  	$fantom = $('<div id="ghost-absolute" class="header" style="height:'+height+'px;width:'+width+'px;"></div>');
+
+				  	  	$el.css({
+				  	  		position:"fixed"
+				  	  		,top:'-1px'
+				  	  		,'opacity':1
+				  	  		,'background':'white'
+				  	  		,'z-index':'100'
+				  	  		,'width': width
+				  	  		,'left':(-scrollLeft + originalElementLeft)
+				  	  	});
+				  	  	if(!$('#ghost-absolute').length) {
+							$('#arboplannif').prepend($fantom);
+				  	  	}
+
+				  	  	$el.addClass('upbuttonsdiv');
+
+				  	  }
+				  	  else{
+				  	  	console.log("tabsAction in screen ");
+				  	  	$el.removeAttr('style');
+				  	  	$el.removeClass('upbuttonsdiv');
+				  	  	if($('#ghost-absolute').length) {
+							$('#arboplannif').find('#ghost-absolute').remove();
+				  	  	}
+						$el.show();
+						$('#justOneButton').hide();
+				  	  }
+			  }
+
+			  var editline_subtotal = -1; /* .indexOf returns -1 if the value to search for never occurs */
+			  if (typeof referer !== 'undefined') editline_subtotal  = referer.indexOf('action=editlinetitle');
+
+			  if (editline_subtotal == -1)
+			  {
+			  		var originalElementTop = $el.offset().top;
+					var originalElementLeft = $el.offset().left;
+
+					if(originalElementTop <= 0) {
+						window.setTimeout(function() { originalElementTop = $el.offset().top;originalElementLeft = $el.offset().left; scrollButtonsToUp(); },100);
+					}
+					$( window ).resize(function() {
+						scrollButtonsToUp();
+					});
+
+					$(window).on('scroll', function() {
+						scrollButtonsToUp();
+					});
+
+					scrollButtonsToUp();
+			  }
+		});
+
+
+
+	</script>
+<?php
 
 llxFooter();
