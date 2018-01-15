@@ -10,7 +10,7 @@ dol_include_once("../projet/class/project.class.php");
 dol_include_once("../commande/class/commande.class.php");
 dol_include_once("../projet/class/task.class.php");
 
-llxHeader('',$langs->trans('Report'));
+llxHeader('',$langs->trans('Report'),'','',0,0,array('/doc2project/js/tableHeadFixer.js'),array());
 print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
 print_fiche_titre($langs->trans("Gestion Client"));
 
@@ -631,6 +631,10 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 	
 }
 
-
+?>
+<script type="text/javascript">
+$("#gestion_client").tableHeadFixer({"left" : 1});
+</script>
+<?php
 
 llxFooter();
