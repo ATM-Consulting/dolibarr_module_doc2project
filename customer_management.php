@@ -257,7 +257,7 @@ function _print_rapport(&$PDOdb){
 					//var_dump($infoLine['prop_cloture']);
 					
 					print '<tr '.(($K % 2) ? 'class="pair"' : 'class="impair"' ).'>';
-					print '<td>'.$societe->getNomUrl(1,'').'</td>';
+					print '<td class="customer">'.$societe->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->getNomUrl(1,'').'</td>';
 					print '<td>'.date("d/m/Y", strtotime($infoLine['prop_cloture'])).'</td>';
 					print '<td>';
@@ -621,7 +621,7 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 
 		$asset->load($PDOdb,$Res->assId);
 		$TAsset[]=array(
-						"assId"           => $Res->assId,
+						"assId"        => $Res->assId,
 						"lot_number"      => $Res->lot_number,
 						"serial_number"   => $asset->getNomUrl()//$Res->serial_number
 					);
@@ -636,6 +636,8 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 
 		$(document).ready(function() {
 			  var $el = $('table#gestion_client>thead');
+			  var $col_customer = $('table#gestion_client>tbody>tr>td.customer');
+
 			  $('table#gestion_client>thead td,table#gestion_client>thead th,table#gestion_client>tbody>tr:first>td').each(function(i,item) {
 				$item = $(item);
 				$item.css('width',$item.width());
@@ -650,8 +652,36 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 
 				  	 var wWidth  = $( window ).width();
 
-						console.log('scrollTop : '+scrollTop+', wHeight : ' + wHeight + ', originalElementTop : '+originalElementTop);
-						console.log('scrollLeft : '+scrollLeft+', wWidth : ' + wWidth + ', originalElementLeft : '+originalElementLeft);
+					if((scrollLeft > originalElementLeft)) {
+						
+						if($('#fixedcol').length == '0') {
+							$('body').append('<div id="fixedcol"><table class="noborder" style="box-shadow:none;" /></div>');
+							$col1 = $col_customer.first();
+							$col_customer.each(function(i,item) {
+								$item = $(item);
+								$('#fixedcol>table').append('<tr class="'+$item.parent().attr('class')+'" style="height:'+$item.parent().height()+'px"><td style="width:'+$item.width()+'px">'+$item.html()+'</td></tr>');
+							});
+
+						}
+
+							$('#fixedcol').css({
+									position:"absolute"
+		                                                        ,top:$col1.offset().top-1
+                		                                        ,'opacity':1
+                                		                        ,'background':'white'
+                                                		        ,'z-index':'99'
+		                                                        ,'left':(scrollLeft)
+                		                                        ,'width':$col1.width()
+								});
+
+
+					}
+                                        else{
+						$('#fixedcol').remove();
+
+
+                                        }	
+
 
 				  	  if((scrollTop > originalElementTop)) {
 				  	  	console.log("tabsAction not in screen ");
@@ -687,11 +717,6 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 				  	  }
 			  }
 
-			  var editline_subtotal = -1; /* .indexOf returns -1 if the value to search for never occurs */
-			  if (typeof referer !== 'undefined') editline_subtotal  = referer.indexOf('action=editlinetitle');
-
-			  if (editline_subtotal == -1)
-			  {
 			  		var originalElementTop = $el.offset().top;
 					var originalElementLeft = $el.offset().left;
 
@@ -707,7 +732,6 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 					});
 
 					scrollButtonsToUp();
-			  }
 		});
 
 
