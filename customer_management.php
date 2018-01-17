@@ -257,7 +257,7 @@ function _print_rapport(&$PDOdb){
 					//var_dump($infoLine['prop_cloture']);
 					
 					print '<tr '.(($K % 2) ? 'class="pair"' : 'class="impair"' ).'>';
-					print '<td>'.$societe->getNomUrl(1,'').'</td>';
+					print '<td class="customer">'.$societe->getNomUrl(1,'').'</td>';
 					print '<td>'.$propal->getNomUrl(1,'').'</td>';
 					print '<td>'.date("d/m/Y", strtotime($infoLine['prop_cloture'])).'</td>';
 					print '<td>';
@@ -621,7 +621,7 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 
 		$asset->load($PDOdb,$Res->assId);
 		$TAsset[]=array(
-						"assId"           => $Res->assId,
+						"assId"        => $Res->assId,
 						"lot_number"      => $Res->lot_number,
 						"serial_number"   => $asset->getNomUrl()//$Res->serial_number
 					);
@@ -633,8 +633,110 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 
 ?>
 <script type="text/javascript">
-$("#gestion_client").tableHeadFixer({"left" : 1});
-</script>
+
+		$(document).ready(function() {
+			  var $el = $('table#gestion_client>thead');
+			  var $col_customer = $('table#gestion_client>tbody>tr>td.customer');
+
+			  $('table#gestion_client>thead td,table#gestion_client>thead th,table#gestion_client>tbody>tr:first>td').each(function(i,item) {
+				$item = $(item);
+				$item.css('width',$item.width());
+	                  });
+
+			$('table#gestion_client').css('width', $('table#gestion_client').width()).removeAttr('width');
+
+			  function scrollButtonsToUp() {
+			  		 var scrollTop = $(window).scrollTop();
+			  		 var scrollLeft = $(window).scrollLeft();
+				  	 var wHeight  = $( window ).height();
+
+				  	 var wWidth  = $( window ).width();
+
+					if((scrollLeft > originalElementLeft)) {
+						
+						if($('#fixedcol').length == '0') {
+							$('body').append('<div id="fixedcol"><table class="noborder" style="box-shadow:none;" /></div>');
+							$col1 = $col_customer.first();
+							$col_customer.each(function(i,item) {
+								$item = $(item);
+								$('#fixedcol>table').append('<tr class="'+$item.parent().attr('class')+'" style="height:'+$item.parent().height()+'px"><td style="width:'+$item.width()+'px">'+$item.html()+'</td></tr>');
+							});
+
+						}
+
+							$('#fixedcol').css({
+									position:"absolute"
+		                                                        ,top:$col1.offset().top-1
+                		                                        ,'opacity':1
+                                		                        ,'background':'white'
+                                                		        ,'z-index':'99'
+		                                                        ,'left':(scrollLeft)
+                		                                        ,'width':$col1.width()
+								});
+
+
+					}
+                                        else{
+						$('#fixedcol').remove();
+
+
+                                        }	
+
+
+				  	  if((scrollTop > originalElementTop)) {
+				  	  	console.log("tabsAction not in screen ");
+				  	  	var width = $el.width();
+				  	  	var height = $el.height();
+				  	  	$fantom = $('<div id="ghost-absolute" class="header" style="height:'+height+'px;width:'+width+'px;"></div>');
+
+				  	  	$el.css({
+				  	  		position:"fixed"
+				  	  		,top:'-1px'
+				  	  		,'opacity':1
+				  	  		,'background':'white'
+				  	  		,'z-index':'100'
+				  	  		,'width': width
+				  	  		,'left':(-scrollLeft + originalElementLeft)
+				  	  	});
+				  	  	if(!$('#ghost-absolute').length) {
+							$('#arboplannif').prepend($fantom);
+				  	  	}
+
+				  	  	$el.addClass('upbuttonsdiv');
+
+				  	  }
+				  	  else{
+				  	  	console.log("tabsAction in screen ");
+				  	  	$el.removeAttr('style');
+				  	  	$el.removeClass('upbuttonsdiv');
+				  	  	if($('#ghost-absolute').length) {
+							$('#arboplannif').find('#ghost-absolute').remove();
+				  	  	}
+						$el.show();
+						$('#justOneButton').hide();
+				  	  }
+			  }
+
+			  		var originalElementTop = $el.offset().top;
+					var originalElementLeft = $el.offset().left;
+
+					if(originalElementTop <= 0) {
+						window.setTimeout(function() { originalElementTop = $el.offset().top;originalElementLeft = $el.offset().left; scrollButtonsToUp(); },100);
+					}
+					$( window ).resize(function() {
+						scrollButtonsToUp();
+					});
+
+					$(window).on('scroll', function() {
+						scrollButtonsToUp();
+					});
+
+					scrollButtonsToUp();
+		});
+
+
+
+	</script>
 <?php
 
 llxFooter();
