@@ -218,24 +218,26 @@ class InterfaceDoc2Projecttrigger
 			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
-				
-			$fk_commande = GETPOST('originid', 'int');
 			
-			$commande = new Commande($db);
-			$commande->fetch($fk_commande);
-			
-			$ref_task = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->origin_id;
-			
-			//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
-			$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';
-			$resql = $db->query($sql);
-			
-			if ($resql && $db->num_rows($resql) > 0)
+			if ($facture->type == Facture::TYPE_SITUATION)
 			{
-				$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
-				$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+				$fk_commande = GETPOST('originid', 'int');
+
+				$commande = new Commande($db);
+				$commande->fetch($fk_commande);
+
+				$ref_task = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->origin_id;
+
+				//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
+				$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';
+				$resql = $db->query($sql);
+
+				if ($resql && $db->num_rows($resql) > 0)
+				{
+					$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
+					$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+				}
 			}
-			
 		}
 
         return 0;
