@@ -155,6 +155,19 @@ class Doc2Project {
 		
 		
 		$durationInSec = $end = '';
+		
+		// Conversion des lignes en unité heure en jour pour être conforme à ce qui est attendu
+		if(!empty($line->fk_unit) && !empty($product->id)) {
+			
+			$sql = 'select code from '.MAIN_DB_PREFIX.'c_units where rowid='.(int)$line->fk_unit;
+			$resql = $db->query($sql);
+			$res = $db->fetch_object($resql);
+			$code_unit = $res->code;
+			
+			if($code_unit === 'H') $line->qty /= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+			
+		}
+		
 		if(!empty($conf->global->DOC2PROJECT_CONVERSION_RULE)) {
 		
 			$Trans = array(
