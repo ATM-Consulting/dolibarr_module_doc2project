@@ -397,6 +397,14 @@ if($ok) {
 	print ajax_constantonoff('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO');
 	print '</td></tr>';
 	
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("Doc2ProjectPrevueBeforeConvert").'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print ajax_constantonoff('DOC2PROJECT_PREVUE_BEFORE_CONVERT');
+	print '</td></tr>';
+	
 		// Excluded products
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';

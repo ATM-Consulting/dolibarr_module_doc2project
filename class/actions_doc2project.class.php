@@ -15,8 +15,72 @@ class ActionsDoc2Project
 			if((float)DOL_VERSION>=3.6) {
 				$langs->load('doc2project@doc2project');
 				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element;
+				if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){ $link = '#'; }
 				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
-				print '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>';
+				print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
+				
+				if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){
+				    if(in_array('propalcard',explode(':',$parameters['context']))){
+				        $objectUrl = DOL_URL_ROOT.'/comm/propal/card.php?id='.$object->id;
+				    }
+				    else {
+				        $objectUrl = $object->getNomUrl(0,'',0,1);
+				    }
+				?>
+				<script type="text/javascript">
+				$(document).ready(function(){
+					$('#doc2project_create_project').click(function(event) {
+						event.preventDefault(); // prevent default url redirrection
+						
+						var htmlLines;
+						var page = "<?php echo dol_buildpath('/doc2project/scripts/interface.php?get=convertToProjectLines&element='.$object->element.'&id='.$object->id,2) ; ?>";
+						var formId = "ajaxloaded_tablelinesform_<?php echo $object->element; ?>_<?php echo $object->id; ?>";
+				        $.get(page, function (data) {
+				        	htmlLines = $(data) ;//.find('#tablelines') ;
+				        });
+
+				        var $dialog = $('<form id="' + formId + '" action="<?php print $objectUrl; ?>"  method="post" ></form>')
+				        .load( page , function() {
+
+				        	$("#" + formId + " #tablelines").prop("id", "ajaxloaded_tablelines"); // change id attribute
+
+				        	$("#" + formId + "  .linecheckbox,#" + formId + " .linecheckboxtoggle").prop("checked", true); // checked by default 
+
+					        // reload checkbox toggle function
+				            $("#" + formId + " .linecheckboxtoggle").click(function(){
+				        		var checkBoxes = $("#" + formId + " .linecheckbox");
+				        		checkBoxes.prop("checked", this.checked);
+				        	});
+
+
+				        })
+				        .html(htmlLines)
+				        .dialog({
+				            autoOpen: false,
+				            modal: true,
+				            height: $(window).height()*0.8 ,//retrieve 80% of current window width
+				            width: $(window).width()*0.8,//retrieve 80% of current window height
+				            title: "<?php echo $langs->trans('LinesToImport'); ?>",
+				            buttons: {
+				                    "<?php echo $langs->trans('Import'); ?>": function() {
+				                      	$( this ).dialog( "close" );
+			    	      	        	$("#" + formId).append('<input type="hidden" name="action" value="import_lines_in_project" />');
+			    	      	        	$("#" + formId).submit();
+				                    },
+				                    "<?php echo $langs->trans('Cancel'); ?>": function() {
+				                      $( this ).dialog( "close" );
+				                    }
+				            }
+				        });
+				        
+				        $dialog.dialog('open');
+
+
+						
+					});
+				});
+				</script>
+				<?php }
 			}
 		}
 
@@ -38,7 +102,7 @@ class ActionsDoc2Project
 			?>
 			<script type="text/javascript">
 				$(document).ready(function(){
-					$('.tabsAction').append('<?php echo '<div class="inline-block divButAction"><a class="butAction" href="' . $link . '">' . $label . '</a></div>'; ?>');
+					$('.tabsAction').append('<?php echo '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>'; ?>');
 				});
 			</script>
 			<?php
