@@ -549,4 +549,316 @@ class Doc2Project {
 		}
 	}
 
+	
+	public static function showLinesToParse(&$object)
+	{
+	    global $conf,$langs,$db,$user;
+	    
+	    $Tlines = array();
+	    
+	    // LOAD subtotal class if needed
+	    if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE)){
+	        dol_include_once('/subtotal/class/subtotal.class.php');
+	    }
+	    
+	    $i = 1;
+	    
+	    print '<table id="tablelines" class="noborder" width="100%"><thead><tr class="liste_titre">
+                <td class="linecoldescription">Description</td>
+                <td class="linecolvat" align="right" width="80">TVA</td>
+                <td class="linecoluht" align="right" width="80">P.U. HT</td>
+                <td class="linecolqty" align="right">Qté</td>
+                <td class="linecoluseunit" align="left">Unité</td>
+                <td class="linecolcheckall" align="left"><input type="checkbox" class="linecheckboxtoggle"></td>
+                </tr></thead><tbody>';
+	   
+	    // CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
+	    if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
+	    {
+	        print '<tr>';
+	        print '<td colspan="6" ><strong>'.$langs->trans('Doc2ProjectGlobalTaskLabel').'</strong> - '.$langs->trans('Doc2ProjectGlobalTaskDesc').'</td>';
+	        print '</tr>';
+	    }
+	    
+	    
+	    // Tableau qui va contenir à chaque indice (niveau du titre) l'id de la dernier tache parent
+	    // Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
+	    $TTask_id_parent = array();
+	    
+	    
+	    //var_dump($object->lines);exit;
+	    $fk_task_parent = 0;
+	    $stories='';
+	    // CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
+	    foreach($object->lines as $iLine => &$line)
+	    {
+	        $i++;
+	        $Tlines = array();
+	        $backgroundColor = '';
+	        $lineType = 'std'; // 'title', 'subtotal'
+	        
+	        // Excluded product
+	        if(self::isExclude($line)) continue;
+	        
+	        // Exclude title ?
+	        if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) continue;
+	        
+	        
+	        if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
+	        else {
+	            $title = $line->label;
+	            if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
+	        }
+	        
+	        // Dans le cas de sous total
+	        if ($line->product_type == 9)
+	        {
+	            if ($line->qty >= 1 && $line->qty <= 10) // TITRE
+	            {
+	                $backgroundColor = '#eeffee';
+	                $lineType = 'title';
+	            }
+	            else // SOUS-TOTAL
+	            {
+	                $backgroundColor = '#ddffdd';
+	                $lineType = 'subtotal';
+	            }
+	        }
+	        elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
+	        {
+	            //self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
+	            if(!empty($line->fk_product)) {
+	                define('INC_FROM_DOLIBARR',true);
+	                dol_include_once('/nomenclature/config.php');
+	                dol_include_once('/nomenclature/class/nomenclature.class.php');
+	                $nomenclature = new TNomenclature($db);
+	                $PDOdb = new TPDOdb($db);
+	                
+	                $nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
+	                if(!empty($nomenclature->TNomenclatureDet)){
+	                    $detailsNomenclature=$nomenclature->getDetails($line->qty);
+	                    
+	                    foreach ($detailsNomenclature as $nomenclatureId => $details )
+	                    {
+	                        
+	                        $i++;
+	                        $Tlines[$i]= array(
+	                            'element' => 'nomenclaturedet',
+	                            'id'      => $nomenclatureId,
+	                            'fk_product'=>$details['fk_product'],
+	                            'infos'   => array(
+	                                'label' => $label,
+	                                'desc' => '',
+	                                'object' => $details,
+	                            ),
+	                        );
+	                    }
+	                }elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
+	                    
+	                    $Tlines[$i]= array(
+	                        'element' => $line->element,
+	                        'id'      => $line->id,
+	                        'fk_product'=>$line->fk_product,
+	                        'infos'   => array(
+	                            'label' => $line->label,
+	                            'desc' => $line->desc,
+	                            'object' => $line
+	                        ),
+	                    );
+	                    
+	                }
+	            }
+	        }
+	        
+	        // => ligne de type service										=> ligne libre
+	        elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
+	        { // On ne créé que les tâches correspondant à des services
+	            
+	            if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
+	            {
+	                
+	                $s = new Product($db);
+	                $s->fetch($line->fk_product);
+	                $s->get_sousproduits_arbo();
+	                $TProdArbo = $s->get_arbo_each_prod();
+	                
+	                if(!empty($TProdArbo)){
+	                    
+	                    if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
+	                        $i++;
+	                        $pi=$i;
+	                        $Tlines[$i]= array(
+	                            'element' => $line->element,
+	                            'id'      => $line->id,
+	                            'fk_product' =>$line->fk_product,
+	                            'infos'   => array(
+	                                'label' => $line->label,
+	                                'desc' => $line->desc,
+	                                'object' => $line
+	                            ),
+	                        );
+	                        
+	                        
+	                        if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
+	                            dol_include_once('/workstation/class/workstation.class.php');
+	                            
+	                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
+	                            
+	                            foreach ($Tids as $workstationProductid) {
+	                                $TWorkstationProduct = new TWorkstationProduct;
+	                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
+	                                
+	                                $TWorkstation = new TWorkstation;
+	                                $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+	                                
+	                                $i++;
+	                                $Tlines[$pi]['childs'][$i]= array(
+	                                    'element' => 'workstation',
+	                                    'id'      => $TWorkstation->rowid,
+	                                    'fk_product' =>$line->fk_product,
+	                                    'infos'   => array(
+	                                        'label' => $line->label,
+	                                        'desc' => $TWorkstation->name,
+	                                        'object' => $TWorkstation,
+	                                    ),
+	                                );
+	                            }
+	                        }
+	                    }
+	                    
+	                    foreach($TProdArbo as $prod){
+	                        
+	                        if($prod['type'] == 1){ //Uniquement les services
+	                            
+	                            $ss = new Product($db);
+	                            $ss->fetch($prod['id']);
+	                            $line->fk_product = $ss->id;
+	                            $line->qty = $line->qty * $prod['nb'];
+	                            $line->product_label = $prod['label'];
+	                            $line->desc = ($ss->description) ? $ss->description : '';
+	                            $line->total_ht = $ss->price;
+	                            $i++;
+	                            $pi=$i;
+	                            $Tlines[$i]= array(
+	                                'element' => $line->element,
+	                                'id'      => $line->id,
+	                                'infos'   => array(
+	                                    'label' => $line->product_label.' '.$line->label,
+	                                    'desc' => $line->desc,
+	                                    'object' => $line
+	                                ),
+	                            );
+	                            
+	                            if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
+	                                dol_include_once('/workstation/class/workstation.class.php');
+	                                
+	                                $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
+	                                if(!empty($Tids)) {
+	                                    foreach ($Tids as $workstationProductid) {
+	                                        $TWorkstationProduct = new TWorkstationProduct;
+	                                        $TWorkstationProduct->load($PDOdb, $workstationProductid);
+	                                        
+	                                        $TWorkstation = new TWorkstation;
+	                                        $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+	                                        
+	                                        $line->fk_product = $ss->id;
+	                                        $line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+	                                        $line->product_label = $TWorkstation->name;
+	                                        $line->desc = '';
+	                                        $line->total_ht = 0;
+	                                        
+	                                        $i++;
+	                                        $Tlines[$pi]['childs'][$i]= array(
+	                                            'element' => 'workstation',
+	                                            'id'      => $TWorkstation->rowid,
+	                                            'infos'   => array(
+	                                                'label' => $line->product_label.' '.$line->label,
+	                                                'desc' => $TWorkstation->name,
+	                                                'object' => $TWorkstation,
+	                                            ),
+	                                        );
+	                                       
+	                                    }
+	                                }
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	        
+	        $backgroundColor = empty($backgroundColor)?'#f8f8f8':$backgroundColor;
+	        print '<tr style="background: '.$backgroundColor.' !important;" >';
+	        print '<td class="linecoldescription">';
+
+            if(!empty($line->fk_product)){
+                $product = new Product($db);
+                if($product->fetch($line->fk_product) > 0){
+                    print $product->getNomUrl(1).' - '.$product->label. ' ';
+                }
+            }
+	        print $line->label;
+	        //if(!empty($line->desc)){ print $line->desc; }
+	        print '</td>';
+	        print '<td class="linecolvat" align="right" width="80">'.price($line->tva_tx).'</td>';
+	        print '<td class="linecoluht" align="right" width="80">'.price($line->subprice).'</td>';
+	        print '<td class="linecolqty" align="right">'.$line->qty.'</td>';
+	        print '<td class="linecoluseunit" align="left"></td>';
+	        print '<td class="linecolcheckall" align="left">';
+	        
+	        if(in_array($lineType, array('std', 'title')) )
+	        {
+	            print '<input type="checkbox" class="linecheckbox" name="doc2projectline['.$line->id.']" value="'.$line->id.'" ></td>';
+	        }
+	        
+	        print '</tr>';
+	        if(!empty($Tlines))
+	        {
+	            print '<tr  style="background:#fff  !important;"  ><td colspan="6" >';
+	            self::taskViewToHtml($Tlines);
+	            print '</td></tr>';
+	        }
+	    }
+	    print '</tbody></table>';
+	    
+	    print '<input type="hidden"  />';
+	    
+	    if (ini_get('max_input_vars') < ($i*4))
+	    {
+	        print 'NEED CHANGE max_input_vars to biggeur value than '.($i*4);
+	    }
+	
+	    
+	}
+	
+	public static function taskViewToHtml($Tlines)
+	{
+	    global $db;
+	    print '<ul>';
+	    foreach ($Tlines as $i => $task)
+	    {
+	        print '<li>';
+	        
+	        if(!empty($task['fk_product']))
+	        {
+	            $product = new Product($db);
+	            if($product->fetch($task['fk_product']) > 0)
+	            {
+	                $task['infos']['label'] = $product->getNomUrl(1) .' '.$task['infos']['label'];
+	            }
+	        }
+	        $devNotes = '';//$i.' :: '.$task['element'] .' ';
+	        print '<h4>'.$devNotes. $task['infos']['label'].'</h4>';
+	        print '<p>'.$task['infos']['desc'].'</p>';
+	        
+	        if(!empty($task['childs']))
+	        {
+	            self::taskViewToHtml($task['childs']);
+	        }
+	        print '</li>';
+	    }
+	    print '</ul>';
+	}
+	
+	
 }

@@ -64,7 +64,6 @@ class ActionsDoc2Project
 				            buttons: {
 				                    "<?php echo $langs->trans('Import'); ?>": function() {
 				                      	$( this ).dialog( "close" );
-			    	      	        	$("#" + formId).append('<input type="hidden" name="action" value="import_lines_in_project" />');
 			    	      	        	$("#" + formId).submit();
 				                    },
 				                    "<?php echo $langs->trans('Cancel'); ?>": function() {
