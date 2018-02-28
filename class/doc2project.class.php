@@ -237,7 +237,7 @@ class Doc2Project {
 		$fk_task_parent = 0;
 		$stories='';
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
-		foreach($object->lines as &$line)
+		foreach($object->lines as $k => &$line)
 		{
 
 			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
@@ -295,7 +295,18 @@ class Doc2Project {
 						$detailsNomenclature=$nomenclature->getDetails($line->qty);
 						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
-						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+						// Par défaut c'était sur le dernier sprint qu'était rattaché les tâches même si elles n'appartiennent pas au titre en question
+						$parentTitleLine = TSubtotal::getParentTitleOfLine($object, $k);
+
+						$tab = explode(',', rtrim($stories, ','));
+						$tmpStories = '';
+						if(count($tab) > 1 && $tab[count($tab)-1] != $parentTitleLine->label) {
+							array_pop($tab);	// On enlève le sprint sur lequel on ne doit pas ajouter la tâche
+							$tmpStories = implode(',', $tab);
+						}
+
+						// Cette fonction ajoute la tâche au dernier sprint de la variable $stories
+						self::lineToTask($object,$line,$project,$start,$end,0,false,0, (empty($tmpStories) ? $stories : $tmpStories.','));
 					}
 				}
 			}
@@ -389,6 +400,7 @@ class Doc2Project {
 				}
 			}
 		}
+
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled){
 			$stories=rtrim($stories,",");
 			$project->statut=0;
