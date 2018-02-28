@@ -239,7 +239,7 @@ class Doc2Project {
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
-			
+
 			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
 				
 				if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
@@ -248,7 +248,12 @@ class Doc2Project {
 					if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
 					
 				}
-				$stories .=$title.',';
+
+				// On vérifie que le titre possède des lignes de produit, de manière à ne pas créer de sprint vide
+				$TLinesFromTitle = TSubtotal::getLinesFromTitle($object, $line->id, '', '', false, true, false);
+				if(! empty($TLinesFromTitle)) {
+					$stories .=$title.',';
+				}
 			}
 			// Excluded product 
 			if(self::isExclude($line)) continue;
@@ -384,7 +389,6 @@ class Doc2Project {
 				}
 			}
 		}
-		
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled){
 			$stories=rtrim($stories,",");
 			$project->statut=0;
@@ -418,7 +422,7 @@ class Doc2Project {
 			if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
 				//$project = new Project($db);
 				$stories = explode(",",$stories);
-				$nbstory = count($stories)-1;				
+				$nbstory = count($stories)-1;
 			}
 			
 			if (!empty($line))
