@@ -161,10 +161,12 @@ class Doc2Project {
 			
 			$sql = 'select code from '.MAIN_DB_PREFIX.'c_units where rowid='.(int)$line->fk_unit;
 			$resql = $db->query($sql);
-			$res = $db->fetch_object($resql);
-			$code_unit = $res->code;
+			if(!empty($resql)) {
+				$res = $db->fetch_object($resql);
+				$code_unit = $res->code;
 			
-			if($code_unit === 'H') $line->qty /= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+				if($code_unit === 'H') $line->qty /= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+			}
 			
 		}
 		
