@@ -6,21 +6,29 @@ class Doc2Project {
 	{
 		global $conf;
 		
+		$exclude = false;
+		
+		// FROM SEND FORM
 		if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){
 		    // Check if line is selected
 		    $linecheckbox = GETPOST('doc2projectline');
 		    // var_dump(array( !empty($linecheckbox), !isset($linecheckbox[$line->id]) ));
 		    if(!empty($linecheckbox) && !isset($linecheckbox[$line->id])){
-		        return true;
+		        $exclude = true;
 		    }
 		}
 		
-		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) return true;
-		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) return true;
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) $exclude =  true;
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) $exclude =  true;
 
+		// FROM CONFIG : PRODUCT REF
 		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
-		if (!empty($conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS) && in_array($line->ref, $TExclude)) return true;
-		else return false;
+		if (!empty($conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS) && in_array($line->ref, $TExclude)) $exclude =  true;
+		
+		// Subtotal
+		if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) $exclude = true;
+		
+		return $exclude;
 	}
 	
 	public static function get_project_ref(&$project) {
@@ -252,6 +260,8 @@ class Doc2Project {
 		foreach($object->lines as &$line)
 		{
 			
+		    
+		    // CREATION DES SPRINTS A PARTIR DES TITRES DE SOUS TOTAL
 			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
 				
 				if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
@@ -263,19 +273,16 @@ class Doc2Project {
 				$stories .=$title.',';
 			}
 			
-			// Excluded line
+			// EXCLUDED LINES
 			if(self::isExclude($line)) continue;
-			
-			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
-			else if ($line->product_type == 9) continue;
-			
-			
 			
 
 			if ($line->product_type == 9)
 			{
-				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
+			    // IF ITS A SUBTOTAL LINE
+				if ($line->qty >= 1 && $line->qty <= 10) 
 				{
+				    // TITLE
 					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 						
@@ -284,8 +291,9 @@ class Doc2Project {
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
-				else // SOUS-TOTAL
+				else 
 				{
+				    // SOUS-TOTAL
 					$index = 100 - $line->qty - 1;
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 				}
@@ -309,9 +317,8 @@ class Doc2Project {
 						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
 					}
 				}
-			}
-				
-			// => ligne de type service										=> ligne libre
+			}	
+			// => ligne de type service	=> ligne libre
 			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
 			{ // On ne créé que les tâches correspondant à des services
 						
@@ -607,9 +614,6 @@ class Doc2Project {
 	        
 	        // Excluded product
 	        if(self::isExclude($line)) continue;
-	        
-	        // Exclude title ?
-	        if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) continue;
 	        
 	        // Dans le cas de sous total
 	        if ($line->product_type == 9)
