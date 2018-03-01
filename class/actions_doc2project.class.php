@@ -60,9 +60,9 @@ class ActionsDoc2Project
 				            modal: true,
 				            height: $(window).height()*0.8 ,//retrieve 80% of current window width
 				            width: $(window).width()*0.8,//retrieve 80% of current window height
-				            title: "<?php echo $langs->trans('LinesToImport'); ?>",
+				            title: "<?php echo html_entity_decode($label); ?>",
 				            buttons: {
-				                    "<?php echo $langs->trans('Import'); ?>": function() {
+				                    "<?php echo html_entity_decode($label); ?>": function() {
 				                      	$( this ).dialog( "close" );
 			    	      	        	$("#" + formId).submit();
 				                    },

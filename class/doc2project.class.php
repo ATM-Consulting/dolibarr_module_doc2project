@@ -5,7 +5,16 @@ class Doc2Project {
 	public static function isExclude(&$line)
 	{
 		global $conf;
-
+		
+		if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){
+		    // Check if line is selected
+		    $linecheckbox = GETPOST('doc2projectline');
+		    // var_dump(array( !empty($linecheckbox), !isset($linecheckbox[$line->id]) ));
+		    if(!empty($linecheckbox) && !isset($linecheckbox[$line->id])){
+		        return true;
+		    }
+		}
+		
 		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) return true;
 		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) return true;
 
@@ -130,7 +139,7 @@ class Doc2Project {
 			}
 			else
 			{
-				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			    setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r.$project->error), 'errors');
 			}
 		}
 		
@@ -219,10 +228,13 @@ class Doc2Project {
 		
 	}
 	
+	
+	
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
 		global $conf,$langs,$db,$user;
 		dol_include_once('/subtotal/class/subtotal.class.php');
+		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
@@ -233,7 +245,7 @@ class Doc2Project {
 		// Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
 		$TTask_id_parent = array();
 		$index = 1;
-//var_dump($object->lines);exit;		
+        //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
 		$stories='';
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
@@ -250,11 +262,15 @@ class Doc2Project {
 				}
 				$stories .=$title.',';
 			}
-			// Excluded product 
+			
+			// Excluded line
 			if(self::isExclude($line)) continue;
 			
 			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
 			else if ($line->product_type == 9) continue;
+			
+			
+			
 
 			if ($line->product_type == 9)
 			{
@@ -561,7 +577,6 @@ class Doc2Project {
 	        dol_include_once('/subtotal/class/subtotal.class.php');
 	    }
 	    
-	    $i = 1;
 	    
 	    print '<table id="tablelines" class="noborder" width="100%"><thead><tr class="liste_titre">
                 <td class="linecoldescription">Description</td>
@@ -579,16 +594,9 @@ class Doc2Project {
 	        print '<td colspan="6" ><strong>'.$langs->trans('Doc2ProjectGlobalTaskLabel').'</strong> - '.$langs->trans('Doc2ProjectGlobalTaskDesc').'</td>';
 	        print '</tr>';
 	    }
+
 	    
-	    
-	    // Tableau qui va contenir à chaque indice (niveau du titre) l'id de la dernier tache parent
-	    // Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
-	    $TTask_id_parent = array();
-	    
-	    
-	    //var_dump($object->lines);exit;
-	    $fk_task_parent = 0;
-	    $stories='';
+	    $i = 0;
 	    // CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 	    foreach($object->lines as $iLine => &$line)
 	    {
@@ -603,16 +611,15 @@ class Doc2Project {
 	        // Exclude title ?
 	        if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) continue;
 	        
-	        
-	        if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
-	        else {
-	            $title = $line->label;
-	            if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
-	        }
-	        
 	        // Dans le cas de sous total
 	        if ($line->product_type == 9)
 	        {
+	            if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
+	            else {
+	                $title = $line->label;
+	                if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
+	            }
+	            
 	            if ($line->qty >= 1 && $line->qty <= 10) // TITRE
 	            {
 	                $backgroundColor = '#eeffee';
@@ -626,57 +633,26 @@ class Doc2Project {
 	        }
 	        elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
 	        {
-	            //self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
-	            if(!empty($line->fk_product)) {
+	            //Avec les postes de travails liés à la nomenclature
+	            if(!empty($line->fk_product) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) ) {
 	                define('INC_FROM_DOLIBARR',true);
-	                dol_include_once('/nomenclature/config.php');
-	                dol_include_once('/nomenclature/class/nomenclature.class.php');
-	                $nomenclature = new TNomenclature($db);
-	                $PDOdb = new TPDOdb($db);
-	                
-	                $nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
-	                if(!empty($nomenclature->TNomenclatureDet)){
-	                    $detailsNomenclature=$nomenclature->getDetails($line->qty);
-	                    
-	                    foreach ($detailsNomenclature as $nomenclatureId => $details )
-	                    {
-	                        
-	                        $i++;
-	                        $Tlines[$i]= array(
-	                            'element' => 'nomenclaturedet',
-	                            'id'      => $nomenclatureId,
-	                            'fk_product'=>$details['fk_product'],
-	                            'infos'   => array(
-	                                'label' => $label,
-	                                'desc' => '',
-	                                'object' => $details,
-	                            ),
-	                        );
-	                    }
-	                }elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
-	                    
-	                    $Tlines[$i]= array(
-	                        'element' => $line->element,
-	                        'id'      => $line->id,
-	                        'fk_product'=>$line->fk_product,
-	                        'infos'   => array(
-	                            'label' => $line->label,
-	                            'desc' => $line->desc,
-	                            'object' => $line
-	                        ),
-	                    );
-	                    
+	                $Tcrawl = self::nomenclatureProductDeepCrawl($line->rowid, $object->element,$line->fk_product,$line->qty);
+	                if(!empty($Tcrawl))
+	                { 
+	                    $Tlines = array_merge($Tlines,$Tcrawl);
 	                }
 	            }
+	            
 	        }
-	        
-	        // => ligne de type service										=> ligne libre
 	        elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
-	        { // On ne créé que les tâches correspondant à des services
+	        { 
+	            
+	            // => ligne de type service	=> ligne libre
+	            // On ne créé que les tâches correspondant à des services
+	            
 	            
 	            if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
 	            {
-	                
 	                $s = new Product($db);
 	                $s->fetch($line->fk_product);
 	                $s->get_sousproduits_arbo();
@@ -685,101 +661,27 @@ class Doc2Project {
 	                if(!empty($TProdArbo)){
 	                    
 	                    if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
-	                        $i++;
-	                        $pi=$i;
-	                        $Tlines[$i]= array(
-	                            'element' => $line->element,
-	                            'id'      => $line->id,
-	                            'fk_product' =>$line->fk_product,
-	                            'infos'   => array(
-	                                'label' => $line->label,
-	                                'desc' => $line->desc,
-	                                'object' => $line
-	                            ),
-	                        );
-	                        
-	                        
 	                        if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 	                            dol_include_once('/workstation/class/workstation.class.php');
 	                            
 	                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
 	                            
 	                            foreach ($Tids as $workstationProductid) {
-	                                $TWorkstationProduct = new TWorkstationProduct;
-	                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
-	                                
-	                                $TWorkstation = new TWorkstation;
-	                                $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-	                                
-	                                $i++;
-	                                $Tlines[$pi]['childs'][$i]= array(
-	                                    'element' => 'workstation',
-	                                    'id'      => $TWorkstation->rowid,
-	                                    'fk_product' =>$line->fk_product,
-	                                    'infos'   => array(
-	                                        'label' => $line->label,
-	                                        'desc' => $TWorkstation->name,
-	                                        'object' => $TWorkstation,
-	                                    ),
-	                                );
+	                                $Tcrawl = self::nomenclatureProductDeepCrawl($workstationProductid,'product',$workstationProductid,1);
+	                                if(!empty($Tcrawl))
+	                                {
+	                                    $Tlines = array_merge($Tlines,$Tcrawl);
+	                                }
 	                            }
 	                        }
 	                    }
 	                    
 	                    foreach($TProdArbo as $prod){
-	                        
 	                        if($prod['type'] == 1){ //Uniquement les services
-	                            
-	                            $ss = new Product($db);
-	                            $ss->fetch($prod['id']);
-	                            $line->fk_product = $ss->id;
-	                            $line->qty = $line->qty * $prod['nb'];
-	                            $line->product_label = $prod['label'];
-	                            $line->desc = ($ss->description) ? $ss->description : '';
-	                            $line->total_ht = $ss->price;
-	                            $i++;
-	                            $pi=$i;
-	                            $Tlines[$i]= array(
-	                                'element' => $line->element,
-	                                'id'      => $line->id,
-	                                'infos'   => array(
-	                                    'label' => $line->product_label.' '.$line->label,
-	                                    'desc' => $line->desc,
-	                                    'object' => $line
-	                                ),
-	                            );
-	                            
-	                            if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
-	                                dol_include_once('/workstation/class/workstation.class.php');
-	                                
-	                                $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
-	                                if(!empty($Tids)) {
-	                                    foreach ($Tids as $workstationProductid) {
-	                                        $TWorkstationProduct = new TWorkstationProduct;
-	                                        $TWorkstationProduct->load($PDOdb, $workstationProductid);
-	                                        
-	                                        $TWorkstation = new TWorkstation;
-	                                        $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-	                                        
-	                                        $line->fk_product = $ss->id;
-	                                        $line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-	                                        $line->product_label = $TWorkstation->name;
-	                                        $line->desc = '';
-	                                        $line->total_ht = 0;
-	                                        
-	                                        $i++;
-	                                        $Tlines[$pi]['childs'][$i]= array(
-	                                            'element' => 'workstation',
-	                                            'id'      => $TWorkstation->rowid,
-	                                            'infos'   => array(
-	                                                'label' => $line->product_label.' '.$line->label,
-	                                                'desc' => $TWorkstation->name,
-	                                                'object' => $TWorkstation,
-	                                            ),
-	                                        );
-	                                       
-	                                    }
-	                                }
+	                            $Tcrawl = self::nomenclatureProductDeepCrawl($prod['id'],'product',$prod['id'],$line->qty * $prod['nb']);
+	                            if(!empty($Tcrawl))
+	                            {
+	                                $Tlines = array_merge($Tlines,$Tcrawl);
 	                            }
 	                        }
 	                    }
@@ -797,12 +699,24 @@ class Doc2Project {
                     print $product->getNomUrl(1).' - '.$product->label. ' ';
                 }
             }
-	        print $line->label;
-	        //if(!empty($line->desc)){ print $line->desc; }
+            print '<strong>'.$line->label.'</strong> ';
+	        if(!empty($line->desc)){ print $line->desc; }
 	        print '</td>';
-	        print '<td class="linecolvat" align="right" width="80">'.price($line->tva_tx).'</td>';
-	        print '<td class="linecoluht" align="right" width="80">'.price($line->subprice).'</td>';
-	        print '<td class="linecolqty" align="right">'.$line->qty.'</td>';
+	        print '<td class="linecolvat" align="right" width="80">';
+	        if( $lineType != 'title' && $lineType != 'subtotal'){
+	            print price($line->tva_tx);
+	        }
+	        print '</td>';
+	        print '<td class="linecoluht" align="right" width="80">';
+	        if( $lineType != 'title' && $lineType != 'subtotal'){
+	            print price($line->subprice);
+	        }
+	        print '</td>';
+	        print '<td class="linecolqty" align="right">';
+	        if( $lineType != 'title' && $lineType != 'subtotal'){
+	            print $line->qty;
+	        }
+	        print '</td>';
 	        print '<td class="linecoluseunit" align="left"></td>';
 	        print '<td class="linecolcheckall" align="left">';
 	        
@@ -815,6 +729,7 @@ class Doc2Project {
 	        if(!empty($Tlines))
 	        {
 	            print '<tr  style="background:#fff  !important;"  ><td colspan="6" >';
+	            //var_dump($Tlines);
 	            self::taskViewToHtml($Tlines);
 	            print '</td></tr>';
 	        }
@@ -830,6 +745,8 @@ class Doc2Project {
 	
 	    
 	}
+	
+	
 	
 	public static function taskViewToHtml($Tlines)
 	{
@@ -847,18 +764,99 @@ class Doc2Project {
 	                $task['infos']['label'] = $product->getNomUrl(1) .' '.$task['infos']['label'];
 	            }
 	        }
-	        $devNotes = '';//$i.' :: '.$task['element'] .' ';
-	        print '<h4>'.$devNotes. $task['infos']['label'].'</h4>';
-	        print '<p>'.$task['infos']['desc'].'</p>';
+	       
+	        $devNotes =  '';//$i.' :: '.$task['element'] .' ';
+	        print '<strong>'.$devNotes. $task['infos']['label'].'</strong>';
+	        if(!empty($task['infos']['desc'])){ print ' '.$task['infos']['desc']; }
 	        
-	        if(!empty($task['childs']))
-	        {
-	            self::taskViewToHtml($task['childs']);
+	        if(!empty($task['infos']['qty'])){
+	            print ' x '.($task['infos']['qty']);
+	        }
+	        
+	        if(!empty($task['children'])){ 
+	            self::taskViewToHtml($task['children']);
 	        }
 	        print '</li>';
 	    }
 	    print '</ul>';
 	}
+
 	
+
 	
+	public static function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty = 1, $deep = 0, $maxDeep = 0){
+	    global $db,$conf;
+	    
+	    $maxDeepConf = empty($conf->global->NOMENCLATURE_MAX_NESTED_LEVEL) ? 50 : $conf->global->NOMENCLATURE_MAX_NESTED_LEVEL;
+	    $maxDeep = !empty($maxDeep)?$maxDeep:$maxDeepConf ;
+	    
+	    if($deep>$maxDeep){ return array(); }
+	    
+	    dol_include_once('/nomenclature/config.php');
+	    dol_include_once('/nomenclature/class/nomenclature.class.php');
+	    $nomenclature = new TNomenclature($db);
+	    $PDOdb = new TPDOdb($db);
+	    
+	   
+	    $nomenclature->loadByObjectId($PDOdb,$fk_element, $element, false, $fk_product, $qty); //get lines of nomenclature
+	    
+	    $Tlines= array();
+	    
+	    $i=0;
+	    if(!empty($nomenclature->TNomenclatureDet)){
+	        $detailsNomenclature=$nomenclature->getDetails($line->qty);
+	        // PARCOURS DE LA NOMENCLATURE
+	        foreach ($nomenclature->TNomenclatureDet as &$det)
+	        {
+	            $i++;
+	            
+	            $Tlines[$i] = array(
+	                'element' => 'nomenclaturedet',
+	                'id'      =>  $det->id,
+	                'fk_product'=>$det->fk_product,
+	                'infos'   => array(
+	                    'label' => '',
+	                    'desc' => '',
+	                    'qty' => $qty * $det->qty,
+	                    'object' => $det,
+	                ),
+	            );
+	            
+	            $childs = self::nomenclatureProductDeepCrawl($det->fk_product, 'product', $det->fk_product,$qty * $det->qty, $deep+1, $maxDeep);
+	            
+	            if(!empty($childs))
+	            {
+	                $Tlines[$i]['children'] = $childs;
+	            }
+	            
+	        }
+	        
+	        // RECUPERATION DES WORKSTATIONS
+	        if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION) )
+	        {
+	            dol_include_once('/workstation/class/workstation.class.php');
+    	        if(!empty($nomenclature->TNomenclatureWorkstation))
+    	        {
+    	            foreach ($nomenclature->TNomenclatureWorkstation as &$wsn)
+    	            {
+    	                
+    	                $i++;
+    	                $Tlines[$i]= array(
+    	                    'element' => 'workstation',
+    	                    'id'      => $wsn->workstation->rowid,
+    	                    'infos'   => array(
+    	                        'label' => $wsn->workstation->name,
+    	                        'desc' => '',
+    	                        'object' => $wsn->workstation,
+    	                    ),
+    	                );
+    	                
+    	            }
+    	        }
+	        }
+	        
+	    }
+	    
+	    return $Tlines;
+	}
 }
