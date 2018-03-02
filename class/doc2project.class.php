@@ -230,8 +230,8 @@ class Doc2Project {
 		
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
-//var_dump($defaultref, $label,  $project->id);exit;		
-		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
+        //var_dump($defaultref, $label,  $project->id);exit;		
+		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
 		
 		
 	}
@@ -280,7 +280,7 @@ class Doc2Project {
 			if ($line->product_type == 9)
 			{
 			    // IF ITS A SUBTOTAL LINE
-				if ($line->qty >= 1 && $line->qty <= 10) 
+				if ($line->qty >= 1 && $line->qty <= 10)
 				{
 				    // TITLE
 					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
@@ -310,11 +310,11 @@ class Doc2Project {
 					$PDOdb = new TPDOdb($db);
 					
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
-					if(!empty($nomenclature->TNomenclatureDet)){
+					if(!empty($nomenclature->TNomenclatureDet) || !empty($nomenclature->TNomenclatureWorkstation )){
 						$detailsNomenclature=$nomenclature->getDetails($line->qty);
-						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
+						$lastCreateTesk = self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
-						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+					    $lastCreateTesk = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
 					}
 				}
 			}	
@@ -530,7 +530,8 @@ class Doc2Project {
 	 */
 	public static function nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories='')
 	{
-		global $db;
+	    global $db,$conf;
+		
 		foreach ($detailsNomenclature as &$lineNomen)
 		{
 			//Conversion du tableau en objet
@@ -564,11 +565,31 @@ class Doc2Project {
 				}
 				
 				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
-				self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
+				$fk_ParentTask = self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
 				
-			} elseif(!empty($lineNomenclature->childs)){
-				self::nomenclatureToTask($lineNomenclature->childs, $line,$object, $project, $start, $end,$stories);
+			}elseif(!empty($lineNomenclature->childs)){
+			    $fk_ParentTask = self::nomenclatureToTask($lineNomenclature->childs, $line,$object, $project, $start, $end,$stories);
 			}
+		}
+		
+		// RECUPERATION DES WORKSTATIONS
+		if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION) )
+		{
+		    dol_include_once('/workstation/class/workstation.class.php');
+		    if(!empty($nomenclature->TNomenclatureWorkstation))
+		    {
+		        foreach ($nomenclature->TNomenclatureWorkstation as &$wsn)
+		        {
+		            $defaultref='';
+		            if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
+		                $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.$wsn->workstation->rowid;
+		            }
+		            
+		            $label = $wsn->workstation->name;
+		            var_dump(self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories));
+		            exit;
+		        }
+		    }
 		}
 	}
 
@@ -648,7 +669,10 @@ class Doc2Project {
 	            }
 	            
 	        }
-	        elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
+	        else if( 
+	                   (!empty($line->fk_product) && $line->fk_product_type == 1) // Line type service
+	                || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null)  // Free line
+	            )
 	        { 
 	            
 	            // => ligne de type service	=> ligne libre
