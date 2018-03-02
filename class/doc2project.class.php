@@ -312,9 +312,9 @@ class Doc2Project {
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet) || !empty($nomenclature->TNomenclatureWorkstation )){
 						$detailsNomenclature=$nomenclature->getDetails($line->qty);
-						$lastCreateTesk = self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
+						$lastCreateTask = self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
-					    $lastCreateTesk = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
 					}
 				}
 			}	
@@ -809,8 +809,36 @@ class Doc2Project {
 	    print '</ul>';
 	}
 
+	/*
+	 * Groupe temps  par services
+	 */
+	public static function  groupTimeSpend($Tlines, &$Ttasks=array()){
+	    
+	    foreach ($Tlines as $line)
+	    {
+	        if(!empty($line['children']) )
+	        {  
+	            groupTimeSpend($line['children'], $Ttasks); 
+	        }
+	        else
+	        {
+	            if(!empty( $line['fk_product']))
+	            {
+	                //$keyId = $line['element'].'-'.$line['id'].'-';
+	   	                
+	   	                
+	   	                /*
+	   	                 if(!empty($Ttasks[])) $line['children']
+	   	                 'element' => 'nomenclaturedet',
+	   	                 'id'      =>  $det->id,
+	   	                 'fk_product'=>$det->fk_product,*/
+	            }
+	            
+	           
+	        }
+	    }
 	
-
+	}
 	
 	public static function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty = 1, $deep = 0, $maxDeep = 0){
 	    global $db,$conf;

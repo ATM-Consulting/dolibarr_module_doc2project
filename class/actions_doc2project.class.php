@@ -274,7 +274,7 @@ class ActionsDoc2Project
 				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 				$end = '';
 
-				Doc2Project::parseLines($object, $project, $start,$end);
+				//Doc2Project::parseLines($object, $project, $start,$end);
 
 				// LIEN OBJECT / PROJECT
 				$project->date_end = $end;
