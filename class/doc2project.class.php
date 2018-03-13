@@ -214,7 +214,7 @@ class Doc2Project {
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
 //var_dump($defaultref, $label,  $project->id);exit;		
-		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
+		self::createOneTask( $project->id, $line->rowid, $object->element, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
 		
 		
 	}
@@ -226,7 +226,7 @@ class Doc2Project {
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
-			self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.'GLOBAL', $langs->trans('Doc2ProjectGlobalTaskLabel'), $langs->trans('Doc2ProjectGlobalTaskDesc'));
+			self::createOneTask($project->id, 'GLOBAL', $object->element, $langs->trans('Doc2ProjectGlobalTaskLabel'), $langs->trans('Doc2ProjectGlobalTaskDesc'));
 		}
 	
 		// Tableau qui va contenir à chaque indice (niveau du titre) l'id de la dernier tache parent
@@ -264,7 +264,7 @@ class Doc2Project {
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 						
 					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+					$fk_task_parent = self::createOneTask($project->id, $line->rowid, $object->element, $label, '', '', '', $fk_task_parent);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
@@ -394,7 +394,8 @@ class Doc2Project {
 	}
 	
 	
-	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$stories='')
+//	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$stories='')
+	public static function createOneTask($fk_project, $fk_origin, $origin_type, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$stories='')
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 
@@ -403,7 +404,7 @@ class Doc2Project {
 		$task = new Task($db);
 		
 		$action = 'createOneTask';
-		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$fk_origin, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 		$reshook = $hookmanager->executeHooks('createTask', $parameters, $task, $action);	
 		
 		if (!empty($hookmanager->resArray))
@@ -414,7 +415,7 @@ class Doc2Project {
 		{
 			
 			
-			$task->fetch('',$ref);
+			$task->fetch('',$conf->global->DOC2PROJECT_TASK_REF_PREFIX.$fk_origin);
 			if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
 				//$project = new Project($db);
 				$stories = explode(",",$stories);
@@ -444,20 +445,22 @@ class Doc2Project {
 				$task->progress = (int)$task->progress;
 				
 				$action = 'updateOneTask';
-				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$fk_origin, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 				$task->update($user);
 				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
 					Doc2Project::setStoryK($db, $task->id, $nbstory);
 				}
 				
-
+				if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
+				elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+				
 				return $task->id;
 			}
 			else{
 
 				$task->fk_project = $fk_project;
-				$task->ref = $ref;
+				$task->ref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$fk_origin;
 				$task->label = $label;
 				$task->description = $desc;
 				$task->date_c=dol_now();
@@ -471,7 +474,7 @@ class Doc2Project {
 				$task->array_options['options_soldprice'] = $total_ht;
 				
 				$action = 'createOneTask';
-				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$fk_origin, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
 				$r = $task->create($user);
@@ -480,6 +483,9 @@ class Doc2Project {
 					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
 						Doc2Project::setStoryK($db, $r, $nbstory);
 					}
+					if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
+					elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+					
 					return $r;
 				} else {
 					dol_print_error($db);
