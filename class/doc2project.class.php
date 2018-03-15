@@ -502,25 +502,24 @@ class Doc2Project {
 		}
 		else
 		{
+		    
+		    $story_k = self::getStoryK($story);
+		    
 		    $groupTask = (!empty($conf->global->DOC2PROJECT_GROUP_TASKS) || !empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT))?true:false;
 		    if($groupTask){
 		        // search previous created task
 		        $previousTask = self::searchTask($fk_project,$label, $story);
 		    }
 		    
-		    if($groupTask && !empty($previousTask))
-		    {
+		    if($groupTask && !empty($previousTask)){
 		        $ref = $previousTask->ref;
 		        $task->fetch($previousTask->rowid);
-		    }
-		    else 
-		    {
+		    }else{
 		        $groupTask = false;
 		        $task->fetch('',$ref);
 		    }
 			
 			
-			$story_k = self::getStoryK($story);
 			
 			if (!empty($line))
 			{
@@ -542,6 +541,13 @@ class Doc2Project {
 			    
 			    if($groupTask)
 			    {
+			        
+			        $story_k = self::getTaskStoryK($task);
+			        $story = self::getStoryL($story);
+			        
+			        //var_dump(array($story_k, self::getStoryL($story_k)));
+			        
+			        
 			        //var_dump(array($task->planned_workload / 3600 , $planned_workload / 3600, ($task->planned_workload + $planned_workload) / 3600));
 			        $task->planned_workload = $task->planned_workload + $planned_workload;
 			        $task->array_options['options_soldprice'] = $task->array_options['options_soldprice'] + $total_ht;
@@ -613,25 +619,52 @@ class Doc2Project {
 		return 0;
 	}
 	
-//Sprint scrumboard
+	//Sprint scrumboard
 	public static function setStoryK($db,$id, $nbstory)
 	{
-		$sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
-		$resql = $db->query($sql);
-		if($resql) return 1;
-		return 0;
+	    $sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
+	    $resql = $db->query($sql);
+	    if($resql) return 1;
+	    return 0;
+	}
+	
+	public static function getTaskStoryK($task)
+	{
+	    global $db;
+	    if(!empty($task->id))
+	    {
+	        $sql="SELECT story_k FROM ".MAIN_DB_PREFIX."projet_task  WHERE rowid=".$task->id;
+	        $resql = $db->query($sql);
+	        
+	        if($resql){
+	            $obj = $db->fetch_object($resql);
+	            return $obj->story_k ;
+	        }
+	    }
+	    
+	    return 0;
 	}
 	
 	public static function getStoryK($story) {
 		global $conf, $TStory;
-//		var_dump($TStory, $story);
+		
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story)) {
 			$key = array_search($story, $TStory);
-//			var_dump($key, '-------------------------------------');
+			
 			if ($key !== false) return $key+1; // décalage suite 
 		}
 		
 		return null;
+	}
+	
+	public static function getStoryL($story_k) {
+	    global $conf, $TStory;
+	    
+	    if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story_k)) {
+	        if(isset($TStory[$story_k-1])) return $TStory[$story_k-1];
+	    }
+	    
+	    return null;
 	}
 	
 	/* Converti une ligne de nomenclature en tache.
