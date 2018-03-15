@@ -281,7 +281,7 @@ class ActionsDoc2Project
 				if($resetProjet) $project->statut = 0;
 				$project->update($user);
 
-				$object->setProject($project->id);
+				//$object->setProject($project->id);
 				if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $project->add_contact($user->id,'PROJECTLEADER','internal');
 				//exit;
 				header('Location:'.dol_buildpath('/projet/tasks.php?id='.$project->id,1));

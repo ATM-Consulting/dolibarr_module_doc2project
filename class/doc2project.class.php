@@ -434,7 +434,7 @@ class Doc2Project {
 	}
 	
 
-	public static function searchTask($label='', $story='')
+	public static function searchTask($fk_project,$label='', $story='')
 	{
 	    global $conf,$db;
 	    
@@ -447,19 +447,22 @@ class Doc2Project {
 	    
 	    $filters=array();
 	    
+	    $filters[] = "t.fk_projet = '".intval($fk_project)."'";
+	    
 	    if (!empty($label)) {
 	        $filters[] = "t.label = '".$db->escape($label)."'";
 	    }
 	    
-	    if (!empty($story)) {
-	        $filters[] = "t.story_k = '".intval($story)."'";
+	    
+	    if (!empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT) && !empty($story) && !empty(self::getStoryK($story))) {
+	        $filters[] = "t.story_k = '".intval(self::getStoryK($story))."'";
 	    }
 	    $sql.= implode(' AND ', $filters);
 	    
 	    $sql.= ' LIMIT 1';
 	    
-	    
 	    $resql=$db->query($sql);
+	    
 	    if ($resql)
 	    {
 	        $num_rows = $db->num_rows($resql);
@@ -487,16 +490,7 @@ class Doc2Project {
 		
 		$task = new Task($db);
 		
-		$groupTask = (!empty($conf->global->DOC2PROJECT_GROUP_TASKS) || !empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT))?true:false;
-		if($groupTask)
-		{
-		    // search previous created task
-		    $previousTask = self::searchTask($label, $story);
-		    if($previousTask->rowid >0)
-		    {
-		        $ref = $previousTask->ref;
-		    }
-		}
+		
 		
 		$action = 'createOneTask';
 		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
@@ -508,9 +502,23 @@ class Doc2Project {
 		}
 		else
 		{
+		    $groupTask = (!empty($conf->global->DOC2PROJECT_GROUP_TASKS) || !empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT))?true:false;
+		    if($groupTask){
+		        // search previous created task
+		        $previousTask = self::searchTask($fk_project,$label, $story);
+		    }
+		    
+		    if($groupTask && !empty($previousTask))
+		    {
+		        $ref = $previousTask->ref;
+		        $task->fetch($previousTask->rowid);
+		    }
+		    else 
+		    {
+		        $groupTask = false;
+		        $task->fetch('',$ref);
+		    }
 			
-			
-			$task->fetch('',$ref);
 			
 			$story_k = self::getStoryK($story);
 			
@@ -529,11 +537,32 @@ class Doc2Project {
 			}
 			
 			if($task->id>0) {
-				$task->planned_workload = $planned_workload;
-				$task->fk_project = $fk_project;
+			    
+			    $task->fk_project = $fk_project;
+			    
+			    if($groupTask)
+			    {
+			        //var_dump(array($task->planned_workload / 3600 , $planned_workload / 3600, ($task->planned_workload + $planned_workload) / 3600));
+			        $task->planned_workload = $task->planned_workload + $planned_workload;
+			        $task->array_options['options_soldprice'] = $task->array_options['options_soldprice'] + $total_ht;
+			        
+			        // new planification calculation
+			        self::includeNewStartEndDateToTask($task,$start, $end);
+			        
+			        
+			    }
+			    else 
+			    {
+			        // DEFAULT BEHAVIOR
+			        $task->planned_workload = $planned_workload;
+			        $task->array_options['options_soldprice'] = $total_ht;
+			    }
+			    
+			    
+				
 
 				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-				$task->array_options['options_soldprice'] = $total_ht;
+				
 				$task->progress = (int)$task->progress;
 				
 				$action = 'updateOneTask';
@@ -872,7 +901,7 @@ class Doc2Project {
 	            $product = new Product($db);
 	            if($product->fetch($task['fk_product']) > 0)
 	            {
-	                $task['infos']['label'] = $product->getNomUrl(1) .' '.$task['infos']['label'];
+	                $task['infos']['label'] = $product->getNomUrl(1) .' '.$product->label.' '.$task['infos']['label'];
 	            }
 	        }
 	       
@@ -892,36 +921,7 @@ class Doc2Project {
 	    print '</ul>';
 	}
 
-	/*
-	 * Groupe temps  par services
-	 */
-	public static function  groupTimeSpend($Tlines, &$Ttasks=array()){
-	    
-	    foreach ($Tlines as $line)
-	    {
-	        if(!empty($line['children']) )
-	        {  
-	            groupTimeSpend($line['children'], $Ttasks); 
-	        }
-	        else
-	        {
-	            if(!empty( $line['fk_product']))
-	            {
-	                //$keyId = $line['element'].'-'.$line['id'].'-';
-	   	                
-	   	                
-	   	                /*
-	   	                 if(!empty($Ttasks[])) $line['children']
-	   	                 'element' => 'nomenclaturedet',
-	   	                 'id'      =>  $det->id,
-	   	                 'fk_product'=>$det->fk_product,*/
-	            }
-	            
-	           
-	        }
-	    }
 	
-	}
 	
 	public static function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty = 1, $deep = 0, $maxDeep = 0){
 	    global $db,$conf;
@@ -998,4 +998,80 @@ class Doc2Project {
 	    
 	    return $Tlines;
 	}
+	
+	/**
+	* Count the number of working days between two dates.
+	*
+	* This function calculate the number of working days between two given dates
+	*
+	* @param   int  $start    Start date timestamp
+	* @param   int  $end    Ending date timestamp
+	* @return  integer           Number of working days ('zero' on error)
+	*
+	*/
+	public static function getWorkdays($start, $end) {
+	    global $conf;
+	    
+	    $defaultWorkingDays = explode('-',(isset($conf->global->MAIN_DEFAULT_WORKING_DAYS)?$conf->global->MAIN_DEFAULT_WORKING_DAYS:'1-5')); // yes, it's true dolibarr don't create a default '1-5' value so on fresh install of dolibarr this conf is empty. ENJOY!
+
+	    $start = strtotime($date1);
+	    $end   = strtotime($date2);
+	    $workdays = 0;
+	    for ($i = $start; $i <= $end; $i = strtotime("+1 day", $i)) {
+	        $day = date("w", $i);  // 0=sun, 1=mon, ..., 6=sat
+	        
+	        if ($day >= defaultWorkingDays[0]  && $day <= defaultWorkingDays[1]) {
+	                $workdays++;
+	        }
+	    }
+	    return intval($workdays);
+	}
+	
+	
+	/*
+	 * Include new start and end date to an existing task
+	 * @param   object  $task    task
+	 * @param   int  $start    Start date timestamp
+	 * @param   int  $end    Ending date timestamp
+	 * @return  null
+	 */
+	public static function includeNewStartEndDateToTask(&$task,$start, $end) {
+	
+    	// retrieve working days
+    	$supTaskWorkdays =  self::getWorkdays($start, $end);
+    	$currentTaskWorkdays = self::getWorkdays($task->date_start, $task->date_end);
+    	$totalTaskWorkdays = $currentTaskWorkdays + $supTaskWorkdays;
+    	
+    	// Apply new start date
+    	$newStart= $task->date_start;
+    	if(!empty($task->date_start) && !empty($start)){
+    	    $newStart = min($start, $task->date_start);
+    	}
+    	elseif(!empty($start)){
+    	    $newStart = $start;
+    	}
+    	
+    	// apply new end date
+    	$newEnd = $task->date_end;
+    	if(!empty($task->date_end) && !empty($end)){
+    	    $newEnd = max($end, $task->date_end);
+    	}
+    	elseif(!empty($end)){
+    	    $newEnd = $end;
+    	}
+    	
+    	
+    	$newTaskWorkdays =  self::getWorkdays($newStart, $newEnd);
+    	if($newTaskWorkdays<$totalTaskWorkdays){
+    	    // adapte end date to include supplemental days
+    	    $missingWorkdays = $totalTaskWorkdays-$newTaskWorkdays;
+    	    $newEnd = strtotime('+'.$missingWorkdays.' day', $newEnd);
+    	}
+    	
+    	$task->date_start = $newStart;
+    	$task->date_end = $newEnd;
+	
+	}
+	
+	
 }
