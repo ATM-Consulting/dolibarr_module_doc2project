@@ -162,10 +162,12 @@ class Doc2Project {
 		$product = new Product($db);
 		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 		
+		// GET fk_workstation from Line
 		if(empty($fk_workstation) && !empty($line->array_options['options_fk_workstation'])) {
 			$fk_workstation = $line->array_options['options_fk_workstation'];
 		}
 		
+		// GET fk_workstation from Object
 		if(empty($fk_workstation) && !empty($object->array_options['options_fk_workstation'])) {
 			$fk_workstation = $object->array_options['options_fk_workstation'];
 		}
@@ -259,13 +261,15 @@ class Doc2Project {
         //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
 		
+		$linesImported = 0;
+		$linesExcluded =0;
+		$linesImportError =0;
+		
 		$story = '';
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
-			// Excluded product 
-			if(self::isExclude($line)) continue;
-			
+		    
 			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && ! TSubtotal::isModSubtotalLine($line)){
 				$TTitle = TSubtotal::getAllTitleFromLine($line);
 				if(! empty($TTitle)) {
@@ -276,8 +280,12 @@ class Doc2Project {
 			}
 			
 			// EXCLUDED LINES
-			if(self::isExclude($line)) continue;
+			if(self::isExclude($line)){
+			    $linesExcluded ++;
+			    continue;
+			}
 			
+			$linesImported++;
 
 			if ($line->product_type == 9)
 			{
@@ -389,7 +397,10 @@ class Doc2Project {
 											$line->desc = '';
 											$line->total_ht = 0;
 					
-											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story);
+											if(!self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story))
+											{
+											    $linesImportError ++;
+											}
 										}
 									}
 								}
@@ -397,16 +408,22 @@ class Doc2Project {
 						}
 					}else{
 						
-						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
+					    if(!self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story)){
+					        $linesImportError ++;
+					    }
 					}
 				}
 				else{
-					
-					self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
+				    if(!self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story)){
+				        $linesImportError ++;
+				    }
 				}
 			}
 		}
-//		exit;
+		
+
+		//var_dump(array($linesImported,$linesExcluded,$linesImportError ));
+		//exit;
 
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled)
 		{
@@ -416,7 +433,52 @@ class Doc2Project {
 		}
 	}
 	
+
+	public static function searchTask($label='', $story='')
+	{
+	    global $conf,$db;
+	    
+	    if( empty($label) && empty($story) ) return false;
+	    
+	    $sql = "SELECT";
+	    $sql.= " t.rowid, t.ref";
+	    $sql.= " FROM ".MAIN_DB_PREFIX."projet_task as t";
+	    $sql.= " WHERE ";
+	    
+	    $filters=array();
+	    
+	    if (!empty($label)) {
+	        $filters[] = "t.label = '".$db->escape($label)."'";
+	    }
+	    
+	    if (!empty($story)) {
+	        $filters[] = "t.story_k = '".intval($story)."'";
+	    }
+	    $sql.= implode(' AND ', $filters);
+	    
+	    $sql.= ' LIMIT 1';
+	    
+	    
+	    $resql=$db->query($sql);
+	    if ($resql)
+	    {
+	        $num_rows = $db->num_rows($resql);
+	        
+	        if ($num_rows)
+	        {
+	            $obj = $db->fetch_object($resql);
+	            return $obj;
+	        }
+	    }
+	    
+	    return 0;
+	    
+	}
 	
+	
+	/*
+	 * return 0 on error and task rowid on success
+	 */
 	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='')
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
@@ -424,6 +486,17 @@ class Doc2Project {
 		$hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		$task = new Task($db);
+		
+		$groupTask = (!empty($conf->global->DOC2PROJECT_GROUP_TASKS) || !empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT))?true:false;
+		if($groupTask)
+		{
+		    // search previous created task
+		    $previousTask = self::searchTask($label, $story);
+		    if($previousTask->rowid >0)
+		    {
+		        $ref = $previousTask->ref;
+		    }
+		}
 		
 		$action = 'createOneTask';
 		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
