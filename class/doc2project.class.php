@@ -14,19 +14,19 @@ class Doc2Project {
 		    $linecheckbox = GETPOST('doc2projectline');
 		    // var_dump(array( !empty($linecheckbox), !isset($linecheckbox[$line->id]) ));
 		    if(!empty($linecheckbox) && !isset($linecheckbox[$line->id])){
-		        $exclude = true;
+		        return true;
 		    }
 		}
 		
-		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) $exclude =  true;
-		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) $exclude =  true;
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) return   true;
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) return   true;
 
 		// FROM CONFIG : PRODUCT REF
 		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
-		if (!empty($conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS) && in_array($line->ref, $TExclude)) $exclude =  true;
+		if (!empty($conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS) && in_array($line->ref, $TExclude)) return  true;
 		
 		// Subtotal
-		if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) $exclude = true;
+		if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) return  true;
 		
 		return $exclude;
 	}
@@ -155,7 +155,7 @@ class Doc2Project {
 		return false;
 	}
 	
-	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0,$stories='') {
+	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0,$story='') {
 		
 		global $conf,$langs,$db,$user;
 		
@@ -230,8 +230,8 @@ class Doc2Project {
 		
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
-        //var_dump($defaultref, $label,  $project->id);exit;		
-		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
+//var_dump($defaultref, $label,  $project->id);exit;		
+		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story);
 		
 		
 	}
@@ -240,7 +240,10 @@ class Doc2Project {
 	
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$TStory;
+		
+		if (empty($TStory)) $TStory = array();
+		
 		dol_include_once('/subtotal/class/subtotal.class.php');
 		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
@@ -255,22 +258,21 @@ class Doc2Project {
 		$index = 1;
         //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
-		$stories='';
+		
+		$story = '';
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
+			// Excluded product 
+			if(self::isExclude($line)) continue;
 			
-		    
-		    // CREATION DES SPRINTS A PARTIR DES TITRES DE SOUS TOTAL
-			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
-				
-				if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
-				else {
-					$title = $line->label;
-					if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
-					
+			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && ! TSubtotal::isModSubtotalLine($line)){
+				$TTitle = TSubtotal::getAllTitleFromLine($line);
+				if(! empty($TTitle)) {
+					$story = current($TTitle);
+					$story = TSubtotal::getTitleLabel($story);
+					if (!in_array($story, $TStory)) $TStory[] = $story;
 				}
-				$stories .=$title.',';
 			}
 			
 			// EXCLUDED LINES
@@ -279,10 +281,8 @@ class Doc2Project {
 
 			if ($line->product_type == 9)
 			{
-			    // IF ITS A SUBTOTAL LINE
-				if ($line->qty >= 1 && $line->qty <= 10)
+				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
 				{
-				    // TITLE
 					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 						
@@ -291,9 +291,8 @@ class Doc2Project {
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
-				else 
+				else // SOUS-TOTAL
 				{
-				    // SOUS-TOTAL
 					$index = 100 - $line->qty - 1;
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 				}
@@ -312,9 +311,9 @@ class Doc2Project {
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet) || !empty($nomenclature->TNomenclatureWorkstation )){
 						$detailsNomenclature=$nomenclature->getDetails($line->qty);
-						$lastCreateTask = self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories);
+						$lastCreateTask = self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$story);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
-					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
 					}
 				}
 			}	
@@ -333,7 +332,7 @@ class Doc2Project {
 					if(!empty($TProdArbo)){
 				
 						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
-							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$stories);
+							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$story);
 				
 							if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 								dol_include_once('/workstation/class/workstation.class.php');
@@ -353,7 +352,7 @@ class Doc2Project {
 									$line->desc = '';
 									$line->total_ht = 0;
 				
-									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$stories);
+									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$story);
 								}
 							}
 						}
@@ -390,7 +389,7 @@ class Doc2Project {
 											$line->desc = '';
 											$line->total_ht = 0;
 					
-											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$stories);
+											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story);
 										}
 									}
 								}
@@ -398,26 +397,27 @@ class Doc2Project {
 						}
 					}else{
 						
-						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
 					}
 				}
 				else{
 					
-					self::lineToTask($object,$line,$project,$start,$end,0,false,0,$stories);
+					self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
 				}
 			}
 		}
-		
-		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled){
-			$stories=rtrim($stories,",");
+//		exit;
+
+		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled)
+		{
 			$project->statut=0;
-			$project->array_options['options_stories'] = $stories;
+			$project->array_options['options_stories'] = implode(',', $TStory);
 			$project->update($user);
 		}
 	}
 	
 	
-	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$stories='')
+	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='')
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 
@@ -438,11 +438,8 @@ class Doc2Project {
 			
 			
 			$task->fetch('',$ref);
-			if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
-				//$project = new Project($db);
-				$stories = explode(",",$stories);
-				$nbstory = count($stories)-1;				
-			}
+			
+			$story_k = self::getStoryK($story);
 			
 			if (!empty($line))
 			{
@@ -470,8 +467,8 @@ class Doc2Project {
 				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 				$task->update($user);
-				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
-					Doc2Project::setStoryK($db, $task->id, $nbstory);
+				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
+					Doc2Project::setStoryK($db, $task->id, $story_k);
 				}
 				
 
@@ -500,8 +497,8 @@ class Doc2Project {
 				$r = $task->create($user);
 				
 				if ($r > 0) {
-					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($stories)){
-						Doc2Project::setStoryK($db, $r, $nbstory);
+					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
+						Doc2Project::setStoryK($db, $r, $story_k);
 					}
 					return $r;
 				} else {
@@ -515,11 +512,24 @@ class Doc2Project {
 	}
 	
 //Sprint scrumboard
-	public static function setStoryK($db,$id, $nbstory){
+	public static function setStoryK($db,$id, $nbstory)
+	{
 		$sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
 		$resql = $db->query($sql);
 		if($resql) return 1;
 		return 0;
+	}
+	
+	public static function getStoryK($story) {
+		global $conf, $TStory;
+//		var_dump($TStory, $story);
+		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story)) {
+			$key = array_search($story, $TStory);
+//			var_dump($key, '-------------------------------------');
+			if ($key !== false) return $key+1; // décalage suite 
+		}
+		
+		return null;
 	}
 	
 	/* Converti une ligne de nomenclature en tache.
