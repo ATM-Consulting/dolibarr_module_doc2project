@@ -240,12 +240,15 @@ class Doc2Project {
 	
 	
 	
+	
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
 		global $conf,$langs,$db,$user,$TStory;
 		
-		if (empty($TStory)) $TStory = array();
-		
+		if (empty($TStory)){
+		    $TStory = self::getAllStoriesFromProject($project->id);
+		}
+		var_dump($TStory);
 		dol_include_once('/subtotal/class/subtotal.class.php');
 		
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
@@ -275,7 +278,7 @@ class Doc2Project {
 				if(! empty($TTitle)) {
 					$story = current($TTitle);
 					$story = TSubtotal::getTitleLabel($story);
-					if (!in_array($story, $TStory)) $TStory[] = $story;
+					self::add_story($TStory,$story,$project->id);
 				}
 			}
 			
@@ -293,9 +296,11 @@ class Doc2Project {
 				{
 					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
-						
-					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+					
+					$label = $line->label;
+					$desc =  !empty($line->description) ? $line->description : $line->desc;
+					
+					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $desc, '', '', $fk_task_parent);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
@@ -318,8 +323,8 @@ class Doc2Project {
 					
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet) || !empty($nomenclature->TNomenclatureWorkstation )){
-						$detailsNomenclature=$nomenclature->getDetails($line->qty);
-						$lastCreateTask = self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$story);
+						
+						$lastCreateTask = self::nomenclatureToTask($nomenclature,$line,$object, $project, $start, $end,$story);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
 					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
 					}
@@ -619,6 +624,41 @@ class Doc2Project {
 		return 0;
 	}
 	
+	public static function getAllStoriesFromProject($fk_projet)
+	{
+    	dol_include_once('/scrumboard/class/scrumboard.class.php');
+    	$TStoryObj = new TStory();
+    	$allTStory = $TStoryObj->getAllStoriesFromProject($fk_projet);
+    	$TStory = array();
+    	if(!empty($allTStory))
+    	{
+    	    foreach ($allTStory as $story)
+    	    {
+    	        $TStory[$story->id] = $story->label;
+    	    }
+    	}
+    	return $TStory;
+	}
+	
+	public static function add_story(&$TStory,$story,$fk_projet){
+	    if (!in_array($story, $TStory)){
+	        
+	        if(empty($TStory)) $TStory = self::getAllStoriesFromProject($fk_projet);
+	        
+	        dol_include_once('/scrumboard/class/scrumboard.class.php');
+	        $PDOdb = new TPDOdb();
+	        $object = new TStory();
+	        $object->fk_projet = $fk_projet;
+	        $object->label = $story;
+	        $object->storie_order = count($TStory) + 1;
+	        $id = $object->save($PDOdb);
+	        if($id>0)
+	        {
+	            $TStory[$id] = $story;
+	        }
+	    }
+	}
+	
 	//Sprint scrumboard
 	public static function setStoryK($db,$id, $nbstory)
 	{
@@ -673,10 +713,21 @@ class Doc2Project {
 	 * $object => objet courant (propal/order)
 	 * 
 	 */
-	public static function nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories='')
+	public static function nomenclatureToTask($curentNomenclature,$line,$object, $project, $start, $end,$stories='')
 	{
 	    global $db,$conf;
 		
+	    if(is_object($curentNomenclature) && get_class($curentNomenclature) == 'TNomenclature')
+	    {
+	        $detailsNomenclature=$curentNomenclature->getDetails($line->qty);
+	    }
+	    else
+	    {
+	        $detailsNomenclature=$curentNomenclature;
+	        $curentNomenclature=false;
+	    }
+	    
+	    
 		foreach ($detailsNomenclature as &$lineNomen)
 		{
 			//Conversion du tableau en objet
@@ -718,21 +769,23 @@ class Doc2Project {
 		}
 		
 		// RECUPERATION DES WORKSTATIONS
-		if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION) )
+		if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION) && !empty($curentNomenclature) )
 		{
+
 		    dol_include_once('/workstation/class/workstation.class.php');
-		    if(!empty($nomenclature->TNomenclatureWorkstation))
+		    if(!empty($curentNomenclature->TNomenclatureWorkstation))
 		    {
-		        foreach ($nomenclature->TNomenclatureWorkstation as &$wsn)
+		        foreach ($curentNomenclature->TNomenclatureWorkstation as &$wsn)
 		        {
 		            $defaultref='';
 		            if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 		                $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.$wsn->workstation->rowid;
 		            }
 		            
+		            $durationInSec = $wsn->nb_hour * 3600;
 		            $label = $wsn->workstation->name;
-		            //var_dump(self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories));
-		            //exit;
+		            self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
+		            
 		        }
 		    }
 		}
@@ -937,11 +990,40 @@ class Doc2Project {
 	                $task['infos']['label'] = $product->getNomUrl(1) .' '.$product->label.' '.$task['infos']['label'];
 	            }
 	        }
+	        elseif($task['element'] == 'workstation'){
+	           print '<i class="fa fa-wrench"></i> ';
+	        }
 	       
 	        $devNotes =  '';//$i.' :: '.$task['element'] .' ';
 	        print '<strong>'.$devNotes. $task['infos']['label'].'</strong>';
 	        if(!empty($task['infos']['desc'])){ print ' '.$task['infos']['desc']; }
 	        
+	        if($task['element'] == 'workstation')
+	        {
+	            print '<i class="fa fa-hourglass-start"></i> ';
+	            print $task['infos']['object']->nb_hour_prepare.'H';
+	            
+	            print '<i class="fa fa-hourglass-half"></i> ';
+	            print $task['infos']['object']->nb_hour_manufacture.'H';
+	            
+	            print '<i class="fa fa-hourglass-end"></i> ';
+	            print $task['infos']['object']->nb_hour_after.'H';
+	            
+	            
+	        }
+	        
+	        /*
+	        public $task['infos']['object']->nb_hour_prepare => float 0
+	        public 'nb_hour_manufacture' => float 0
+	        public 'nb_hour_capacity' => float 5
+	        public 'nb_ressource' => float 0
+	        public 'thm' => float 0
+	        public 'thm_machine' => float 0
+	        public 'thm_overtime' => float 0
+	        public 'thm_night' => float 0
+	        public 'nb_hour_before' => float 1
+	        public 'nb_hour_after' => float 1
+	        */
 	        if(!empty($task['infos']['qty'])){
 	            print ' x '.($task['infos']['qty']);
 	        }
