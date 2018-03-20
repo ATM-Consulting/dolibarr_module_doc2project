@@ -731,8 +731,8 @@ class Doc2Project {
 		            }
 		            
 		            $label = $wsn->workstation->name;
-		            var_dump(self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories));
-		            exit;
+		            //var_dump(self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories));
+		            //exit;
 		        }
 		    }
 		}
