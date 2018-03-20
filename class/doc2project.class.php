@@ -782,7 +782,7 @@ class Doc2Project {
 		                $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.$wsn->workstation->rowid;
 		            }
 		            
-		            $durationInSec = $wsn->nb_hour * 3600;
+		            $durationInSec = $line->qty * $wsn->nb_hour * 3600;
 		            $label = $wsn->workstation->name;
 		            self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
 		            
@@ -1000,16 +1000,7 @@ class Doc2Project {
 	        
 	        if($task['element'] == 'workstation')
 	        {
-	            print '<i class="fa fa-hourglass-start"></i> ';
-	            print $task['infos']['object']->nb_hour_prepare.'H';
-	            
-	            print '<i class="fa fa-hourglass-half"></i> ';
-	            print $task['infos']['object']->nb_hour_manufacture.'H';
-	            
-	            print '<i class="fa fa-hourglass-end"></i> ';
-	            print $task['infos']['object']->nb_hour_after.'H';
-	            
-	            
+	            print ' '.$task['infos']['object']->nb_hour.'H'; 
 	        }
 	        
 	        /*
@@ -1100,8 +1091,9 @@ class Doc2Project {
     	                    'id'      => $wsn->workstation->rowid,
     	                    'infos'   => array(
     	                        'label' => $wsn->workstation->name,
+    	                        'qty' => $qty * $det->qty,
     	                        'desc' => '',
-    	                        'object' => $wsn->workstation,
+    	                        'object' => $wsn,
     	                    ),
     	                );
     	                
