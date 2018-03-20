@@ -980,7 +980,13 @@ class Doc2Project {
 	    print '<ul>';
 	    foreach ($Tlines as $i => $task)
 	    {
-	        print '<li>';
+	        $style = '';
+	        if($task['element'] == 'workstation' && empty($task['infos']['object']->nb_hour)){
+	            $style = 'text-decoration: line-through;';
+	        }
+	        
+	        print '<li style="'.$style.'">';
+	        
 	        
 	        if(!empty($task['fk_product']))
 	        {
@@ -1003,18 +1009,7 @@ class Doc2Project {
 	            print ' '.$task['infos']['object']->nb_hour.'H'; 
 	        }
 	        
-	        /*
-	        public $task['infos']['object']->nb_hour_prepare => float 0
-	        public 'nb_hour_manufacture' => float 0
-	        public 'nb_hour_capacity' => float 5
-	        public 'nb_ressource' => float 0
-	        public 'thm' => float 0
-	        public 'thm_machine' => float 0
-	        public 'thm_overtime' => float 0
-	        public 'thm_night' => float 0
-	        public 'nb_hour_before' => float 1
-	        public 'nb_hour_after' => float 1
-	        */
+	       
 	        if(!empty($task['infos']['qty'])){
 	            print ' x '.($task['infos']['qty']);
 	        }
