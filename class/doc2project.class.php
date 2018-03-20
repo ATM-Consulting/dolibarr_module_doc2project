@@ -272,13 +272,9 @@ class Doc2Project {
 		foreach($object->lines as &$line)
 		{
 		    
-			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && ! TSubtotal::isModSubtotalLine($line)){
-				$TTitle = TSubtotal::getAllTitleFromLine($line);
-				if(! empty($TTitle)) {
-					$story = current($TTitle);
-					$story = TSubtotal::getTitleLabel($story);
-					self::add_story($TStory,$story,$project->id);
-				}
+		    if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
+				$story = TSubtotal::getTitleLabel($line);
+				self::add_story($TStory,$story,$project->id);
 			}
 			
 			// EXCLUDED LINES
@@ -299,7 +295,7 @@ class Doc2Project {
 					$label = $line->label;
 					$desc =  !empty($line->description) ? $line->description : $line->desc;
 					
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $desc, '', '', $fk_task_parent);
+					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $desc, '', '', $fk_task_parent,'', '', 0,'',$story);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
@@ -633,7 +629,7 @@ class Doc2Project {
     	{
     	    foreach ($allTStory as $story)
     	    {
-    	        $TStory[$story->id] = $story->label;
+    	        $TStory[$story->storie_order] = $story->label;
     	    }
     	}
     	return $TStory;
@@ -653,7 +649,7 @@ class Doc2Project {
 	        $id = $object->save($PDOdb);
 	        if($id>0)
 	        {
-	            $TStory[$id] = $story;
+	            $TStory[$object->storie_order] = $story;
 	        }
 	    }
 	}
@@ -690,7 +686,7 @@ class Doc2Project {
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story)) {
 			$key = array_search($story, $TStory);
 			
-			if ($key !== false) return $key+1; // décalage suite 
+			if ($key !== false) return $key; // décalage suite 
 		}
 		
 		return null;
