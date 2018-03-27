@@ -214,7 +214,7 @@ class Doc2Project {
 		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
 //var_dump($defaultref, $label,  $project->id);exit;		
-		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story);
+		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $line->rowid, $object->element);
 		
 		
 	}
@@ -266,7 +266,7 @@ class Doc2Project {
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 						
 					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent, $line->rowid, $object->element);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
@@ -386,8 +386,7 @@ class Doc2Project {
 				}
 			}
 		}
-//		exit;
-
+		
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled)
 		{
 			$project->statut=0;
@@ -396,8 +395,8 @@ class Doc2Project {
 		}
 	}
 	
-	
-	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='')
+
+	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='', $fk_origin='', $origin_type='')
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 
@@ -451,7 +450,11 @@ class Doc2Project {
 					Doc2Project::setStoryK($db, $task->id, $story_k);
 				}
 				
-
+				if(! empty($fk_origin)) {
+					if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
+					elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+				}
+				
 				return $task->id;
 			}
 			else{
@@ -480,6 +483,11 @@ class Doc2Project {
 					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
 						Doc2Project::setStoryK($db, $r, $story_k);
 					}
+					if(! empty($fk_origin)) {
+						if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
+						elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+					}
+					
 					return $r;
 				} else {
 					dol_print_error($db);
