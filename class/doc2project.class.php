@@ -211,7 +211,8 @@ class Doc2Project {
 			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 		}
 		
-		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
+		if (!empty($conf->global->DOC2PROJECT_TASK_NAME)) $label = strtr($conf->global->DOC2PROJECT_TASK_NAME, array('{product_ref}' => $line->ref, '{product_label}' => $line->product_label));
+		else $label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
 //var_dump($defaultref, $label,  $project->id);exit;		
 		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $line->rowid, $object->element);
@@ -264,7 +265,7 @@ class Doc2Project {
 				{
 					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
-						
+					
 					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
 					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent, $line->rowid, $object->element);
 						
@@ -414,8 +415,6 @@ class Doc2Project {
 		}
 		else
 		{
-			
-			
 			$task->fetch('',$ref);
 			
 			$story_k = self::getStoryK($story);
