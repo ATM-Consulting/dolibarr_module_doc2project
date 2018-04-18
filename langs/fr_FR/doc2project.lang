@@ -26,6 +26,8 @@ DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
 DOC2PROJECT_TITLE_PROJECT_info=Clef de remplacement {ref_client},{ref},{thirdparty_name}, {options_...}, ...
 DOC2PROJECT_SET_PROJECT_DRAFT=Repasser le projet au statut brouillon sur la création de nouvelles tâches
 Doc2ProjectCreateSprintFromTitle=Créer les sprints en fonction des lignes titres contenus dans le document
+DOC2PROJECT_TASK_NAME=Label à appliquer lors de la création des tâches
+DOC2PROJECT_TASK_NAME_HELP=Clés de substitutions :<br />- {product_ref} => référence du produit<br />- {product_label} => libellé de la ligne
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
