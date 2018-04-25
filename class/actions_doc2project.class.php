@@ -293,7 +293,7 @@ class ActionsDoc2Project
 			}
 			else
 			{
-				setEventMessage($langs->trans('Doc2ProjectErrorCanNotFetchProject'));
+				setEventMessage($langs->trans('Doc2ProjectErrorCanNotFetchProject'),'errors');
 			}
 			
 		}
