@@ -296,7 +296,7 @@ class Doc2Project {
 					$label = !empty($line->product_label) ? $line->product_label : $line->label;
 					$desc =  !empty($line->description) ? $line->description : $line->desc;
 					
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $desc, '', '', $fk_task_parent=0, '', '', 0,'',$story,$line->rowid, $object->element);
+					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $desc, '', '', $fk_task_parent, '', '', 0,'',$story,$line->rowid, $object->element);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
