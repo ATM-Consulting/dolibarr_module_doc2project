@@ -436,6 +436,18 @@ if($ok) {
 	print '</td></tr>';
 	
 	
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$form->textwithpicto($langs->trans("DOC2PROJECT_TASK_NAME"), $langs->transnoentitiesnoconv("DOC2PROJECT_TASK_NAME_HELP")).'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="set_DOC2PROJECT_TASK_NAME">';
+	print '<input size="35" type="text" class="flat" name="DOC2PROJECT_TASK_NAME" value="'.$conf->global->DOC2PROJECT_TASK_NAME.'">';
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print '</td></tr>';
 	
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
