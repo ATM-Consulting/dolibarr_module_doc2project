@@ -317,12 +317,15 @@ class Doc2Project {
 					$nomenclature = new TNomenclature($db);
 					$PDOdb = new TPDOdb($db);
 					
+					$fk_workstation = 0;
+					$isParent=false;
+					$fk_parent=0;
+					
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet) || !empty($nomenclature->TNomenclatureWorkstation )){
-						
 						$lastCreateTask = self::nomenclatureToTask($nomenclature,$line,$object, $project, $start, $end,$story);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
-					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
+					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,$fk_parent,$isParent,$fk_workstation,$story);
 					}
 				}
 			}	
@@ -785,7 +788,8 @@ class Doc2Project {
 		            if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 		                $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.$wsn->workstation->rowid;
 		            }
-		            
+		            $fk_task_parent = 0;
+		            $fk_workstation = $wsn->workstation->rowid;
 		            $durationInSec = $line->qty * $wsn->nb_hour * 3600;
 		            $label = $wsn->workstation->name;
 		            self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
