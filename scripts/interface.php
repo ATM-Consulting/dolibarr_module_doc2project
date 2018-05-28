@@ -7,6 +7,7 @@ require('../config.php');
 dol_include_once('/projet/class/project.class.php');
 dol_include_once('/projet/class/task.class.php');
 dol_include_once('/doc2project/class/doc2project.class.php');
+dol_include_once('/doc2project/lib/doc2project.lib.php');
 
 $langs->load('doc2project@doc2project');
 
@@ -32,7 +33,7 @@ if($get == 'convertToProjectLines' )
         
         if($object->fetch($id) > 0)
         {
-            doc2project::showLinesToParse($object);
+            showLinesToParse($object);
             
             print '<input type="hidden" name="id" value="'.$id.'" />';
             print '<input type="hidden" name="type" value="'.$element.'" />';

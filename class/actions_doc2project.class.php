@@ -20,71 +20,10 @@ class ActionsDoc2Project
 				print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
 				
 				if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){
-				    if(in_array('propalcard',explode(':',$parameters['context']))){
-				        $objectUrl = DOL_URL_ROOT.'/comm/propal/card.php?id='.$object->id;
-				    }
-				    else {
-				        $objectUrl = $object->getNomUrl(0,'',0,1);
-				    }
-				?>
-				<script type="text/javascript">
-				$(document).ready(function(){
-					$('#doc2project_create_project').click(function(event) {
-						event.preventDefault(); // prevent default url redirrection
-						
-						var htmlLines;
-						var page = "<?php echo dol_buildpath('/doc2project/scripts/interface.php?get=convertToProjectLines&element='.$object->element.'&id='.$object->id,2) ; ?>";
-						var formId = "ajaxloaded_tablelinesform_<?php echo $object->element; ?>_<?php echo $object->id; ?>";
-				        $.get(page, function (data) {
-				        	htmlLines = $(data) ;//.find('#tablelines') ;
-				        });
-
-				        var $dialog = $('<form id="' + formId + '" action="<?php print $objectUrl; ?>"  method="post" ></form>')
-				        .load( page , function() {
-
-				        	$("#" + formId + " #tablelines").prop("id", "ajaxloaded_tablelines"); // change id attribute
-
-				        	$("#" + formId + "  .linecheckbox,#" + formId + " .linecheckboxtoggle").prop("checked", true); // checked by default 
-
-					        // reload checkbox toggle function
-				            $("#" + formId + " .linecheckboxtoggle").click(function(){
-				        		var checkBoxes = $("#" + formId + " .linecheckbox");
-				        		checkBoxes.prop("checked", this.checked);
-				        	});
-
-
-				        })
-				        .html(htmlLines)
-				        .dialog({
-				            autoOpen: false,
-				            modal: true,
-				            height: $(window).height()*0.8 ,//retrieve 80% of current window width
-				            width: $(window).width()*0.8,//retrieve 80% of current window height
-				            title: "<?php echo html_entity_decode($label); ?>",
-				            buttons: {
-				                    "<?php echo html_entity_decode($label); ?>": function() {
-				                      	$( this ).dialog( "close" );
-			    	      	        	$("#" + formId).submit();
-				                    },
-				                    "<?php echo $langs->trans('Cancel'); ?>": function() {
-				                      $( this ).dialog( "close" );
-				                    }
-				            }
-				        });
-				        
-				        $dialog.dialog('open').tooltip({
-							show: { collision: "flipfit", effect:'toggle', delay:50 },
-							hide: { delay: 50 },
-							tooltipClass: "mytooltip",
-							content: function () {
-				  				return $(this).prop('title');		/* To force to get title as is */
-								}
-						});
-						
-					});
-				});
-				</script>
-				<?php }
+				    // Print la partie JS nécessaire à la popin 
+				    dol_include_once('/doc2project/lib/doc2project.lib.php');
+				    printJSPopinBeforeAddTasksInProject($parameters, $object, $action, $hookmanager,$label);
+				}
 			}
 		}
 
