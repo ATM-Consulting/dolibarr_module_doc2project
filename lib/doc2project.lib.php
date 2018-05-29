@@ -64,10 +64,11 @@ function showLinesToParse(&$object)
     $Tlines = array();
     
     // LOAD subtotal class if needed
-    if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE)){
+    if(!empty($conf->subtotal->enabled)){
         dol_include_once('/subtotal/class/subtotal.class.php');
     }
     
+
     
     print '<table id="tablelines" class="noborder" width="100%"><thead><tr class="liste_titre">
                 <td class="linecoldescription">Description</td>
@@ -86,7 +87,6 @@ function showLinesToParse(&$object)
         print '</tr>';
     }
     
-    
     $i = 0;
     // CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
     foreach($object->lines as $iLine => &$line)
@@ -100,9 +100,9 @@ function showLinesToParse(&$object)
         if(Doc2Project::isExclude($line)) continue;
         
         // Dans le cas de sous total
-        if ($line->product_type == 9)
+        if ( $line->product_type == 9)
         {
-            if (method_exists('TSubtotal', 'getTitleLabel')) $title = TSubtotal::getTitleLabel($line);
+            if (!empty($conf->subtotal->enabled)) $title = TSubtotal::getTitleLabel($line);
             else {
                 $title = $line->label;
                 if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
@@ -227,12 +227,7 @@ function showLinesToParse(&$object)
     }
     print '</tbody></table>';
     
-    print '<input type="hidden"  />';
     
-    if (ini_get('max_input_vars') < ($i*4))
-    {
-        print 'NEED CHANGE max_input_vars to biggeur value than '.($i*4);
-    }
     
     
 }
@@ -388,7 +383,7 @@ function getWorkdays($start, $end) {
     for ($i = $start; $i <= $end; $i = strtotime("+1 day", $i)) {
         $day = date("w", $i);  // 0=sun, 1=mon, ..., 6=sat
         
-        if ($day >= defaultWorkingDays[0]  && $day <= defaultWorkingDays[1]) {
+        if ($day >= $defaultWorkingDays[0]  && $day <= $defaultWorkingDays[1]) {
             $workdays++;
         }
     }
