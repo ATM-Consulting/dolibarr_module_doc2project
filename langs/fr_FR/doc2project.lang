@@ -68,3 +68,9 @@ Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si
 Doc2ProjectErrorCanNotFetchProject=Erreur : impossible de charger ou de créer le projet
 
 Doc2ProjectViewStats = Voir les statistiques doc2project
+
+Doc2ProjectPrevueBeforeConvert=Prévisualiser et sélectionner les lignes à importer lors de l'import
+Doc2ProjectGroupTasksBySprint=Grouper les tâches avec le même libellé par sprint
+Doc2ProjectGroupTasks=Grouper les tâches avec le même libellé
+
+

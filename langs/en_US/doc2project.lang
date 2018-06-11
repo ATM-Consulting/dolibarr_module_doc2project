@@ -19,3 +19,7 @@ ModuleNeedProposalOrOrderModule = The proposal or customer order module must be 
 Doc2ProjectCreateTaskForParent = Create the initial service as a parent task  for all composed products
 
 Doc2ProjectViewStats = View doc2project stats
+
+Doc2ProjectPrevueBeforeConvert=Preview and select lines before import
+Doc2ProjectGroupTasksBySprint=Group task with same label by sprint
+Doc2ProjectGroupTasks=Group task with same label
