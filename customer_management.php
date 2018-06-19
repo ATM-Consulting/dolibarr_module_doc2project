@@ -657,12 +657,19 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
 						if($('#fixedcol').length == '0') {
 							$('body').append('<div id="fixedcol"><table class="noborder" style="box-shadow:none;" /></div>');
 							$col1 = $col_customer.first();
+							maxwidth = 0;
 							$col_customer.each(function(i,item) {
 								$item = $(item);
-								$('#fixedcol>table').append('<tr class="'+$item.parent().attr('class')+'" style="height:'+$item.parent().height()+'px"><td style="width:'+$item.width()+'px">'+$item.html()+'</td></tr>');
-							});
 
+                                if($item.width()>maxwidth) {
+                                	maxwidth = $item.width();
+                                }
+								
+								$('#fixedcol>table').append('<tr class="'+$item.parent().attr('class')+'" style="height:'+$item.parent().height()+'px"><td>'+$item.html()+'</td></tr>');
+							});
+							
 						}
+
 
 							$('#fixedcol').css({
 									position:"absolute"
@@ -671,7 +678,7 @@ function _get_equipement($PDOdb, $idCateg, $refcommande){
                                 		                        ,'background':'white'
                                                 		        ,'z-index':'99'
 		                                                        ,'left':(scrollLeft)
-                		                                        ,'width':$col1.width()
+                		                                        ,'width':(maxwidth+30)+'px'
 								});
 
 
