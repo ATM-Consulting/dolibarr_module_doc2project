@@ -130,6 +130,8 @@ class InterfaceDoc2Projecttrigger
 				$thm = $res->thm;
 			}
 			else{
+				$ttId = $object->timespent_id;
+
 				$u=new User($this->db);
                 $u->fetch($object->timespent_fk_user);
                 $thm = $u->thm;
