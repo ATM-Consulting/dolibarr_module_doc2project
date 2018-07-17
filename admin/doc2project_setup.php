@@ -448,6 +448,14 @@ if($ok) {
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print '</form>';
 	print '</td></tr>';
+
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("Doc2ProjectUseSpecificStoryToCreateTasks").'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print ajax_constantonoff('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS');
+	print '</td></tr>';
 	
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');

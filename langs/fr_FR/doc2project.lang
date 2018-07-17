@@ -73,4 +73,4 @@ Doc2ProjectPrevueBeforeConvert=Prévisualiser et sélectionner les lignes à imp
 Doc2ProjectGroupTasksBySprint=Grouper les tâches avec le même libellé par sprint
 Doc2ProjectGroupTasks=Grouper les tâches avec le même libellé
 
-
+Doc2ProjectUseSpecificStoryToCreateTasks = Utiliser un autre sprint que le premier pour la création des tâches
