@@ -242,7 +242,7 @@ class Doc2Project {
 	
 	
 	
-	public static function parseLines(&$object,&$project,&$start,&$end)
+	public static function parseLines(&$object,&$project,&$start,&$end, &$story = '')
 	{
 		global $conf,$langs,$db,$user,$TStory;
 		
@@ -268,7 +268,6 @@ class Doc2Project {
 		$linesExcluded =0;
 		$linesImportError =0;
 		
-		$story = '';
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
@@ -424,10 +423,6 @@ class Doc2Project {
 				}
 			}
 		}
-		
-
-		//var_dump(array($linesImported,$linesExcluded,$linesImportError ));
-		//exit;
 
 		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled)
 		{
@@ -613,7 +608,7 @@ class Doc2Project {
 				$r = $task->create($user);
 				
 				if ($r > 0) {
-					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
+					if(!is_null($story_k) && (! empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) || ! empty($conf->global->DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS))){
 						Doc2Project::setStoryK($db, $r, $story_k);
 					}
 					if(! empty($fk_origin)) {
@@ -695,7 +690,7 @@ class Doc2Project {
 	public static function getStoryK($story) {
 		global $conf, $TStory;
 		
-		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story)) {
+		if(! empty($story) && (! empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) || ! empty($conf->global->DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS))) {
 			$key = array_search($story, $TStory);
 			
 			if ($key !== false) return $key; // décalage suite 
