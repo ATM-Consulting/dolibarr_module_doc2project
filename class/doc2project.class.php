@@ -452,8 +452,8 @@ class Doc2Project {
 	        $filters[] = "t.label = '".$db->escape($label)."'";
 	    }
 	    
-	    
-	    if (!empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT) && !empty($story) && !empty(self::getStoryK($story))) {
+	    $story_k = self::getStoryK($story);
+	    if (!empty($conf->global->DOC2PROJECT_GROUP_TASKS_BY_SPRINT) && !empty($story) && !empty($story_k)) {
 	        $filters[] = "t.story_k = '".intval(self::getStoryK($story))."'";
 	    }
 	    $sql.= implode(' AND ', $filters);
