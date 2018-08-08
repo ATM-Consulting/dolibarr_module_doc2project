@@ -310,12 +310,13 @@ class Doc2Project {
 					$s->fetch($line->fk_product);
 					$s->get_sousproduits_arbo();
 					$TProdArbo = $s->get_arbo_each_prod();
-				
+					$fk_parent = 0;
+					
 					if(!empty($TProdArbo)){
 				
 						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
 							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$story);
-				
+							
 							if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 								dol_include_once('/workstation/class/workstation.class.php');
 				
@@ -353,6 +354,15 @@ class Doc2Project {
 				
 								$new_fk_parent = self::lineToTask($object,$line, $project,$start,$end,$fk_parent,false,0,$story);
 								
+								if (!empty($conf->global->DOC2PROJECT_TASK_NAME)) $label = strtr($conf->global->DOC2PROJECT_TASK_NAME, array('{product_ref}' => $line->ref, '{product_label}' => $line->product_label));
+								else $label = !empty($line->product_label) ? $line->product_label : $line->desc;
+								
+								$defaultref='';
+								if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
+								    $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'-'.$ss->id;
+								}
+								$new_fk_parent = self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_parent, '', $line->total_ht,0,$line,$story, $line->rowid, $object->element);
+		
 								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
 									dol_include_once('/workstation/class/workstation.class.php');
 				
