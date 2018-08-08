@@ -183,32 +183,11 @@ if($ok) {
 	
 	_print_on_off('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO', $langs->trans('Doc2ProjectDoNotConvertServiceWithQuantityToZero'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectPrevueBeforeConvert").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_PREVUE_BEFORE_CONVERT');
-	print '</td></tr>';
+	_print_on_off('DOC2PROJECT_PREVUE_BEFORE_CONVERT', $langs->trans('Doc2ProjectPrevueBeforeConvert'));
 	
+	_print_on_off('DOC2PROJECT_GROUP_TASKS', $langs->trans('Doc2ProjectGroupTasks'));
 	
-
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectGroupTasks").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_GROUP_TASKS');
-	print '</td></tr>';
-
-
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectGroupTasksBySprint").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_GROUP_TASKS_BY_SPRINT');
-	print '</td></tr>';
+	_print_on_off('DOC2PROJECT_GROUP_TASKS_BY_SPRINT', $langs->trans('Doc2ProjectGroupTasksBySprint'));
 	
 	// Excluded products
 	$metas = array(
@@ -217,16 +196,10 @@ if($ok) {
 	);
 	_print_input_form_part('DOC2PROJECT_CONVERSION_RULE', $langs->trans('Doc2ProjectConversionRule'), '', $metas, 'textarea', $langs->transnoentitiesnoconv("Doc2ProjectConversionRuleDesc"));
 	
-	
 	_print_input_form_part('DOC2PROJECT_TASK_NAME', $langs->trans('DOC2PROJECT_TASK_NAME'), '', array(), 'input', $langs->transnoentitiesnoconv("DOC2PROJECT_TASK_NAME_HELP"));
 	
-		$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectUseSpecificStoryToCreateTasks").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS');
-	print '</td></tr>';
+	_print_on_off('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS', $langs->trans('Doc2ProjectUseSpecificStoryToCreateTasks'));
+
 
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
