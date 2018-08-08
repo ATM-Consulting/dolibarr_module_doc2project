@@ -101,362 +101,106 @@ if($ok) {
 	// Setup page goes here
 	$form=new Form($db);
 	$var=false;
-	print '<table class="noborder" width="100%">';
-	print '<tr class="liste_titre">';
-	print '<td>'.$langs->trans("Parameters").'</td>'."\n";
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="center" width="100">'.$langs->trans("Value").'</td>'."\n";
+	print '<table class="noborder liste" width="100%">';
+	
+	_print_title($langs->trans("Parameters"));
+	
 	
 	// Display convert button on proposal
 	if($conf->propal->enabled) {
-		$var=!$var;
-		print '<tr '.$bc[$var].'>';
-		print '<td>'.$langs->trans("DisplayOnProposal").'</td>';
-		print '<td align="center" width="20">&nbsp;</td>';
-		print '<td align="right" width="300">';
-		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="set_DOC2PROJECT_DISPLAY_ON_PROPOSAL">';
-		print $form->selectyesno("DOC2PROJECT_DISPLAY_ON_PROPOSAL",$conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL,1);
-		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-		print '</form>';
-		print '</td></tr>';
+	    _print_on_off('DOC2PROJECT_DISPLAY_ON_PROPOSAL', $langs->trans('DisplayOnProposal'));
 	}
 	
 	// Display convert button on order
 	if($conf->commande->enabled) {
-		$var=!$var;
-		print '<tr '.$bc[$var].'>';
-		print '<td>'.$langs->trans("DisplayOnOrder").'</td>';
-		print '<td align="center" width="20">&nbsp;</td>';
-		print '<td align="right" width="300">';
-		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="set_DOC2PROJECT_DISPLAY_ON_ORDER">';
-		print $form->selectyesno("DOC2PROJECT_DISPLAY_ON_ORDER",$conf->global->DOC2PROJECT_DISPLAY_ON_ORDER,1);
-		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-		print '</form>';
-		print '</td></tr>';
+	    _print_on_off('DOC2PROJECT_DISPLAY_ON_ORDER', $langs->trans('DisplayOnOrder'));
 	}
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans('DOC2PROJECT_SET_PROJECT_DRAFT').'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="center" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">'; // Keep form because ajax_constantonoff return single link with <a> if the js is disabled
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_SET_PROJECT_DRAFT">';
-	print ajax_constantonoff('DOC2PROJECT_SET_PROJECT_DRAFT');
-	print '</form>';
-	print '</td></tr>';
+	_print_on_off('DOC2PROJECT_SET_PROJECT_DRAFT');
+
+	$metas = array( 'placeholder'=> $langs->trans('Doc2ProjectTitle', '{refclient/ref}').' '.$langs->trans('DocConverted') );
+	_print_input_form_part('DOC2PROJECT_TITLE_PROJECT', false, '', $metas, 'input', $langs->trans('DOC2PROJECT_TITLE_PROJECT_info'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("DOC2PROJECT_TITLE_PROJECT").img_info($langs->trans('DOC2PROJECT_TITLE_PROJECT_info')).'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_TITLE_PROJECT">';
-	print '<input name="DOC2PROJECT_TITLE_PROJECT" value="'.$conf->global->DOC2PROJECT_TITLE_PROJECT.'" placeholder="'.$langs->trans('Doc2ProjectTitle', '{refclient/ref}').' '.$langs->trans('DocConverted').'" size="50" />';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
 	
 	// Task prefix
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("TaskRefPrefix").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_TASK_REF_PREFIX">';
-	print '<input type="text" class="flat" name="DOC2PROJECT_TASK_REF_PREFIX" value="'.$conf->global->DOC2PROJECT_TASK_REF_PREFIX.'">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	_print_input_form_part('DOC2PROJECT_TASK_REF_PREFIX', $langs->trans("TaskRefPrefix"));
+
 	
 	// Nb hour a day
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("NbHoursPerDay").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_NB_HOURS_PER_DAY">';
-	print '<input type="text" size="3" class="flat" name="DOC2PROJECT_NB_HOURS_PER_DAY" value="'.$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY.'">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	$metas = array( 
+	    'type' => 'number',
+	    'min' => 0,
+	    'step' => 0.01
+    );
+	_print_input_form_part('DOC2PROJECT_NB_HOURS_PER_DAY', $langs->trans("NbHoursPerDay"), '', $metas);
 	
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectValidateProjectOnValidateOrder").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER">';
-	print $form->selectyesno('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER', $conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectClotureProjectOnValidateExpedition").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION">';
-	print $form->selectyesno('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION', $conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectCreateTaskForParent").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_TASK_FOR_PARENT">';
-	print $form->selectyesno('DOC2PROJECT_CREATE_TASK_FOR_PARENT', $conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectCreateTaskForVirtualProduct").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT">';
-	print $form->selectyesno('DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT', $conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
-	/*
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectCreateTaskForParent").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_TASK_FOR_PARENT">';
-	print $form->selectyesno('DOC2PROJECT_CREATE_TASK_FOR_PARENT', $conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';*/
+	// Créer et valider un projet sur la validation d'une commande client
+	_print_on_off('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER', $langs->trans('Doc2ProjectValidateProjectOnValidateOrder'));
 
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectUseNomenclatureAndWorkstation").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION">';
-	print $form->selectyesno('DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION', $conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+
+	// Clôturer le projet sur la validation d'une expédition
+	_print_on_off('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION', $langs->trans('Doc2ProjectClotureProjectOnValidateExpedition'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectAllowFreeLine").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_ALLOW_FREE_LINE">';
-	print $form->selectyesno('DOC2PROJECT_ALLOW_FREE_LINE', $conf->global->DOC2PROJECT_ALLOW_FREE_LINE, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	// Créer la le service initial en tant que tâche parente des sous-produits associés
+	_print_on_off('DOC2PROJECT_CREATE_TASK_FOR_PARENT', $langs->trans('Doc2ProjectCreateTaskForParent'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectUpdateProgressOfSituationInvoice").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_UPDATE_PROGRESS_SITUATION_INVOICE">';
-	print $form->selectyesno('DOC2PROJECT_UPDATE_PROGRESS_SITUATION_INVOICE', $conf->global->DOC2PROJECT_UPDATE_PROGRESS_SITUATION_INVOICE, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	// Créer autant de tâche que de sous-services associés au service parent
+	_print_on_off('DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT', $langs->trans('Doc2ProjectCreateTaskForVirtualProduct'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectCreateGlobalTask").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_GLOBAL_TASK">';
-	print $form->selectyesno('DOC2PROJECT_CREATE_GLOBAL_TASK', $conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	// Coupler l'utilisation du module à "Nomenclature" et "Workstation"
+	_print_on_off('DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION', $langs->trans('Doc2ProjectUseNomenclatureAndWorkstation'));
+
+	// Autoriser la création de tâche pour une ligne libre
+	_print_on_off('DOC2PROJECT_ALLOW_FREE_LINE', $langs->trans('Doc2ProjectAllowFreeLine'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectCreateTaskWithSubtotal"), $langs->transnoentitiesnoconv("Doc2ProjectCreateTaskWithSubtotalTooltip")).'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL">';
-	print $form->selectyesno('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL', $conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	// Récupérer la progression des tâches pour les reporter dans les factures de situations
+	_print_on_off('DOC2PROJECT_UPDATE_PROGRESS_SITUATION_INVOICE', $langs->trans('Doc2ProjectUpdateProgressOfSituationInvoice'));
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectAutoAffectProjectLeader"), $langs->transnoentitiesnoconv("Doc2ProjectAutoAffectProjectLeader")).'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER">';
-	print $form->selectyesno('DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER', $conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER, 1);
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	// Créer une tâche globale lors de la validation d'une commande
+	_print_on_off('DOC2PROJECT_CREATE_GLOBAL_TASK', $langs->trans('Doc2ProjectCreateGlobalTask'));
 	
+	// Créer des tâches correspondant aux titres afin de garder une hiérarchie (module "Subtotal" requis)
+	_print_on_off('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL', $langs->trans('Doc2ProjectCreateTaskWithSubtotal'), '', $langs->trans("Doc2ProjectCreateTaskWithSubtotalTooltip"));
+	
+	// Créer les sprints en fonction des lignes titres contenus dans le document
+	_print_on_off('DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER', $langs->trans('Doc2ProjectAutoAffectProjectLeader'));
+	
+	// Créer les sprints en fonction des lignes titres contenus dans le document
 	if($conf->subtotal->enabled && $conf->scrumboard->enabled){
-		$var=!$var;
-		print '<tr '.$bc[$var].'>';
-		print '<td>'.$langs->trans("Doc2ProjectCreateSprintFromTitle").'</td>';
-		print '<td align="center" width="20">&nbsp;</td>';
-		print '<td align="right" width="300">';
-		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="set_DOC2PROJECT_CREATE_SPRINT_FROM_TITLE">';
-		print $form->selectyesno('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE', $conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE, 1);
-		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-		print '</form>';
-		print '</td></tr>';
+	    _print_on_off('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE', $langs->trans('Doc2ProjectCreateSprintFromTitle'));
 	}
 	
+	// Créer autant de tâches qu'il y a de postes de travail associés au produit/service
 	if($conf->workstation->enabled){
-		
-		$var=!$var;
-		print '<tr '.$bc[$var].'>';
-		print '<td>'.$form->textwithpicto($langs->trans("Doc2projectWithWorkstation"), $langs->transnoentitiesnoconv("Doc2projectWithWorkstation")).'</td>';
-		print '<td align="center" width="20">&nbsp;</td>';
-		print '<td align="right" width="300">';
-		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-		print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-		print '<input type="hidden" name="action" value="set_DOC2PROJECT_WITH_WORKSTATION">';
-		print $form->selectyesno('DOC2PROJECT_WITH_WORKSTATION', $conf->global->DOC2PROJECT_WITH_WORKSTATION, 1);
-		print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-		print '</form>';
-		print '</td></tr>';
+	    _print_on_off('DOC2PROJECT_WITH_WORKSTATION', $langs->trans('Doc2projectWithWorkstation'), '', $langs->trans('Doc2projectWithWorkstation'));
 	}
 
 	// Excluded products
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectExcludedProducts"), $langs->transnoentitiesnoconv("Doc2ProjectExcludedProductsDesc")).'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_EXCLUDED_PRODUCTS">';
-	print '<input type="text" class="flat" name="DOC2PROJECT_EXCLUDED_PRODUCTS" value="'.$conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS.'">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectDoNotConvertServiceWithPriceToZero").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO');
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectDoNotConvertServiceWithQuantityToZero").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO');
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectPrevueBeforeConvert").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_PREVUE_BEFORE_CONVERT');
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectGroupTasks").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_GROUP_TASKS');
-	print '</td></tr>';
-	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectGroupTasksBySprint").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_GROUP_TASKS_BY_SPRINT');
-	print '</td></tr>';
-	
-		// Excluded products
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$form->textwithpicto($langs->trans("Doc2ProjectConversionRule"), $langs->transnoentitiesnoconv("Doc2ProjectConversionRuleDesc")).'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_CONVERSION_RULE">';
-	print '<textarea class="flat" name="DOC2PROJECT_CONVERSION_RULE" rows="5" cols="50">'.$conf->global->DOC2PROJECT_CONVERSION_RULE.'</textarea>';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	_print_input_form_part('DOC2PROJECT_EXCLUDED_PRODUCTS', $langs->trans('Doc2ProjectExcludedProducts'), '', array(), 'input', $langs->transnoentitiesnoconv("Doc2ProjectExcludedProductsDesc"));
 	
 	
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$form->textwithpicto($langs->trans("DOC2PROJECT_TASK_NAME"), $langs->transnoentitiesnoconv("DOC2PROJECT_TASK_NAME_HELP")).'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
-	print '<input type="hidden" name="action" value="set_DOC2PROJECT_TASK_NAME">';
-	print '<input size="35" type="text" class="flat" name="DOC2PROJECT_TASK_NAME" value="'.$conf->global->DOC2PROJECT_TASK_NAME.'">';
-	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
-	print '</form>';
-	print '</td></tr>';
+	_print_on_off('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO', $langs->trans('Doc2ProjectDoNotConvertServiceWithPriceToZero'));
+	
+	_print_on_off('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO', $langs->trans('Doc2ProjectDoNotConvertServiceWithQuantityToZero'));
+	
+	_print_on_off('DOC2PROJECT_PREVUE_BEFORE_CONVERT', $langs->trans('Doc2ProjectPrevueBeforeConvert'));
+	
+	_print_on_off('DOC2PROJECT_GROUP_TASKS', $langs->trans('Doc2ProjectGroupTasks'));
+	
+	_print_on_off('DOC2PROJECT_GROUP_TASKS_BY_SPRINT', $langs->trans('Doc2ProjectGroupTasksBySprint'));
+	
+	// Conversion rule
+	$metas = array(
+	    'rows' => 5, 
+	    'cols' => 50
+	);
+	_print_input_form_part('DOC2PROJECT_CONVERSION_RULE', $langs->trans('Doc2ProjectConversionRule'), '', $metas, 'textarea', $langs->transnoentitiesnoconv("Doc2ProjectConversionRuleDesc"));
+	
+	_print_input_form_part('DOC2PROJECT_TASK_NAME', $langs->trans('DOC2PROJECT_TASK_NAME'), '', array(), 'input', $langs->transnoentitiesnoconv("DOC2PROJECT_TASK_NAME_HELP"));
+	
+	_print_on_off('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS', $langs->trans('Doc2ProjectUseSpecificStoryToCreateTasks'));
 
-	$var=!$var;
-	print '<tr '.$bc[$var].'>';
-	print '<td>'.$langs->trans("Doc2ProjectUseSpecificStoryToCreateTasks").'</td>';
-	print '<td align="center" width="20">&nbsp;</td>';
-	print '<td align="right" width="300">';
-	print ajax_constantonoff('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS');
-	print '</td></tr>';
-	
+
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
 }
@@ -468,3 +212,105 @@ dol_fiche_end();
 llxFooter();
 
 $db->close();
+
+
+
+
+function _print_title($title="")
+{
+    global $langs;
+    print '<tr class="liste_titre">';
+    print '<td>'.$langs->trans($title).'</td>'."\n";
+    print '<td align="center" width="20">&nbsp;</td>';
+    print '<td align="center" ></td>'."\n";
+    print '</tr>';
+}
+
+function _print_on_off($confkey, $title = false, $desc ='', $help = false)
+{
+    global $var, $bc, $langs, $conf;
+    $var=!$var;
+    
+    $form=new Form($db);
+    
+    print '<tr '.$bc[$var].'>';
+    print '<td>';
+    
+    if(!empty($help)){
+        print $form->textwithtooltip( ($title?$title:$langs->trans($confkey)) , $langs->trans($help),2,1,img_help(1,''));
+    }
+    else {
+        print $title?$title:$langs->trans($confkey);
+    }
+    
+    if(!empty($desc))
+    {
+        print '<br><small>'.$langs->trans($desc).'</small>';
+    }
+    print '</td>';
+    print '<td align="center" width="20">&nbsp;</td>';
+    print '<td align="right" width="300">';
+    print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="action" value="set_'.$confkey.'">';
+    print ajax_constantonoff($confkey);
+    print '</form>';
+    print '</td></tr>';
+}
+
+function _print_input_form_part($confkey, $title = false, $desc ='', $metas = array(), $type='input', $help = false)
+{
+    global $var, $bc, $langs, $conf, $db;
+    $var=!$var;
+    
+    $form=new Form($db);
+    
+    $defaultMetas = array(
+        'name' => $confkey
+    );
+    
+    if($type!='textarea'){
+        $defaultMetas['type']   = 'text';
+        $defaultMetas['value']  = $conf->global->{$confkey};
+    }
+    
+    
+    $metas = array_merge ($defaultMetas, $metas);
+    $metascompil = '';
+    foreach ($metas as $key => $values)
+    {
+        $metascompil .= ' '.$key.'="'.$values.'" ';
+    }
+    
+    print '<tr '.$bc[$var].'>';
+    print '<td>';
+    
+    if(!empty($help)){
+        print $form->textwithtooltip( ($title?$title:$langs->trans($confkey)) , $langs->trans($help),2,1,img_help(1,''));
+    }
+    else {
+        print $title?$title:$langs->trans($confkey);
+    }
+    
+    if(!empty($desc))
+    {
+        print '<br><small>'.$langs->trans($desc).'</small>';
+    }
+    
+    print '</td>';
+    print '<td align="center" width="20">&nbsp;</td>';
+    print '<td align="right" width="300">';
+    print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="action" value="set_'.$confkey.'">';
+    if($type=='textarea'){
+        print '<textarea '.$metascompil.'  >'.dol_htmlentities($conf->global->{$confkey}).'</textarea>';
+    }
+    else {
+        print '<input '.$metascompil.'  />';
+    }
+    
+    print '<input type="submit" class="butAction" value="'.$langs->trans("Modify").'">';
+    print '</form>';
+    print '</td></tr>';
+}
