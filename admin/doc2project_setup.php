@@ -189,7 +189,7 @@ if($ok) {
 	
 	_print_on_off('DOC2PROJECT_GROUP_TASKS_BY_SPRINT', $langs->trans('Doc2ProjectGroupTasksBySprint'));
 	
-	// Excluded products
+	// Conversion rule
 	$metas = array(
 	    'rows' => 5, 
 	    'cols' => 50
