@@ -347,7 +347,8 @@ class Doc2Project {
 								$ss = new Product($db);
 								$ss->fetch($prod['id']);
 								$line->fk_product = $ss->id;
-								$line->qty = $line->qty * $prod['nb'];
+								$qty = $line->qty;
+								$line->qty = 0;
 								$line->product_label = $prod['label'];
 								$line->desc = ($ss->description) ? $ss->description : '';
 								$line->total_ht = $ss->price;
@@ -361,7 +362,7 @@ class Doc2Project {
 								if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 								    $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'-'.$ss->id;
 								}
-								$new_fk_parent = self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_parent, '', $line->total_ht,0,$line,$story, $line->rowid, $object->element);
+								$new_fk_parent = self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_parent, $qty * $prod['nb'] * 60 * 60, $line->total_ht,0,$line,$story, $line->rowid, $object->element);
 		
 								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
 									dol_include_once('/workstation/class/workstation.class.php');
