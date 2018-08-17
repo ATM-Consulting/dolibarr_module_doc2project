@@ -14,17 +14,21 @@ DocConverted = convertie
 DisplayOnProposal = Afficher le bouton de conversion sur la fiche proposition
 DisplayOnOrder = Afficher le bouton de conversion sur la fiche commande client
 TaskRefPrefix = Préfixe pour la référence des tâches
-NbHoursPerDay = Nombre d'heure journalier
+NbHoursPerDay = Nombre d'heures journalier
 ModuleNeedProposalOrOrderModule = Le module proposition commerciale ou commande client doit être activé pour pouvoir utiliser ce module
 Doc2ProjectValidateProjectOnValidateOrder=Créer et valider un projet sur la validation d'une commande client
 Doc2ProjectSearchCustomerProject=Associer les tâches créées au premier projet trouvé pour le client
 Doc2ProjectClotureProjectOnValidateExpedition=Clôturer le projet sur la validation d'une expédition
 Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-services associés au service parent
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
-Doc2projectWithWorkstation=Créer autant de tâche qu'il y a de poste de travail associé au produit/service
+Doc2projectWithWorkstation=Créer autant de tâches qu'il y a de postes de travail associés au produit/service
 Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
 DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
 DOC2PROJECT_TITLE_PROJECT_info=Clef de remplacement {ref_client},{ref},{thirdparty_name}, {options_...}, ...
+DOC2PROJECT_SET_PROJECT_DRAFT=Repasser le projet au statut brouillon sur la création de nouvelles tâches
+Doc2ProjectCreateSprintFromTitle=Créer les sprints en fonction des lignes titres contenus dans le document
+DOC2PROJECT_TASK_NAME=Label à appliquer lors de la création des tâches
+DOC2PROJECT_TASK_NAME_HELP=Clés de substitutions :<br />- {product_ref} => référence du produit<br />- {product_label} => libellé de la ligne
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
@@ -33,10 +37,10 @@ Doc2ProjectErrorClassNotFoundProject=Impossible de créer un projet, class non t
 Doc2ProjectErrorCommandeNotFound=Impossible de clôturer le projet : commande non trouvée
 Doc2ProjectErrorProjectNotFound=Aucun projet lié
 Doc2ProjectErrorProjectCantBeClose=Impossible de clôturer le projet %s
-Doc2ProjectProjectAlreadyClose=Projet (%s) déjà clot
+Doc2ProjectProjectAlreadyClose=Projet (%s) déjà clos
 Doc2ProjectProjectAsBeenClose=Le projet (%s) a été clôturé
 Doc2ProjectExcludedProducts=Ne pas convertir les services suivants
-Doc2ProjectExcludedProductsDesc=Renseigner les référence des services à exclure, séparés par un point virgule
+Doc2ProjectExcludedProductsDesc=Renseigner les références des services à exclure, séparés par un point virgule
 Doc2ProjectDoNotConvertServiceWithPriceToZero=Ne pas convertir les services dont le prix est à 0
 Doc2ProjectDoNotConvertServiceWithQuantityToZero=Ne pas convertir les services dont la quantité est à 0
 
@@ -52,8 +56,8 @@ Doc2ProjectUseNomenclatureAndWorkstation=Coupler l'utilisation du module à "Nom
 Doc2ProjectAllowFreeLine=Autoriser la création de tâche pour une ligne libre
 Doc2ProjectUpdateProgressOfSituationInvoice=Récupérer la progression des tâches pour les reporter dans les factures de situations
 
-Doc2ProjectCreateGlobalTask=Créer une tâche global lors de la validation d'une commande
-Doc2ProjectGlobalTaskLabel=Tâche global
+Doc2ProjectCreateGlobalTask=Créer une tâche globale lors de la validation d'une commande
+Doc2ProjectGlobalTaskLabel=Tâche globale
 Doc2ProjectGlobalTaskDesc=Utilisée pour la saisie de temps
 Doc2ProjectCreateTaskWithSubtotal=Créer des tâches correspondant aux titres afin de garder une hiérarchie (module "Subtotal" requis)
 Doc2ProjectCreateTaskWithSubtotalTooltip=Attention : la bonne hiérarchisation des tâches, nécessite que les niveaux de titre se suivent (pas de titre 1 puis subitement un titre 3) et que des sous-totaux soient présents en tant que délimiteur
@@ -61,3 +65,7 @@ Doc2ProjectCreateTaskWithSubtotalTooltip=Attention : la bonne hiérarchisation d
 
 Doc2ProjectConversionRule=Règle de conversion de temps des services en tâche
 Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si vide prendra la durée du service. {qty} quantité de la ligne, {totalht} total HT de la ligne
+
+Doc2ProjectErrorCanNotFetchProject=Erreur : impossible de charger ou de créer le projet
+
+Doc2ProjectViewStats = Voir les statistiques doc2project

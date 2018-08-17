@@ -56,7 +56,7 @@ class modDoc2Project extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '1.2';
+		$this->version = '1.5.2';
 		// Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		// Where to store the module in setup page (0=common,1=interface,2=others,3=very specific)
@@ -188,6 +188,11 @@ class modDoc2Project extends DolibarrModules
 		// $this->rights[$r][4] = 'level1';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		// $this->rights[$r][5] = 'level2';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		// $r++;
+		$this->rights[$r][0] = $this->numero + $r;	// Permission id (must not be already used)
+		$this->rights[$r][1] = $langs->trans('Doc2ProjectViewStats');	// Permission label
+		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
+		$this->rights[$r][4] = 'read';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
+		$r++;
 
 
 		// Main menu entries
@@ -206,7 +211,7 @@ class modDoc2Project extends DolibarrModules
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>166,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
-								'perms'=>'1',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'perms'=>'$user->rights->doc2project->read',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
@@ -214,13 +219,13 @@ class modDoc2Project extends DolibarrModules
 		 $this->menu[$r]=array(	'fk_menu'=>"fk_mainmenu=project,fk_leftmenu=doc2project",			                // Put 0 if this is a top menu
 								'type'=>'left',			                // This is a Top menu entry
 								'titre'=>'statistiques',
-								'mainmenu'=>'doc2project',
+								'mainmenu'=>'',
 								'leftmenu'=>'statistiques',
 								'url'=>'/doc2project/rapport.php',
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>167,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
-								'perms'=>'1',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'perms'=>'$user->rights->doc2project->read',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;

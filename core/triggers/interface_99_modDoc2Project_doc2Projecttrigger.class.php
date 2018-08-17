@@ -130,6 +130,8 @@ class InterfaceDoc2Projecttrigger
 				$thm = $res->thm;
 			}
 			else{
+				$ttId = $object->timespent_id;
+
 				$u=new User($this->db);
                 $u->fetch($object->timespent_fk_user);
                 $thm = $u->thm;
@@ -164,17 +166,20 @@ class InterfaceDoc2Projecttrigger
 			dol_include_once('/projet/class/task.class.php');
 			dol_include_once('/doc2project/class/doc2project.class.php');
 			
+			// Petit hack pour simuler la provenance de doc2project ("from" et "type" sont défini en paramètre sur le lien de création en manuel)
+			$_REQUEST['from'] = 'doc2project';
+			$_REQUEST['type'] = 'commande';
+			
 			if($project = Doc2Project::createProject($object)) {
 			
 				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 				$end = '';
-				
 				Doc2Project::parseLines($object, $project, $start, $end);
 				$project->setValid($user);
 			
 			}
 				
-	
+			
 		}
 		else if ($action == 'SHIPPING_VALIDATE' && !empty($conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION))
 		{
@@ -215,24 +220,26 @@ class InterfaceDoc2Projecttrigger
 			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
-				
-			$fk_commande = GETPOST('originid', 'int');
 			
-			$commande = new Commande($db);
-			$commande->fetch($fk_commande);
-			
-			$ref_task = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->origin_id;
-			
-			//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
-			$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';
-			$resql = $db->query($sql);
-			
-			if ($resql && $db->num_rows($resql) > 0)
+			if ($facture->type == Facture::TYPE_SITUATION)
 			{
-				$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
-				$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+				$fk_commande = GETPOST('originid', 'int');
+
+				$commande = new Commande($db);
+				$commande->fetch($fk_commande);
+
+				$ref_task = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->origin_id;
+
+				//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
+				$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';
+				$resql = $db->query($sql);
+
+				if ($resql && $db->num_rows($resql) > 0)
+				{
+					$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
+					$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+				}
 			}
-			
 		}
 
         return 0;

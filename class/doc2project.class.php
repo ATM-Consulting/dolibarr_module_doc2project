@@ -10,7 +10,7 @@ class Doc2Project {
 		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) return true;
 
 		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
-		if (in_array($line->ref, $TExclude)) return true;
+		if (!empty($conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS) && in_array($line->ref, $TExclude)) return true;
 		else return false;
 	}
 	
@@ -48,7 +48,7 @@ class Doc2Project {
 	
 	public static function createProject(&$object) {
 		
-		global $conf,$langs,$db,$user;
+		global $conf,$langs,$db,$user,$hookmanager;
 		
 		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
 		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
@@ -69,66 +69,94 @@ class Doc2Project {
 				
 			}
 		}
-		
-		if (!empty($object->fk_project))
-		{
-			$r = $project->fetch($object->fk_project);
 
-			if($project->id>0) return $project;
-			else return false;
-		}
+		$hookmanager->initHooks(array('doc2projecttaskcard'));
 
 		$langs->load('doc2project@doc2project');
+		if (!class_exists('Project')) dol_include_once('/projet/class/project.class.php');
+		if (!class_exists('Task')) dol_include_once('/projet/class/task.class.php');
 		
-		if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
-			$Trans=array(
-				'{ref_client}'=>	$object->ref_client
-				,'{thirdparty_name}'=>$object->thirdparty->name
-				,'{ref}'=>$object->ref
-			);
-			
-			if(!empty($object->array_options )) {
-				foreach($object->array_options as $k=>$v) {
-					$Trans['{'.$k.'}'] = $v;	
-				}
-			}
-			
-			$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
-						
-		}
-		else{
-			$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-			$title = $langs->trans('Doc2ProjectTitle', $title);
-		}
+		if(empty($object->thirdparty)) $object->fetch_thirdparty();
 		
-		$project->title			 = $title.' : '.self::getRALLabel($object);
-		$project->socid          = $object->socid;
-		$project->description    = '';
-		$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
-		$project->datec			 = dol_now();
-		$project->date_start	 = $object->date_livraison;
-		$project->date_end		 = null;
-	
-		$project->ref 			 = self::get_project_ref($project);
-			
-		$r = $project->create($user);
-		if ($r > 0)
+		$project = new Project($db);
+		
+		$action = 'createProject';
+		$reshook = $hookmanager->executeHooks('createProject', array('project' => &$project), $object, $action);
+		
+		if (!empty($hookmanager->resArray))
 		{
-			$object->setProject($r);
-			
-			return $project;
-			
-			setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+			$project=&$hookmanager->resArray[0];
+			return $project; // £project est donnée par référence et il doit avoir été soit create ou fetch
 		}
 		else
 		{
-			setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			if (!empty($object->fk_project))
+			{
+				$r = $project->fetch($object->fk_project);
+				
+				if (!empty($conf->global->DOC2PROJECT_SET_PROJECT_DRAFT)) { $res = $project->setStatut(0); $project->statut = 0; }
+				
+				if($project->id>0) return $project;
+				else return false;
+			}
+
+			$langs->load('doc2project@doc2project');
+
+			$project = new Project($db);
+			
+			// ref is still PROV if coming from VALIDATE trigger
+			if(preg_match('/^[\(]?PROV/i', $object->ref)) {
+				$object->ref = $object->newref;
+			}
+
+			if(!empty($conf->global->DOC2PROJECT_TITLE_PROJECT) ) {
+				$Trans=array(
+					'{ref_client}'=>	$object->ref_client
+					,'{thirdparty_name}'=>$object->thirdparty->name
+					,'{ref}'=>$object->ref
+				);
+
+				if(!empty($object->array_options )) {
+					foreach($object->array_options as $k=>$v) {
+						$Trans['{'.$k.'}'] = $v;	
+					}
+				}
+
+				$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
+
+			}
+			else{
+				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+				$title = $langs->trans('Doc2ProjectTitle', $title);
+			}
+
+			$project->title			 = $title;
+			$project->socid          = $object->socid;
+			$project->description    = '';
+			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
+			$project->datec			 = dol_now();
+			$project->date_start	 = (!empty($object->date_livraison))?$object->date_livraison:dol_now();
+			$project->date_end		 = null;
+
+			$project->ref 			 = self::get_project_ref($project);
+
+			$r = $project->create($user);
+			if ($r > 0)
+			{
+				$object->setProject($r);
+
+				return $project;
+
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectProjectCreated', $project->ref));
+			}
+			else
+			{
+				setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r), 'errors');
+			}
 		}
 		
 		
-		
 		return false;
-		
 	}
 
 	/**
@@ -176,10 +204,10 @@ class Doc2Project {
 		
 	}
 	
-	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0) {
+	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0,$story='') {
 		
 		global $conf,$langs,$db,$user;
-//var_dump($line);exit;		
+		
 		$product = new Product($db);
 		if (!empty($line->fk_product)) $product->fetch($line->fk_product);
 		
@@ -249,18 +277,22 @@ class Doc2Project {
 			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 		}
 		
-		$label = !empty($line->product_label) ? $line->product_label : $line->desc;
+		if (!empty($conf->global->DOC2PROJECT_TASK_NAME)) $label = strtr($conf->global->DOC2PROJECT_TASK_NAME, array('{product_ref}' => $line->ref, '{product_label}' => $line->product_label));
+		else $label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
 //var_dump($defaultref, $label,  $project->id);exit;		
-		self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation);
+		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $line->rowid, $object->element);
 		
 		
 	}
 	
 	public static function parseLines(&$object,&$project,&$start,&$end)
 	{
-		global $conf,$langs,$db,$user;
-	
+		global $conf,$langs,$db,$user,$TStory;
+		
+		if (empty($TStory)) $TStory = array();
+		
+		dol_include_once('/subtotal/class/subtotal.class.php');
 		// CREATION D'UNE TACHE GLOBAL POUR LA SAISIE DES TEMPS
 		if (!empty($conf->global->DOC2PROJECT_CREATE_GLOBAL_TASK))
 		{
@@ -274,9 +306,23 @@ class Doc2Project {
 //var_dump($object->lines);exit;		
 		$fk_task_parent = 0;
 		$object->fetch_lines();
+		$story = '';
+		
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
+			// Excluded product 
+			if(self::isExclude($line)) continue;
+			
+			if(!empty($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE) && !empty($conf->subtotal->enabled) && ! TSubtotal::isModSubtotalLine($line)){
+				$TTitle = TSubtotal::getAllTitleFromLine($line);
+				if(! empty($TTitle)) {
+					$story = current($TTitle);
+					$story = TSubtotal::getTitleLabel($story);
+					if (!in_array($story, $TStory)) $TStory[] = $story;
+				}
+			}
+			
 			if (!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) null; // Si la conf
 			else if ($line->product_type == 9) continue;
 
@@ -286,9 +332,9 @@ class Doc2Project {
 				{
 					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
-						
+					
 					$label = !empty($line->product_label) ? $line->product_label : $line->desc;
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent);
+					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, '', '', '', $fk_task_parent, $line->rowid, $object->element);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
@@ -302,28 +348,42 @@ class Doc2Project {
 			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
 			{
 				//self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
+				if(!empty($line->fk_product)) {
+					define('INC_FROM_DOLIBARR',true);
+					dol_include_once('/nomenclature/config.php');
+					dol_include_once('/nomenclature/class/nomenclature.class.php');
+					$nomenclature = new TNomenclature($db);
+					$PDOdb = new TPDOdb($db);
+					
+					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
+					if(!empty($nomenclature->TNomenclatureDet)){
+						$detailsNomenclature=$nomenclature->getDetails($line->qty);
+						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$story);
+					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
+						self::lineToTask($object,$line,$project,$start,$end,0,false,0, $story);
+					}
+				}
 			}
 				
 			// => ligne de type service										=> ligne libre
 			elseif( (!empty($line->fk_product) && $line->fk_product_type == 1) || (!empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && $line->fk_product === null) )
 			{ // On ne créé que les tâches correspondant à des services
-				
-//var_dump(self::isExclude($line), $line->desc);
-				if(self::isExclude($line)) continue;
-//var_dump($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT,$line);exit;				
+			    
+			    $PDOdb = new TPDOdb($db);
 				if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_VIRTUAL_PRODUCT) && !empty($conf->global->PRODUIT_SOUSPRODUITS) && !is_null($line->ref))
 				{
-				
+					
 					$s = new Product($db);
 					$s->fetch($line->fk_product);
 					$s->get_sousproduits_arbo();
 					$TProdArbo = $s->get_arbo_each_prod();
-				
+					$fk_parent = 0;
+					
 					if(!empty($TProdArbo)){
 				
 						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
-							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true);
-				
+							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$story);
+							
 							if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
 								dol_include_once('/workstation/class/workstation.class.php');
 				
@@ -342,11 +402,11 @@ class Doc2Project {
 									$line->desc = '';
 									$line->total_ht = 0;
 				
-									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid);
+									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$story);
 								}
 							}
 						}
-				
+						
 						foreach($TProdArbo as $prod){
 				
 							if($prod['type'] == 1){ //Uniquement les services
@@ -354,13 +414,23 @@ class Doc2Project {
 								$ss = new Product($db);
 								$ss->fetch($prod['id']);
 								$line->fk_product = $ss->id;
-								$line->qty = $line->qty * $prod['nb'];
+								$qty = $line->qty;
+								$line->qty = 0;
 								$line->product_label = $prod['label'];
 								$line->desc = ($ss->description) ? $ss->description : '';
 								$line->total_ht = $ss->price;
 				
-								$new_fk_parent = $this->create_task($object,$line,$project,$start,$end,$fk_parent);
-				
+								$new_fk_parent = self::lineToTask($object,$line, $project,$start,$end,$fk_parent,false,0,$story);
+								
+								if (!empty($conf->global->DOC2PROJECT_TASK_NAME)) $label = strtr($conf->global->DOC2PROJECT_TASK_NAME, array('{product_ref}' => $line->ref, '{product_label}' => $line->product_label));
+								else $label = !empty($line->product_label) ? $line->product_label : $line->desc;
+								
+								$defaultref='';
+								if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
+								    $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.'-'.$ss->id;
+								}
+								$new_fk_parent = self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_parent, $qty * $prod['nb'] * 60 * 60, $line->total_ht,0,$line,$story, $line->rowid, $object->element);
+		
 								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
 									dol_include_once('/workstation/class/workstation.class.php');
 				
@@ -379,7 +449,7 @@ class Doc2Project {
 											$line->desc = '';
 											$line->total_ht = 0;
 					
-											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid);
+											self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story);
 										}
 									}
 								}
@@ -387,47 +457,86 @@ class Doc2Project {
 						}
 					}else{
 						
-						self::lineToTask($object,$line,$project,$start,$end);
+						self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
 					}
 				}
 				else{
-					self::lineToTask($object,$line,$project,$start,$end);
+					
+					self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story);
 				}
-				
-				
 			}
-				
 		}
-//exit('LA');
+		
+		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled)
+		{
+			$project->statut=0;
+			$project->array_options['options_stories'] = implode(',', $TStory);
+			$project->update($user);
+		}
 	}
 	
-	
-	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0)
+
+	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='', $fk_origin='', $origin_type='')
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 		
 		$hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		$task = new Task($db);
-		$task->fetch('',$ref);
-		if($task->id>0) {
-			$task->planned_workload = $planned_workload;
-			$task->fk_project = $fk_project;
-			
-			if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
-			$task->array_options['options_soldprice'] = $total_ht;
-			$task->progress = (int)$task->progress;
-			$task->update($user);
-			
-			return $task->id;
+		
+		$action = 'createOneTask';
+		$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+		$reshook = $hookmanager->executeHooks('createTask', $parameters, $task, $action);	
+		
+		if (!empty($hookmanager->resArray))
+		{
+			return $hookmanager->resArray[0]->id;
 		}
-		else{
+		else
+		{
+			$task->fetch('',$ref);
 			
-			$action = 'create_task';
-			$reshook = $hookmanager->executeHooks('doActions', array('id_project'=>$fk_project, 'fk_workstation'=>$fk_workstation, 'planned_workload'=>$planned_workload), $task, $action);
+			$story_k = self::getStoryK($story);
 			
-			if(empty($task->id)) {
+			if (!empty($line))
+			{
+				if (empty($line->array_options) && method_exists($line, 'fetch_optionals')) $line->fetch_optionals($line->id?$line->id:$line->rowid);
+				if (!class_exists('ExtraFields')) require_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+
+				$extrafields = new ExtraFields($db);
+				$extralabels=$extrafields->fetch_name_optionals_label($task->table_element);
+
+				foreach ($extralabels as $key => $dummy)
+				{
+					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
+				}
+			}
+			
+			if($task->id>0) {
+				$task->planned_workload = $planned_workload;
+				$task->fk_project = $fk_project;
+
+				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
+				$task->array_options['options_soldprice'] = $total_ht;
+				$task->progress = (int)$task->progress;
 				
+				$action = 'updateOneTask';
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
+				$task->update($user);
+				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
+					Doc2Project::setStoryK($db, $task->id, $story_k);
+				}
+				
+				if(! empty($fk_origin)) {
+					if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
+					elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+				}
+				
+				return $task->id;
+			}
+			else{
+
 				$task->fk_project = $fk_project;
 				$task->ref = $ref;
 				$task->label = $label;
@@ -437,23 +546,106 @@ class Doc2Project {
 				$task->date_end = $end;
 				$task->fk_task_parent = (int)$fk_task_parent;
 				$task->planned_workload = $planned_workload;
-				
+				$task->progress='0'; // Depuis doli 6.0, nécessité de renseigner 0 en chaîne car sinon le create task met null et la tâche n'apparaît pas dans l'ordo
+
 				if($fk_workstation) $task->array_options['options_fk_workstation'] = $fk_workstation;
 				$task->array_options['options_soldprice'] = $total_ht;
 				
+				$action = 'createOneTask';
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
+
 				$r = $task->create($user);
 				
-			} else $r = $task->id;
-//var_dump($task);
-//exit('create');
+				if ($r > 0) {
+					if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
+						Doc2Project::setStoryK($db, $r, $story_k);
+					}
+					if(! empty($fk_origin)) {
+						if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
+						elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+					}
+					
+					return $r;
+				} else {
+					dol_print_error($db);
+				}
 
-			if ($r > 0) {
-				return $r;
-			} else {
-				dol_print_error($db);
-			}
-				
+			}	
 		}
+		
 		return 0;
 	}
+	
+//Sprint scrumboard
+	public static function setStoryK($db,$id, $nbstory)
+	{
+		$sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
+		$resql = $db->query($sql);
+		if($resql) return 1;
+		return 0;
+	}
+	
+	public static function getStoryK($story) {
+		global $conf, $TStory;
+//		var_dump($TStory, $story);
+		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story)) {
+			$key = array_search($story, $TStory);
+//			var_dump($key, '-------------------------------------');
+			if ($key !== false) return $key+1; // décalage suite 
+		}
+		
+		return null;
+	}
+	
+	/* Converti une ligne de nomenclature en tache.
+	 * $detailsNomenclature => resultat de getDetails() de la classe nomenclature 
+	 * $line => ligne courante (propaldet/orderdet)
+	 * $object => objet courant (propal/order)
+	 * 
+	 */
+	public static function nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories='')
+	{
+		global $db;
+		foreach ($detailsNomenclature as &$lineNomen)
+		{
+			//Conversion du tableau en objet
+			$lineNomenclature = new stdClass();
+			foreach ($lineNomen as $key => $value)
+			{
+				$lineNomenclature->$key = $value;
+			}
+			
+			$product = new Product($db);
+			$product->fetch($lineNomenclature->fk_product);
+			//On prend les services les plus bas pour créer les taches
+			
+			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomen['childs'],1) || empty($lineNomenclature->childs)))
+			{
+				//Le calcul des quantités est déjà fait grâce à getDetails
+				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
+				
+				$lineNomenclature->desc = $product->description;
+				$nomenclature = new TNomenclature($db);
+				$PDOdb = new TPDOdb($db);
+				
+				$nomenclature->loadByObjectId($PDOdb, $lineNomenclature->rowid,$object->element, false, $lineNomenclature->fk_product);
+				if (!empty($nomenclature->TNomenclatureWorkstation[0]->rowid))
+				{
+					$idWorkstation = $nomenclature->TNomenclatureWorkstation[0]->rowid;
+				}
+				else
+				{
+					$idWorkstation = 0;
+				}
+				
+				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
+				self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
+				
+			} elseif(!empty($lineNomenclature->childs)){
+				self::nomenclatureToTask($lineNomenclature->childs, $line,$object, $project, $start, $end,$stories);
+			}
+		}
+	}
+
 }
