@@ -379,8 +379,8 @@ class Doc2Project {
 								$line->product_label = $prod['label'];
 								$line->desc = ($ss->description) ? $ss->description : '';
 								$line->total_ht = $ss->price;
-				
-								$new_fk_parent = $this->create_task($object,$line,$project,$start,$end,$fk_parent);
+								
+								$new_fk_parent =   self::lineToTask($object,$line,$project,$start,$end,$fk_parent);
 				
 								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
 									dol_include_once('/workstation/class/workstation.class.php');
