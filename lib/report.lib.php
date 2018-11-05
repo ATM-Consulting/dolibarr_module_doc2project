@@ -18,7 +18,7 @@ function reportPrepareHead($type='report') {
 				}
 				return $tab;
 			break;
-		case ALTERNATE_HOME:
+		case 'ALTERNATE_HOME':
 				return array(
 					array(dol_buildpath('/report/report.php',1), $langs->trans('Reports'),'report'),
 					array(dol_buildpath('/report/report_'.ALTERNATE_HOME.'.php',1), $langs->trans(ALTERNATE_HOME),ALTERNATE_HOME)

@@ -1,46 +1,38 @@
 <?php
 require('config.php');
 
+
+
 if(!$user->rights->doc2project->read) accessforbidden();
 
 dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");
 
-llxHeader('',$langs->trans('Report'));
-print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
-print_fiche_titre($langs->trans("Report"));
-?>
-<script type="text/javascript" src="<?php echo COREHTTP?>includes/js/dataTable/js/jquery.dataTables.min.js"></script>
-<script type="text/javascript" src="<?php echo COREHTTP?>includes/js/dataTable/js/dataTables.tableTools.min.js"></script>
-
-<link rel="stylesheet" href="<?php echo COREHTTP?>includes/js/dataTable/css/jquery.dataTables.css" type="text/css" />
-<link rel="stylesheet" href="<?php echo COREHTTP?>includes/js/dataTable/css/dataTables.tableTools.css" type="text/css" />
-<?php
-
 $PDOdb=new TPDOdb;
+
+llxHeader('',$langs->trans('Report'));
 
 // Get parameters
 _action($PDOdb);
 
-llxFooter();
 
 function _action(&$PDOdb) {
-    global $user, $conf;
+	global $user, $conf;
 
-    if(isset($_REQUEST['action'])) {
-        switch($_REQUEST['action']) {
+	if(isset($_REQUEST['action'])) {
+		switch($_REQUEST['action']) {
 
-            case 'report':
-                _fiche($PDOdb,$_REQUEST['report']);
-                break;
-            default :
-                _fiche($PDOdb);
-        }
+			case 'report':
+				_fiche($PDOdb,$_REQUEST['report']);
+				break;
+			default :
+				_fiche($PDOdb);
+		}
 
-    }
-    else{
-        _fiche($PDOdb);
-    }
+	}
+	else{
+		_fiche($PDOdb);
+	}
 }
 
 //Déclaration des DataTables
@@ -50,7 +42,7 @@ function _action(&$PDOdb) {
         $('#statistiques_projet').dataTable({
             "sDom": 'T<"clear">lfrtip',
             "oTableTools": {
-                "sSwfPath": "<?php echo COREHTTP?>includes/js/dataTable/swf/copy_csv_xls_pdf.swf"
+                "sSwfPath": "<?php echo dol_buildpath('/abricot/includes/js/dataTable/swf/copy_csv_xls_pdf.swf', 1); ?>"
             },
             "bSort": false,
             "iDisplayLength": 100,
@@ -81,7 +73,23 @@ function _action(&$PDOdb) {
 </script>
 <?php
 
+llxFooter();
+$db->close();
+
 function _fiche(&$PDOdb,$report=''){
+	global $langs;
+
+
+	print dol_get_fiche_head(reportPrepareHead('Doc2Project') , 'Doc2Project', $langs->trans('Doc2Project'));
+	print_fiche_titre($langs->trans("Report"));
+	?>
+	<script type="text/javascript" src="<?php echo dol_buildpath('/abricot/includes/js/dataTable/js/jquery.dataTables.min.js', 1); ?>"></script>
+	<script type="text/javascript" src="<?php echo dol_buildpath('/abricot/includes/js/dataTable/js/dataTables.tableTools.min.js', 1); ?>"></script>
+
+	<link rel="stylesheet" href="<?php echo dol_buildpath('/abricot/includes/js/dataTable/css/jquery.dataTables.css', 1); ?>" type="text/css" />
+	<link rel="stylesheet" href="<?php echo dol_buildpath('/abricot/includes/js/dataTable/css/dataTables.tableTools.css', 1); ?>" type="text/css" />
+	<?php
+
 
     echo '<div>';
 
@@ -110,6 +118,8 @@ function _fiche(&$PDOdb,$report=''){
 
         echo $form->end();
 
+		print dol_get_fiche_end();
+
         switch ($report) {
             case 'statistiques_projet':
                 $TReport=_get_statistiques_projet($PDOdb);
@@ -129,6 +139,7 @@ function _fiche(&$PDOdb,$report=''){
     }
     else{
         echo $form->btsubmit('Afficher', '');
+		print dol_get_fiche_end();
     }
 
     echo '</div>';
@@ -232,7 +243,7 @@ function _print_statistiques_projet(&$TRapport){
     $id_projet = GETPOST('');
 
     $params = $_SERVER['QUERY_STRING'];
-
+	$sortfield = $sortorder = '';
     ?>
     <div class="tabBar" style="padding-bottom: 25px;">
         <table id="statistiques_projet" class="noborder" width="100%">
@@ -253,7 +264,7 @@ function _print_statistiques_projet(&$TRapport){
             </thead>
             <tbody>
                 <?php
-
+				$total_vente = $total_achat = $total_ndf = $total_temps = $total_cout_homme = $total_marge = 0;
                 foreach($TRapport as $line){
                     $project=new Project($db);
                     $project->fetch($line['IdProject']);
@@ -332,8 +343,8 @@ function get_statistiques_categorie($PDOdb, $TRapport){
 
         $idCategorie=0;
         $categorie="";//Récupérer le label via array extrafield_options
-        $date_debut;
-        $date_fin;
+        $date_debut=null;
+        $date_fin=null;
         $total_vente=0;
         $total_achat=0;
         $total_ndf=0;
@@ -383,7 +394,7 @@ function print_statistiques_categorie($PDOdb, &$TReport){
     //$id_projet = GETPOST('');
 
     //$params = $_SERVER['QUERY_STRING'];
-
+	$params = $sortfield = $sortorder = '';
     ?>
     <div class="tabBar" style="padding-bottom: 25px;">
         <table id="statistiques_projet" class="noborder" width="100%">
@@ -404,6 +415,7 @@ function print_statistiques_categorie($PDOdb, &$TReport){
             </thead>
             <tbody>
                 <?php
+				$total_vente = $total_achat = $total_ndf = $total_temps = $total_cout_homme = $total_marge = 0;
                 foreach($TRapport as $line){
 
                     $project=new Project($db);
