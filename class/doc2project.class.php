@@ -201,7 +201,7 @@ class Doc2Project {
 			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 		
 		}
-		else if($line->ref!=null){
+		else if($line->fk_product!=null){
 			$product->fetch($line->fk_product);
 		
 			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
@@ -215,9 +215,12 @@ class Doc2Project {
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$nbDays = ceil($line->qty * $product->duration_value / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 			}
-		} else {
-		
-			$durationInSec = $line->qty *$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY* 3600;
+		}
+
+		// Si les 2 méthodes d'avant ne sont pas appelées ou que le résultat vos 0, alors on calcule avec la conf de doc2project
+		if (empty($durationInSec))
+		{
+			$durationInSec = $line->qty * $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY * 3600;
 			$nbDays = $line->qty;
 		
 		}
@@ -733,11 +736,7 @@ class Doc2Project {
 		foreach ($detailsNomenclature as &$lineNomen)
 		{
 			//Conversion du tableau en objet
-			$lineNomenclature = new stdClass();
-			foreach ($lineNomen as $key => $value)
-			{
-				$lineNomenclature->$key = $value;
-			}
+			$lineNomenclature = (object) $lineNomen;
 			
 			$product = new Product($db);
 			$product->fetch($lineNomenclature->fk_product);
