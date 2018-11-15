@@ -69,7 +69,7 @@ class ActionsDoc2Project
 					$f=new FactureFournisseur($db);
 					$f->fetch($id);
 
-					$otherExpenses+=$f->total;
+					$otherExpenses+=$f->total_ht;
 
 				}
 			}
