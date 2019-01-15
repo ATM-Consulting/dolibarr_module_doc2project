@@ -303,7 +303,7 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
     
     $i=0;
     if(!empty($nomenclature->TNomenclatureDet)){
-        $detailsNomenclature=$nomenclature->getDetails($line->qty);
+        $detailsNomenclature=$nomenclature->getDetails($qty);
         // PARCOURS DE LA NOMENCLATURE
         foreach ($nomenclature->TNomenclatureDet as &$det)
         {
