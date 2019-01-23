@@ -632,16 +632,18 @@ class Doc2Project {
 	public static function getAllStoriesFromProject($fk_projet)
 	{
     	dol_include_once('/scrumboard/class/scrumboard.class.php');
-    	$TStoryObj = new TStory();
-    	$allTStory = $TStoryObj->getAllStoriesFromProject($fk_projet);
     	$TStory = array();
-    	if(!empty($allTStory))
-    	{
-    	    foreach ($allTStory as $story)
-    	    {
-    	        $TStory[$story->storie_order] = $story->label;
-    	    }
-    	}
+    	if(class_exists('TStory')) {
+		$TStoryObj = new TStory();
+	    	$allTStory = $TStoryObj->getAllStoriesFromProject($fk_projet);
+	    	if(!empty($allTStory))
+	    	{
+	    	    foreach ($allTStory as $story)
+	    	    {
+	    	        $TStory[$story->storie_order] = $story->label;
+	    	    }
+	    	}
+	}
     	return $TStory;
 	}
 	
