@@ -155,7 +155,7 @@ class Doc2Project {
 		return false;
 	}
 	
-	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_parent=0,$isParent=false,$fk_workstation=0,$story='') {
+	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_task_parent=0,$isParent=false,$fk_workstation=0,$story='') {
 		
 		global $conf,$langs,$db,$user;
 		
@@ -414,13 +414,14 @@ class Doc2Project {
 						}
 					}else{
 						
-					    if(!self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story)){
+					    if(!self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story)){
 					        $linesImportError ++;
 					    }
 					}
 				}
 				else{
-				    if(!self::lineToTask($object,$line,$project,$start,$end,0,false,0,$story)){
+				//var_dump($fk_task_parent);exit;
+				    if(!self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story)){
 				        $linesImportError ++;
 				    }
 				}
