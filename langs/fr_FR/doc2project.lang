@@ -68,3 +68,8 @@ Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si
 Doc2ProjectErrorCanNotFetchProject=Erreur : impossible de charger ou de créer le projet
 
 Doc2ProjectViewStats = Voir les statistiques doc2project
+
+DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS=Convertir les lignes de nomenclature en tant que sous tâches (incompatible avec la conf : Si une "Nomenclature" est présente sur la ligne du produit/service...)
+d2p_onlyTNomenclatureDet=Uniquement les lignes de nomenclature
+d2p_onlyTNomenclatureWorkstation=Uniquement les lignes de poste de travail (TODO)
+d2p_Both=Les deux (TODO)
