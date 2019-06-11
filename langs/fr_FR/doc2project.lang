@@ -51,7 +51,7 @@ TotalBill=Montant total des factures
 OtherExpenses=Autres dépenses (Achat, NdF, ...)
 TotalPropal=Montant total des propositions signées
 
-Doc2ProjectUseNomenclatureAndWorkstation=Coupler l'utilisation du module à "Nomenclature" et "Workstation"
+Doc2ProjectUseNomenclatureAndWorkstation=Si une "Nomenclature" est présente sur la ligne du produit/service, alors on cherche à créer une tâche projet avec le service de plus bas niveau pour chaque ligne de nomenclature (attention s'il y a des sous nomenclatures, une seul tâche est créer avec la ligne service de plus bas niveau)
 Doc2ProjectAllowFreeLine=Autoriser la création de tâche pour une ligne libre
 Doc2ProjectUpdateProgressOfSituationInvoice=Récupérer la progression des tâches pour les reporter dans les factures de situations
 
@@ -68,9 +68,3 @@ Doc2ProjectConversionRuleDesc=Nombre d'heure alimentant la durée planifiée. Si
 Doc2ProjectErrorCanNotFetchProject=Erreur : impossible de charger ou de créer le projet
 
 Doc2ProjectViewStats = Voir les statistiques doc2project
-
-Doc2ProjectPrevueBeforeConvert=Prévisualiser et sélectionner les lignes à importer lors de l'import
-Doc2ProjectGroupTasksBySprint=Grouper les tâches avec le même libellé par sprint
-Doc2ProjectGroupTasks=Grouper les tâches avec le même libellé
-
-Doc2ProjectUseSpecificStoryToCreateTasks = Utiliser un autre sprint que le premier pour la création des tâches
