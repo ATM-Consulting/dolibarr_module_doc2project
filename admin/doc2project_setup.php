@@ -91,7 +91,7 @@ dol_fiche_head(
     $head,
     'settings',
     $langs->trans("Module104250Name"),
-    0,
+    -1,
     "project"
 );
 
@@ -431,7 +431,7 @@ if($ok) {
 
 print '</table>';
 
-dol_fiche_end();
+dol_fiche_end(-1);
 
 llxFooter();
 
