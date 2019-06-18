@@ -421,22 +421,32 @@ class Doc2Project {
 				}
 				else{
 				//var_dump($fk_task_parent);exit;
-                    $fk_task = self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story);
-				    if(!$fk_task){
+                    $skip = false;
+                    if (!empty($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS) && !empty($conf->nomenclature->enabled))
+                    {
+                        if (!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR', true);
+                        dol_include_once('/nomenclature/config.php');
+                        dol_include_once('/nomenclature/class/nomenclature.class.php');
+                        $nomenclature = new TNomenclature($db);
+                        $PDOdb = new TPDOdb($db);
+                        $nomenclature->loadByObjectId($PDOdb, $line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
+
+                        $detailsNomenclature = $nomenclature->getDetails($line->qty);
+                        // TODO load data for "onlyTNomenclatureWorkstation" or "both"
+
+                        if (!empty($conf->global->DOC2PROJECT_DISABLE_CREATE_TASK_IF_NOMENCLATURE_EXISTS) && !empty($detailsNomenclature)) $skip = true;
+                    }
+
+                    if (!$skip) $fk_task = self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story);
+
+                    if(!$skip && !$fk_task){
 				        $linesImportError ++;
 				    } else {
                         if (!empty($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS) && !empty($conf->nomenclature->enabled))
                         {
-                            if (!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR',true);
-                            dol_include_once('/nomenclature/config.php');
-                            dol_include_once('/nomenclature/class/nomenclature.class.php');
-                            $nomenclature = new TNomenclature($db);
-                            $PDOdb = new TPDOdb($db);
-                            $nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
                             if (in_array($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS, array('onlyTNomenclatureDet', 'both')))
                             {
-                                $detailsNomenclature=$nomenclature->getDetails($line->qty);
-                                self::nomenclaturedetToTask($detailsNomenclature, $line, $object, $project, $start, $end, $fk_task, $story);
+                                self::nomenclaturedetToTask($detailsNomenclature, $line, $object, $project, $start, $end, ($skip ? 0 : $fk_task), $story);
                             }
                             if (in_array($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS, array('onlyTNomenclatureWorkstation', 'both')))
                             {
@@ -745,6 +755,7 @@ class Doc2Project {
             $product = new Product($db);
             $product->fetch($lineNomenclature->fk_product);
             $lineNomenclature->product_label = $product->label;
+            if (!empty($fk_task_parent)) $lineNomenclature->rowid = $fk_task_parent.'-'.$lineNomenclature->rowid;
             $new_fk_task_parent = self::lineToTask($object, $lineNomenclature, $project, $start, $end, $fk_task_parent, false, 0, $stories);
             if (!empty($detailNomen['childs']))
             {
