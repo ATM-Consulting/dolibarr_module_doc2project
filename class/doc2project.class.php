@@ -509,7 +509,7 @@ class Doc2Project {
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 
-		$hookmanager->initHooks(array('doc2projecttaskcard'));
+        if (!in_array('doc2projecttaskcard', $hookmanager->contextarray))  $hookmanager->initHooks(array('doc2projecttaskcard'));
 		
 		$task = new Task($db);
 		
