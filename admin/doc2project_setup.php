@@ -201,6 +201,25 @@ if($ok) {
 	_print_on_off('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS', $langs->trans('Doc2ProjectUseSpecificStoryToCreateTasks'));
 
 
+    $var=!$var;
+    print '<tr '.$bc[$var].'>';
+    print '<td>'.$langs->trans("DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS").'</td>';
+    print '<td align="center" width="20">&nbsp;</td>';
+    print '<td align="right" width="300">';
+    print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="action" value="set_DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS">';
+    $TVal = array(
+        '' => ''
+        ,'onlyTNomenclatureDet' => $langs->trans('d2p_onlyTNomenclatureDet')
+        ,'onlyTNomenclatureWorkstation' => $langs->trans('d2p_onlyTNomenclatureWorkstation')
+        ,'both' => $langs->trans('d2p_Both')
+    );
+    print Form::selectarray('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS', $TVal, $conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS);
+    print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+    print '</form>';
+    print '</td></tr>';
+
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
 }
