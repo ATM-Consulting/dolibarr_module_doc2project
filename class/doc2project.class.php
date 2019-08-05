@@ -292,9 +292,9 @@ class Doc2Project {
 					$PDOdb = new TPDOdb($db);
 					
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
+					$nomenclature->setPrice($PDOdb, $line->qty, null, $object->element, $line->rowid, $line->fk_product);
 					if(!empty($nomenclature->TNomenclatureDet)){
-						$detailsNomenclature=$nomenclature->getDetails($line->qty);
-						self::nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$story);
+						self::nomenclatureToTask($nomenclature, $line, $object, $project, $start, $end, $story);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
 						self::lineToTask($object,$line,$project,$start,$end,0,false,0, $story);
 					}
@@ -540,18 +540,23 @@ class Doc2Project {
 	 * $object => objet courant (propal/order)
 	 * 
 	 */
-	public static function nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories='')
+	public static function nomenclatureToTask(TNomenclature $nomenclature, $line, $object, $project, $start, $end, $stories='')
 	{
 		global $db;
-		foreach ($detailsNomenclature as &$lineNomen)
+
+        $detailsNomenclature = $nomenclature->getDetails($line->qty);
+
+        $i = 0;
+
+		foreach ($nomenclature->TNomenclatureDet as &$nomenclatureDet)
 		{
-			$lineNomenclature = (object) $lineNomen;
+			$lineNomenclature = (object) $detailsNomenclature[$i];
 
 			$product = new Product($db);
 			$product->fetch($lineNomenclature->fk_product);
 			//On prend les services les plus bas pour créer les taches
 			
-			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomen['childs'],1) || empty($lineNomenclature->childs)))
+			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomenclature->childs, 1) || empty($lineNomenclature->childs)))
 			{
 				//Le calcul des quantités est déjà fait grâce à getDetails
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
@@ -560,7 +565,6 @@ class Doc2Project {
 				$nomenclature = new TNomenclature($db);
 				$PDOdb = new TPDOdb($db);
 				
-				$nomenclature->loadByObjectId($PDOdb, $lineNomenclature->rowid,$object->element, false, $lineNomenclature->fk_product);
 				if (!empty($nomenclature->TNomenclatureWorkstation[0]->rowid))
 				{
 					$idWorkstation = $nomenclature->TNomenclatureWorkstation[0]->rowid;
@@ -569,13 +573,22 @@ class Doc2Project {
 				{
 					$idWorkstation = 0;
 				}
-				
 				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
+                $lineNomenclature->total_ht = $nomenclatureDet->pv;
+
 				self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
-				
 			} elseif(!empty($lineNomenclature->childs)){
-				self::nomenclatureToTask($lineNomenclature->childs, $line,$object, $project, $start, $end,$stories);
+                $coef = 1;
+                if($line->qty != $nomenclature->qty_reference)
+                {
+                    $coef = $line->qty / $nomenclature->qty_reference;
+                }
+                $qty = $lineNomen->qty * $coef;
+			    $childNomenclature = TNomenclatureDet::getArboNomenclatureDet($PDOdb, $lineNomen, $qty);
+				self::nomenclatureToTask($childNomenclature, $line, $object, $project, $start, $end, $stories);
 			}
+
+            $i++;
 		}
 	}
 
