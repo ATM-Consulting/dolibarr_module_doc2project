@@ -284,7 +284,7 @@ class Doc2Project {
 			elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION))
 			{
 				//self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
-				if(!empty($line->fk_product)) {
+				if(! empty($line->fk_product) || (! empty($conf->global->DOC2PROJECT_ALLOW_FREE_LINE) && ! empty($conf->global->NOMENCLATURE_ALLOW_FREELINE))) {
 					define('INC_FROM_DOLIBARR',true);
 					dol_include_once('/nomenclature/config.php');
 					dol_include_once('/nomenclature/class/nomenclature.class.php');
