@@ -292,9 +292,8 @@ class Doc2Project {
 					$PDOdb = new TPDOdb($db);
 					
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
-					$nomenclature->setPrice($PDOdb, $line->qty, null, $object->element, $line->rowid, $line->fk_product);
 					if(!empty($nomenclature->TNomenclatureDet)){
-						self::nomenclatureToTask($nomenclature, $line, $object, $project, $start, $end, $story);
+						self::nomenclatureToTask($PDOdb, $nomenclature, $line, $object, $project, $start, $end, $story);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
 						self::lineToTask($object,$line,$project,$start,$end,0,false,0, $story);
 					}
@@ -540,10 +539,11 @@ class Doc2Project {
 	 * $object => objet courant (propal/order)
 	 * 
 	 */
-	public static function nomenclatureToTask(TNomenclature $nomenclature, $line, $object, $project, $start, $end, $stories='')
+	public static function nomenclatureToTask(TPDOdb &$PDOdb, TNomenclature &$nomenclature, $line, $object, $project, $start, $end, $stories='')
 	{
 		global $db;
 
+		$nomenclature->setPrice($PDOdb, $line->qty, null, $object->element, $line->rowid, $line->fk_product);
         $detailsNomenclature = $nomenclature->getDetails($line->qty);
 
         $i = 0;
@@ -583,9 +583,11 @@ class Doc2Project {
                 {
                     $coef = $line->qty / $nomenclature->qty_reference;
                 }
+
                 $qty = $lineNomen->qty * $coef;
+
 			    $childNomenclature = TNomenclatureDet::getArboNomenclatureDet($PDOdb, $lineNomen, $qty);
-				self::nomenclatureToTask($childNomenclature, $line, $object, $project, $start, $end, $stories);
+				self::nomenclatureToTask($PDOdb, $childNomenclature, $line, $object, $project, $start, $end, $stories);
 			}
 
             $i++;
