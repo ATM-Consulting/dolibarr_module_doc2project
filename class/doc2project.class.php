@@ -847,7 +847,7 @@ class Doc2Project {
 		    {
 		        foreach ($curentNomenclature->TNomenclatureWorkstation as &$wsn)
 		        {
-		            $defaultref=self::getNewDefaultTaskRef();
+		            $defaultref=self::getNewDefaultTaskRef($line);
 		            if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 		                $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.$wsn->workstation->rowid;
 		            }
@@ -922,7 +922,7 @@ class Doc2Project {
      * @param Task $task  A Task
      * @return string  A new reference number.
      */
-	public static function getNewDefaultTaskRef($line, $task = null)
+    public static function getNewDefaultTaskRef($line, $task = null)
     {
         global $db, $conf;
         $task = $task ?: new Task($db);
@@ -933,7 +933,7 @@ class Doc2Project {
      *
      * @return mod_task_simple|mod_task_universal
      */
-	public static function getTaskRefNumberingModule()
+    public static function getTaskRefNumberingModule()
     {
         global $conf;
         $numberingModuleClass = 'mod_task_simple'; // default
@@ -952,7 +952,4 @@ class Doc2Project {
             return new $numberingModuleClass;
         }
     }
-
-	
-	
 }
