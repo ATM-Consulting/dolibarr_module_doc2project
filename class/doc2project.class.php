@@ -228,11 +228,11 @@ class Doc2Project {
 		$end = strtotime('+'.$nbDays.' weekdays', $start);
 		
 		$t = new Task($db);
-		$defaultref='';
+		$defaultref=self::getNewDefaultTaskRef($line, $t);
 		if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 			$defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid;
 		}
-		
+
 		if (!empty($conf->global->DOC2PROJECT_TASK_NAME)) $label = strtr($conf->global->DOC2PROJECT_TASK_NAME, array('{product_ref}' => $line->ref, '{product_label}' => $line->product_label));
 		else $label = !empty($line->product_label) ? $line->product_label : $line->desc;
 		
@@ -298,7 +298,20 @@ class Doc2Project {
 					$label = !empty($line->product_label) ? $line->product_label : $line->label;
 					$desc =  !empty($line->description) ? $line->description : $line->desc;
 					
-					$fk_task_parent = self::createOneTask($project->id, $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid, $label, $desc, '', '', $fk_task_parent, '', '', 0,'',$story,$line->rowid, $object->element);
+					$fk_task_parent = self::createOneTask($project->id,
+                        $conf->global->DOC2PROJECT_TASK_REF_PREFIX ? $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid : self::getNewDefaultTaskRef($line),
+                        $label,
+                        $desc,
+                        '',
+                        '',
+                        $fk_task_parent,
+                        '',
+                        '',
+                        0,
+                        '',
+                        $story,
+                        $line->rowid,
+                        $object->element);
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
@@ -639,6 +652,9 @@ class Doc2Project {
 				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
+				if ($origin_type === ' propal') $task->origin = 'propaldet';
+				elseif ($origin_type === 'commande') $task->origin = 'orderline';
+
 				$r = $task->create($user);
 				
 				if ($r > 0) {
@@ -831,7 +847,7 @@ class Doc2Project {
 		    {
 		        foreach ($curentNomenclature->TNomenclatureWorkstation as &$wsn)
 		        {
-		            $defaultref='';
+		            $defaultref=self::getNewDefaultTaskRef($line);
 		            if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
 		                $defaultref = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$line->rowid.$wsn->workstation->rowid;
 		            }
@@ -898,6 +914,42 @@ class Doc2Project {
     	$task->date_end = $newEnd;
 	
 	}
-	
-	
+
+    /**
+     * @param OrderLine|PropaleLigne $line The order or proposal line
+     *                    whose ID is used by the doc2project specific numbering
+     *                    scheme.
+     * @param Task $task  A Task
+     * @return string  A new reference number.
+     */
+    public static function getNewDefaultTaskRef($line, $task = null)
+    {
+        global $db, $conf;
+        $task = $task ?: new Task($db);
+        return self::getTaskRefNumberingModule()->getNextValue($line->thirdparty, $task);
+    }
+    /**
+     * Returns an instance of the task ref. numbering module to be used.
+     *
+     * @return mod_task_simple|mod_task_universal
+     */
+    public static function getTaskRefNumberingModule()
+    {
+        global $conf;
+        $numberingModuleClass = 'mod_task_simple'; // default
+        if (empty($conf->global->PROJECT_TASK_ADDON)) {
+            return new $numberingModuleClass;
+        }
+        $projectTaskAddonPath = DOL_DOCUMENT_ROOT
+            . '/core/modules/project/task/'
+            . $conf->global->PROJECT_TASK_ADDON . '.php';
+        if (is_readable($projectTaskAddonPath)) {
+            require_once $projectTaskAddonPath;
+            $numberingModuleClass = $conf->global->PROJECT_TASK_ADDON;
+            return new $numberingModuleClass;
+        } else {
+            setEventMessages('Unable to read ' . $projectTaskAddonPath . '; using default numbering scheme.');
+            return new $numberingModuleClass;
+        }
+    }
 }

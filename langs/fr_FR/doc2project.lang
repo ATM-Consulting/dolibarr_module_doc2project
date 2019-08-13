@@ -13,7 +13,7 @@ DocConverted = convertie
 # SETUP
 DisplayOnProposal = Afficher le bouton de conversion sur la fiche proposition
 DisplayOnOrder = Afficher le bouton de conversion sur la fiche commande client
-TaskRefPrefix = Préfixe pour la référence des tâches
+TaskRefPrefix = Préfixe pour la référence des tâches (si vide, utilisera la numérotation du module <i>Projets</i>)
 NbHoursPerDay = Nombre d'heures journalier
 ModuleNeedProposalOrOrderModule = Le module proposition commerciale ou commande client doit être activé pour pouvoir utiliser ce module
 Doc2ProjectValidateProjectOnValidateOrder=Créer et valider un projet sur la validation d'une commande client
