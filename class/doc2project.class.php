@@ -13,12 +13,18 @@ class Doc2Project {
 		    // Check if line is selected
 		    $linecheckbox = GETPOST('doc2projectline');
 		    // var_dump(array( !empty($linecheckbox), !isset($linecheckbox[$line->id]) ));
-		    if(!empty($linecheckbox) && !isset($linecheckbox[$line->id])){
-		        return true;
+		    if(!empty($linecheckbox) && !isset($linecheckbox[$line->id]))
+		    {
+                if (!empty($conf->subtotal->enabled) && (TSubtotal::isFreeText($line) || TSubtotal::isSubtotal($line)) ) { /* nothing to do */ }
+		        else return true;
 		    }
 		}
 		
-		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0) return   true;
+		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO) && $line->subprice == 0)
+        {
+            if (!empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line)) { /* nothing to do */ }
+            else return true;
+        }
 		if (!empty($conf->global->DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO) && $line->qty == 0) return   true;
 
 		// FROM CONFIG : PRODUCT REF
@@ -26,7 +32,7 @@ class Doc2Project {
 		if (!empty($conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS) && in_array($line->ref, $TExclude)) return  true;
 		
 		// Subtotal
-		if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && $conf->subtotal->enabled && $line->product_type == 9) return  true;
+		if (empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL) && !empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line)) return true;
 		
 		return $exclude;
 	}
@@ -270,7 +276,7 @@ class Doc2Project {
 		$linesImported = 0;
 		$linesExcluded =0;
 		$linesImportError =0;
-		
+
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
@@ -288,11 +294,11 @@ class Doc2Project {
 			
 			$linesImported++;
 
-			if ($line->product_type == 9)
+			if (!empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line))
 			{
-				if ($line->qty >= 1 && $line->qty <= 10) // TITRE
+				if (TSubtotal::isTitle($line)) // TITRE
 				{
-					$index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
+				    $index = $line->qty - 1; // -1 pcq je veux savoir si un id task existe sur un niveau parent
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 					
 					$label = !empty($line->product_label) ? $line->product_label : $line->label;
@@ -315,12 +321,15 @@ class Doc2Project {
 						
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
 				}
-				else // SOUS-TOTAL
+				elseif (TSubtotal::isFreeText($line))
+                {
+                    // do nothing
+                }
+				elseif (TSubtotal::isSubtotal($line)) // SOUS-TOTAL
 				{
 					$index = 100 - $line->qty - 1;
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 				}
-	
 			}
             elseif (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION) && !empty($conf->nomenclature->enabled))
 			{
@@ -459,7 +468,7 @@ class Doc2Project {
                         {
                             if (in_array($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS, array('onlyTNomenclatureDet', 'both')))
                             {
-                                self::nomenclaturedetToTask($detailsNomenclature, $line, $object, $project, $start, $end, ($skip ? 0 : $fk_task), $story);
+                                self::nomenclaturedetToTask($detailsNomenclature, $line, $object, $project, $start, $end, ($skip ? $fk_task_parent : $fk_task), $story);
                             }
                             if (in_array($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS, array('onlyTNomenclatureWorkstation', 'both')))
                             {
