@@ -771,6 +771,7 @@ class Doc2Project {
             $product = new Product($db);
             $product->fetch($lineNomenclature->fk_product);
             $lineNomenclature->product_label = $product->label;
+            $lineNomenclature->array_options = $line->array_options;
             if (!empty($fk_task_parent)) $lineNomenclature->rowid = $fk_task_parent.'-'.$lineNomenclature->rowid;
             $new_fk_task_parent = self::lineToTask($object, $lineNomenclature, $project, $start, $end, $fk_task_parent, false, 0, $stories);
             if (!empty($detailNomen['childs']))
