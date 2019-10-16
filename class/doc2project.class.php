@@ -230,9 +230,18 @@ class Doc2Project {
 			$nbDays = $line->qty;
 		
 		}
-		
-		$end = strtotime('+'.$nbDays.' weekdays', $start);
-		
+
+		// TODO à voir si la conf ne doit pas réinit la valeur des dates à vide s'il n'y en a pas sur la ligne pour éviter d'avoir 2 modes d'affectation des dates
+        if (!empty($conf->global->DOC2PROJECT_USE_DATE_FROM_LINE) && !empty($line->date_start) && !empty($line->date_end))
+        {
+            $start = $line->date_start;
+            $end = $line->date_end;
+        }
+        else
+        {
+            $end = strtotime('+'.$nbDays.' weekdays', $start);
+        }
+
 		$t = new Task($db);
 		$defaultref=self::getNewDefaultTaskRef($line, $t);
 		if(!empty($conf->global->DOC2PROJECT_TASK_REF_PREFIX)) {
@@ -781,6 +790,8 @@ class Doc2Project {
             $product->fetch($lineNomenclature->fk_product);
             $lineNomenclature->product_label = $product->label;
             $lineNomenclature->array_options = $line->array_options;
+            $lineNomenclature->date_start = $line->date_start;
+            $lineNomenclature->date_end = $line->date_end;
             if (!empty($fk_task_parent)) $lineNomenclature->rowid = $fk_task_parent.'-'.$lineNomenclature->rowid;
             $new_fk_task_parent = self::lineToTask($object, $lineNomenclature, $project, $start, $end, $fk_task_parent, false, 0, $stories);
             if (!empty($detailNomen['childs']))
