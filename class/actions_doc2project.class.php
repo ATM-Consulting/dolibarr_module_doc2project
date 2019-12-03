@@ -18,9 +18,9 @@ class ActionsDoc2Project
 				if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){ $link = '#'; }
 				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 				print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
-				
+
 				if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){
-				    // Print la partie JS nécessaire à la popin 
+				    // Print la partie JS nécessaire à la popin
 				    dol_include_once('/doc2project/lib/doc2project.lib.php');
 				    printJSPopinBeforeAddTasksInProject($parameters, $object, $action, $hookmanager,$label);
 				}
@@ -172,19 +172,19 @@ class ActionsDoc2Project
 				<tr>
 					<td><?php echo $langs->trans('THM'); ?></td>
 					<td><?php
-	
+
 						if($action=='edit') {
 							echo '<input id="thm" type="text" value="'.$thm.'" maxlength="11" size="9" name="thm">';
 						}
 						else{
 							echo price($thm);
 						}
-	
+
 					?></td>
-	
+
 				</tr>
 				<?php
-				
+
 			}
 
 		}
@@ -207,12 +207,12 @@ class ActionsDoc2Project
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
 			dol_include_once('/doc2project/class/doc2project.class.php');
-			
+
 			$PDOdb = new TPDOdb;
 
 			// CREATION OU CHARGEMENT DU PROJET
 			$project = Doc2Project::createProject($object); // La méthode fetch déjà le projet s'il existe
-			
+
 			if (!empty($project->id))
 			{
 				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
@@ -225,6 +225,8 @@ class ActionsDoc2Project
 				if($resetProjet) $project->statut = 0;
 				$project->update($user);
 
+				if (!empty($conf->global->DOC2PROJECT_VALIDATE_CREATED_PROJECT)) $project->setValid($user);
+
 				//$object->setProject($project->id);
 				if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $project->add_contact($user->id,'PROJECTLEADER','internal');
 				//exit;
@@ -234,11 +236,11 @@ class ActionsDoc2Project
 			{
 				setEventMessage($langs->trans('Doc2ProjectErrorCanNotFetchProject'),'errors');
 			}
-			
+
 		}
 
 		return 0;
 	}
 
-	
+
 }
