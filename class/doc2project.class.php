@@ -239,7 +239,8 @@ class Doc2Project {
         }
         else
         {
-            $end = strtotime('+'.$nbDays.' weekdays', $start);
+        	// Si on passe un float à strtotime, il prend la partie après le "." comme entier d'où les dates de fin allucinantes...
+            $end = strtotime('+'.ceil($nbDays).' weekdays', $start);
         }
 
 		$t = new Task($db);
