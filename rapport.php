@@ -333,7 +333,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td<?php echo ($line['marge_futur'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge_futur'],2)) ?></td>
 						<td<?php echo ($line['marge_prev'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge_prev'],2)) ?></td>
 					</tr>
-					<?
+					<?php
 					$total_vente += $line['total_vente'];
 					$total_achat += $line['total_achat'];
 					if($conf->ndfp->enabled)$total_ndf += $line['total_ndf'];
