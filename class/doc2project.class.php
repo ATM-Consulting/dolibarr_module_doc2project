@@ -217,7 +217,7 @@ class Doc2Project {
 			$nbDays = 0;
 			if($product->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
 				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
-				$nbDays = $line->qty * $product->duration_value;
+				$nbDays = $line->qty * (empty($product->duration_value)?0:$product->duration_value);
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 			}
