@@ -463,7 +463,9 @@ class Doc2Project {
                         $PDOdb = new TPDOdb($db);
                         $nomenclature->loadByObjectId($PDOdb, $line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 
-                        $detailsNomenclature = $nomenclature->getDetails($line->qty);
+						$qty_ref = $line->qty;
+						if (!empty($conf->global->DOC2PROJECT_USE_NOMENCLATURE_REFERENCE_QTY_AS_LINE_QTY)) $qty_ref = $nomenclature->qty_reference;
+                        $detailsNomenclature = $nomenclature->getDetails($qty_ref);
                         // TODO load data for "onlyTNomenclatureWorkstation" or "both"
 
                         if (!empty($conf->global->DOC2PROJECT_DISABLE_CREATE_TASK_IF_NOMENCLATURE_EXISTS) && !empty($detailsNomenclature)) $skip = true;
@@ -784,6 +786,7 @@ class Doc2Project {
     public static function nomenclaturedetToTask($detailsNomenclature, $line, $object, $project, $start, $end, $fk_task_parent = 0, $stories='')
     {
         global $db;
+
         foreach ($detailsNomenclature as $detailNomen)
         {
             $lineNomenclature = (object) $detailNomen;
