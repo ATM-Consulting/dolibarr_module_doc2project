@@ -253,7 +253,9 @@ class Doc2Project {
 		else $label = !empty($line->product_label) ? $line->product_label : $line->desc;
 
 //var_dump($defaultref, $label,  $project->id);exit;
-		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $line->rowid, $object->element);
+		// si $line est de type 'stdClass', $line représente une ligne de nomenclature
+		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->rowid;
+		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $rowid, $object->element);
 
 
 	}
@@ -789,7 +791,8 @@ class Doc2Project {
 
         foreach ($detailsNomenclature as $detailNomen)
         {
-            $lineNomenclature = (object) $detailNomen;
+			$lineNomenclature = (object) $detailNomen;
+			$lineNomenclature->fk_object = $line->id;
             $product = new Product($db);
             $product->fetch($lineNomenclature->fk_product);
             $lineNomenclature->product_label = $product->label;
