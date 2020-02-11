@@ -69,6 +69,10 @@ class Doc2Project {
 		return $defaultref;
 	}
 
+	/**
+	 * @param Commande|Propal|CommonObject $object
+	 * @return bool|mixed|Project
+	 */
 	public static function createProject(&$object) {
 
 		global $conf,$langs,$db,$user,$hookmanager;
@@ -146,6 +150,9 @@ class Doc2Project {
 			if ($r > 0)
 			{
 				$object->setProject($r);
+
+				$action = 'afterCreateProject';
+				$reshook = $hookmanager->executeHooks('afterCreateProject', array('project' => &$project), $object, $action);
 
 				return $project;
 
