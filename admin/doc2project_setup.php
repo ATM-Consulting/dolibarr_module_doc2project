@@ -59,7 +59,7 @@ if (preg_match('/set_(.*)/',$action,$reg))
 		dol_print_error($db);
 	}
 }
-	
+
 if (preg_match('/del_(.*)/',$action,$reg))
 {
 	$code=$reg[1];
@@ -106,7 +106,7 @@ if($ok) {
 	print '<td>'.$langs->trans("Parameters").'</td>'."\n";
 	print '<td align="center" width="20">&nbsp;</td>';
 	print '<td align="center" width="100">'.$langs->trans("Value").'</td>'."\n";
-	
+
 	// Display convert button on proposal
 	if($conf->propal->enabled) {
 		$var=!$var;
@@ -122,7 +122,7 @@ if($ok) {
 		print '</form>';
 		print '</td></tr>';
 	}
-	
+
 	// Display convert button on order
 	if($conf->commande->enabled) {
 		$var=!$var;
@@ -152,7 +152,7 @@ if($ok) {
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print '</form>';
 	print '</td></tr>';
-	
+
 	// Nb hour a day
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
@@ -166,8 +166,8 @@ if($ok) {
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print '</form>';
 	print '</td></tr>';
-	
-	
+
+
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
 	print '<td>'.$langs->trans("Doc2ProjectValidateProjectOnValidateOrder").'</td>';
@@ -180,7 +180,7 @@ if($ok) {
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print '</form>';
 	print '</td></tr>';
-	
+
 	$var=!$var;
 	print '<tr '.$bc[$var].'>';
 	print '<td>'.$langs->trans("Doc2ProjectClotureProjectOnValidateExpedition").'</td>';
@@ -193,8 +193,21 @@ if($ok) {
 	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 	print '</form>';
 	print '</td></tr>';
-	
-	
+
+	$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("DOC2PROJECT_SHOW_DOCUMENT_DATE_FILTER_ON_STATISTICS_REPORT").'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="right" width="300">';
+	print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+	print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+	print '<input type="hidden" name="action" value="set_DOC2PROJECT_SHOW_DOCUMENT_DATE_FILTER_ON_STATISTICS_REPORT">';
+	print $form->selectyesno('DOC2PROJECT_SHOW_DOCUMENT_DATE_FILTER_ON_STATISTICS_REPORT', $conf->global->DOC2PROJECT_SHOW_DOCUMENT_DATE_FILTER_ON_STATISTICS_REPORT, 1);
+	print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
+	print '</form>';
+	print '</td></tr>';
+
+
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
 }

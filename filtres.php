@@ -31,15 +31,23 @@ function _print_filtre_societe(&$form,&$PDOdb){
 		</tr>
 	<?php
 }
-function _print_filtre_plage_date(&$form){
+
+	/**
+	 * @param TFormCore $form
+	 * @param string $prefix
+	 */
+function _print_filtre_plage_date(&$form, $prefix){
+	global $langs, $db;
+	$stdform = new Form($db);
+	$helpPrefix = ucfirst($prefix);
 	?>
 		<tr>
-			<td>Date de début : </td>
-			<td><?php echo $form->calendrier('', 'date_deb', ($_REQUEST['date_deb'])? $_REQUEST['date_deb'] : ''); ?></td>
+			<td><?php echo $stdform->textwithpicto($langs->trans($helpPrefix . 'StartDate'), $langs->trans($helpPrefix . 'StartDateHelp')) ?></td>
+			<td><?php echo $form->calendrier('', $prefix . '_start_date', ($_REQUEST[$prefix . '_start_date'])? $_REQUEST[$prefix . '_start_date'] : ''); ?></td>
 		</tr>
 		<tr>
-			<td>Date de fin : </td>
-			<td><?php echo $form->calendrier('', 'date_fin', ($_REQUEST['date_fin'])? $_REQUEST['date_fin'] : ''); ?></td>
+			<td><?php echo $stdform->textwithpicto($langs->trans($helpPrefix . 'EndDate'), $langs->trans($helpPrefix . 'EndDateHelp')) ?></td>
+			<td><?php echo $form->calendrier('', $prefix . '_end_date', ($_REQUEST[$prefix . '_end_date'])? $_REQUEST[$prefix . '_end_date'] : ''); ?></td>
 		</tr>
 	<?php
 }

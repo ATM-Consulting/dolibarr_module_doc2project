@@ -13,7 +13,7 @@ print_fiche_titre($langs->trans("Report"));
 <link rel="stylesheet" href="<?php echo COREHTTP?>includes/js/dataTable/css/jquery.dataTables.css" type="text/css" />
 <link rel="stylesheet" href="<?php echo COREHTTP?>includes/js/dataTable/css/dataTables.tableTools.css" type="text/css" />
 <?php
-
+$langs->load('doc2project@doc2project');
 $PDOdb=new TPDOdb;
 
 // Get parameters
@@ -21,9 +21,10 @@ _action($PDOdb);
 
 llxFooter();
 
+/**
+ * @param TPDOdb $PDOdb
+ */
 function _action(&$PDOdb) {
-	global $user, $conf;
-
 	if(isset($_REQUEST['action'])) {
 		switch($_REQUEST['action']) {
 
@@ -104,7 +105,7 @@ function _fiche(&$PDOdb,$report=''){
 			echo $form->btsubmit('Afficher', '');
 		}
 
-		echo $form->end();
+		$form->end();
 
 		switch ($report) {
 			case 'statistiques_projet':
@@ -119,7 +120,13 @@ function _fiche(&$PDOdb,$report=''){
 	echo '</div>';
 }
 
+/**
+ * @param string $report
+ * @param TPDOdb $PDOdb
+ * @param TFormCore $form
+ */
 function _get_filtre($report,$PDOdb,$form){
+	global $conf;
 
 	print_fiche_titre('Filtres');
 	echo '<div class="tabBar">';
@@ -128,7 +135,10 @@ function _get_filtre($report,$PDOdb,$form){
 	switch ($report) {
 		case 'statistiques_projet':
 			_print_filtre_liste_projet($form,$PDOdb);
-			_print_filtre_plage_date($form);
+			_print_filtre_plage_date($form, 'project');
+			if (!empty($conf->global->DOC2PROJECT_SHOW_DOCUMENT_DATE_FILTER_ON_STATISTICS_REPORT)) {
+				_print_filtre_plage_date($form, 'document');
+			}
 			_print_filtre_type_projet($form, $PDOdb);
 			break;
 
@@ -142,52 +152,86 @@ function _get_filtre($report,$PDOdb,$form){
 	echo '</div>';
 }
 
+	/**
+	 * @param string $prefix
+	 * @return object
+	 */
+function _get_date_filter($prefix) {
+	$start = GETPOST($prefix . '_start_date', 'alpha');
+	$end   = GETPOST($prefix . '_end_date',   'alpha');
+	if (!empty($start)) $t_start = Tools::get_time($start); else $t_start = 0;
+	if (!empty($end))   $t_end   = Tools::get_time($end);   else $t_end   = 0;
+	return (object) array(
+		'start_str' => $start,
+		'end_str'   => $end,
+		'start' => $t_start,
+		'end'   => $t_end,
+		'wrong_order' => ($t_start && $t_end && $t_start > $t_end),
+	);
+}
+
+/**
+ * @param TPDOdb $PDOdb
+ */
 function _get_statistiques_projet(&$PDOdb){
-	global $db,$conf;
+	global $conf, $langs;
 
 	$idprojet = GETPOST('id_projet');
 
-	$date_deb = GETPOST('date_deb');
-	$t_deb = !$date_deb ? 0 : Tools::get_time($date_deb);
+	$projectDateFilter = _get_date_filter('project');
+	$documentDateFilter = _get_date_filter('document');
 
-	$date_fin = GETPOST('date_fin');
-	$t_fin = !$date_fin ? 0 : Tools::get_time($date_fin);
-
-	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, pe.datevent, pe.datefin, pe.typeevent
-	, (
-		SELECT SUM(f.total) FROM ".MAIN_DB_PREFIX."facture as f WHERE f.fk_projet = p.rowid AND f.fk_statut IN(1, 2)
-		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-		) as total_vente
-	,
-	(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut = 2  AND prop.fk_projet = p.rowid) as total_vente_futur
-	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "propal as prop WHERE prop.fk_statut <> 0 AND prop.fk_projet = p.rowid) as total_vente_previsionnel
-	, (
-		SELECT SUM(ff.total_ht) FROM ".MAIN_DB_PREFIX."facture_fourn as ff WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1
-		".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-	) as total_achat
-	,(SELECT SUM(total_ht) FROM " . MAIN_DB_PREFIX . "commande_fournisseur as cmd WHERE cmd.fk_statut <> 0 AND cmd.fk_projet = p.rowid) as total_achat_futur
-	";
-
-	if($conf->ndfp->enabled){
-		$sql .=" , (
-			SELECT SUM(ndfp.total_ht) FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1
-			".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-		) as total_ndf ";
+	// make sure that $date_deb and $date_fin are in the right order
+	if ($projectDateFilter->wrong_order) {
+		$langs->load('doc2project@doc2project');
+		setEventMessages($langs->trans('Doc2ProjectErrorDateStartBeforeEnd'), array(), 'errors');
+		return;
 	}
 
-	$sql .= ", (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
-			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
-		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-	) as total_temps
-	,(SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (
-			SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)
-		".($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
-	) as total_cout_homme
+	// subqueries
+	$sqlTotalVente       = 'SELECT SUM(f.total) FROM                        ' . MAIN_DB_PREFIX . 'facture as f               '. ' WHERE f.fk_projet = p.rowid AND f.fk_statut IN (1, 2)';
+	$sqlTotalVenteFutur  = 'SELECT SUM(total_ht) FROM                       ' . MAIN_DB_PREFIX . 'propal as prop             '. ' WHERE prop.fk_statut = 2  AND prop.fk_projet = p.rowid';
+	$sqlTotalVentePrevis = 'SELECT SUM(total_ht) FROM                       ' . MAIN_DB_PREFIX . 'propal as prop             '. ' WHERE prop.fk_statut <> 0 AND prop.fk_projet = p.rowid';
+	$sqlTotalAchat       = 'SELECT SUM(ff.total_ht) FROM                    ' . MAIN_DB_PREFIX . 'facture_fourn as ff        '. ' WHERE ff.fk_projet = p.rowid AND ff.fk_statut >= 1';
+	$sqlTotalAchatFutur  = 'SELECT SUM(total_ht) FROM                       ' . MAIN_DB_PREFIX . 'commande_fournisseur as cmd'. ' WHERE cmd.fk_statut <> 0 AND cmd.fk_projet = p.rowid';
+	$sqlTotalNDF         = 'SELECT SUM(ndfp.total_ht) FROM                  ' . MAIN_DB_PREFIX . 'ndfp as ndfp               '. ' WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1';
+	$sqlTotalTemps       = 'SELECT SUM(tt.task_duration) FROM               ' . MAIN_DB_PREFIX . 'projet_task_time as tt     '. ' WHERE tt.fk_task IN (SELECT t.rowid FROM ' . MAIN_DB_PREFIX . 'projet_task as t WHERE t.fk_projet = p.rowid)';
+	$sqlTotalCoutHomme   = 'SELECT SUM(tt.thm * tt.task_duration/3600) FROM ' . MAIN_DB_PREFIX . 'projet_task_time as tt     '. ' WHERE tt.fk_task IN (SELECT t.rowid FROM ' . MAIN_DB_PREFIX . 'projet_task as t WHERE t.fk_projet = p.rowid)';
 
-			FROM ".MAIN_DB_PREFIX."projet as p
-			INNER JOIN " . MAIN_DB_PREFIX . "projet_extrafields as pe ON pe.fk_object = p.rowid
-			WHERE 1 = 1
-	 ";
+	// some subqueries can have an additional date restriction
+	if (!empty($conf->global->DOC2PROJECT_SHOW_DOCUMENT_DATE_FILTER_ON_STATISTICS_REPORT)) {
+		$addDateRestriction = function($fieldName) use ($documentDateFilter, $PDOdb) {
+			if ($documentDateFilter->start == 0 || $documentDateFilter->end == 0) return '';
+			return sprintf(
+				' AND %s BETWEEN %s AND %s ',
+				$fieldName,
+				$PDOdb->quote(date('Y-m-d', $documentDateFilter->start)),
+				$PDOdb->quote(date('Y-m-d', $documentDateFilter->end))
+			);
+		};
+		$sqlTotalVente     .= $addDateRestriction('datef');
+		$sqlTotalAchat     .= $addDateRestriction('datef');
+		$sqlTotalNDF       .= $addDateRestriction('datef');
+		$sqlTotalTemps     .= $addDateRestriction('task_date');
+		$sqlTotalCoutHomme .= $addDateRestriction('task_date');
+	}
+
+	$sql = 'SELECT p.rowid AS IdProject, p.ref, p.title, pe.datevent, pe.datefin, pe.typeevent, '
+		. "\n" . ' (' . $sqlTotalVente       . ') AS total_vente,'
+		. "\n" . ' (' . $sqlTotalVenteFutur  . ') AS total_vente_futur,'
+		. "\n" . ' (' . $sqlTotalVentePrevis . ') AS total_vente_previsionnel,'
+		. "\n" . ' (' . $sqlTotalAchat       . ') AS total_achat,'
+		. "\n" . ' (' . $sqlTotalAchatFutur  . ') AS total_achat_futur,'
+		. (($conf->ndfp->enabled) ? "\n" . ' (' . $sqlTotalNDF . ') AS total_ndf,' : '')
+		. "\n" . ' (' . $sqlTotalTemps       . ') AS total_temps,'
+		. "\n" . ' (' . $sqlTotalCoutHomme   . ') AS total_cout_homme'
+		. "\n" . ' FROM ' . MAIN_DB_PREFIX . 'projet AS p'
+		. "\n" . ' INNER JOIN ' . MAIN_DB_PREFIX . 'projet_extrafields AS pe ON pe.fk_object = p.rowid'
+		. ' WHERE 1 = 1';
+	$sqlProjectEndsAfterFilterStartDate  = ' AND pe.datefin  >= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->start));
+	$sqlProjectStartsBeforeFilterEndDate = ' AND pe.datevent <= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->end));
+	if (!empty($projectDateFilter->start_str)) $sql .= $sqlProjectEndsAfterFilterStartDate;
+	if (!empty($projectDateFilter->end_str))   $sql .= $sqlProjectStartsBeforeFilterEndDate;
 
 	if($idprojet > 0) $sql.= " AND p.rowid = ".$idprojet;
 
@@ -206,11 +250,11 @@ function _get_statistiques_projet(&$PDOdb){
 	} else {
 		$sql .= 'pe.datevent';
 	}
+	print '<pre>' . $sql . '</pre>' ;exit;
 
 	$PDOdb->Execute($sql);
 
 	$TRapport = array();
-	$PDOdb2 = new TPDOdb;
 
 	while ($PDOdb->Get_line()) {
 		//echo ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60).'<br>';
@@ -257,17 +301,14 @@ function _get_statistiques_projet(&$PDOdb){
 		$TRapport['total_ndf'] = $PDOdb->Get_field('total_ndf');
 	}
 
-	_print_statistiques_projet($TRapport);
+	_print_statistiques_projet($TRapport, $sortfield, $sortorder);
 }
 
-function _print_statistiques_projet(&$TRapport){
+function _print_statistiques_projet(&$TRapport, $sortfield, $sortorder){
 	global $conf, $db;
 
 	dol_include_once('/core/lib/date.lib.php');
 	dol_include_once('/projet/class/project.class.php');
-
-	$selected_type = GETPOST('type_event');
-	$id_projet = GETPOST('');
 
 	$params = $_SERVER['QUERY_STRING'];
 
@@ -302,7 +343,17 @@ function _print_statistiques_projet(&$TRapport){
 			</thead>
 			<tbody>
 				<?php
-
+				$total_vente = 0;
+				$total_achat = 0;
+				$total_ndf = 0;
+				$total_temps = 0;
+				$total_cout_homme = 0;
+				$total_marge = 0;
+				$total_marge_futur = 0;
+				$total_marge_prev = 0;
+				$total_vente_futur = 0;
+				$total_vente_previsionnel = 0;
+				$total_achat_futur = 0;
 				foreach($TRapport as $line){
 					$project=new Project($db);
 					$project->fetch($line['IdProject']);
