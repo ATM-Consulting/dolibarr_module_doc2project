@@ -216,7 +216,7 @@ function _get_statistiques_projet(&$PDOdb){
 		$sqlTotalCoutHomme .= $addDateRestriction('task_date');
 	}
 
-	$sql = 'SELECT p.rowid AS IdProject, p.ref, p.title, pe.datevent, pe.datefin, pe.typeevent, '
+	$sql = 'SELECT p.rowid AS IdProject, p.ref, p.title, p.dateo, p.datee, pe.datevent, pe.datefin, pe.typeevent, '
 		. "\n" . ' (' . $sqlTotalVente       . ') AS total_vente,'
 		. "\n" . ' (' . $sqlTotalVenteFutur  . ') AS total_vente_futur,'
 		. "\n" . ' (' . $sqlTotalVentePrevis . ') AS total_vente_previsionnel,'
@@ -228,8 +228,14 @@ function _get_statistiques_projet(&$PDOdb){
 		. "\n" . ' FROM ' . MAIN_DB_PREFIX . 'projet AS p'
 		. "\n" . ' INNER JOIN ' . MAIN_DB_PREFIX . 'projet_extrafields AS pe ON pe.fk_object = p.rowid'
 		. ' WHERE 1 = 1';
-	$sqlProjectEndsAfterFilterStartDate  = ' AND pe.datefin  >= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->start));
-	$sqlProjectStartsBeforeFilterEndDate = ' AND pe.datevent <= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->end));
+
+	if ($conf->global->DOC2PROJECT_LACEVENEMENTS_USE_EVENT_DATES_IN_STATISTICS) {
+		$sqlProjectEndsAfterFilterStartDate  = ' AND pe.datefin  >= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->start));
+		$sqlProjectStartsBeforeFilterEndDate = ' AND pe.datevent <= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->end));
+	} else {
+		$sqlProjectEndsAfterFilterStartDate  = ' AND p.datee >= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->start));
+		$sqlProjectStartsBeforeFilterEndDate = ' AND p.dateo <= ' . $PDOdb->quote(date('Y-m-d', $projectDateFilter->end));
+	}
 	if (!empty($projectDateFilter->start_str)) $sql .= $sqlProjectEndsAfterFilterStartDate;
 	if (!empty($projectDateFilter->end_str))   $sql .= $sqlProjectStartsBeforeFilterEndDate;
 
@@ -248,9 +254,14 @@ function _get_statistiques_projet(&$PDOdb){
 	if (!empty($sortfield) && !empty($sortorder)) {
 		$sql .= $sortfield . ' ' . $sortorder;
 	} else {
-		$sql .= 'pe.datevent';
+		if ($conf->global->DOC2PROJECT_LACEVENEMENTS_USE_EVENT_DATES_IN_STATISTICS) {
+			$sql .= 'pe.datevent';
+		} else {
+			$sql .= 'p.dateo';
+		}
 	}
-	print '<pre>' . $sql . '</pre>' ;exit;
+//	print '<pre>' . $sql . '</pre>' ;
+//	exit;
 
 	$PDOdb->Execute($sql);
 
@@ -262,6 +273,8 @@ function _get_statistiques_projet(&$PDOdb){
 		$id_projet 								= $PDOdb->Get_field('IdProject');
 		$date_event 							= $PDOdb->Get_field('datevent');
 		$date_fin_event 					= $PDOdb->Get_field('datefin');
+		$project_date_start = $PDOdb->Get_field('dateo');
+		$project_date_end   = $PDOdb->Get_field('datee');
 		$total_vente 							= $PDOdb->Get_field('total_vente');
 		$total_vente_futur 				= $total_vente + $PDOdb->Get_field('total_vente_futur');
 		$total_vente_previsionnel = $PDOdb->Get_field('total_vente_previsionnel');
@@ -284,6 +297,8 @@ function _get_statistiques_projet(&$PDOdb){
 			"IdProject" 								=> $id_projet,
 			"datevent" 									=> $date_event,
 			"datefin" 									=> $date_fin_event,
+			'project_date_start'                        => $project_date_start,
+			'project_date_end'                          => $project_date_end,
 			"total_vente" 							=> $total_vente,
 			"total_vente_futur" 				=> $total_vente_futur,
 			"total_vente_previsionnel" 	=> $total_vente_previsionnel,
@@ -324,8 +339,13 @@ function _print_statistiques_projet(&$TRapport, $sortfield, $sortorder){
 				<tr style="text-align:center;" class="liste_titre nodrag nodrop">
 					<th class="liste_titre">Réf. Projet</th>
 					<?php
-					print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "pe.datevent", "", $params, "", $sortfield, $sortorder);
-					print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "pe.datefin", "", $params, "", $sortfield, $sortorder);
+					if ($conf->global->DOC2PROJECT_LACEVENEMENTS_USE_EVENT_DATES_IN_STATISTICS) {
+						print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "pe.datevent", "", $params, "", $sortfield, $sortorder);
+						print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "pe.datefin", "", $params, "", $sortfield, $sortorder);
+					} else {
+						print_liste_field_titre('Date début', $_SERVER["PHP_SELF"], "p.dateo", "", $params, "", $sortfield, $sortorder);
+						print_liste_field_titre('Date fin', $_SERVER["PHP_SELF"], "p.datee", "", $params, "", $sortfield, $sortorder);
+					}
 					?>
 					<th class="liste_titre">Type</th>
 					<th class="liste_titre">Total vente (€)</th>
@@ -364,8 +384,10 @@ function _print_statistiques_projet(&$TRapport, $sortfield, $sortorder){
 
 					$type = $TTypes[$project->array_options['options_typeevent']];
 
-					$date_debut = ($line['datevent'] !== false ? date('d/m/Y', strtotime($line['datevent'])) : '');
-					$date_fin = ($line['datefin'] !== false ? date('d/m/Y', strtotime($line['datefin'])) : '');
+//					$date_debut = ($line['datevent'] !== false ? date('d/m/Y', strtotime($line['datevent'])) : '');
+//					$date_fin = ($line['datefin'] !== false ? date('d/m/Y', strtotime($line['datefin'])) : '');
+					$date_debut = ($line['project_date_start'] !== false ? date('d/m/Y', strtotime($line['project_date_start'])) : '');
+					$date_fin = ($line['project_date_end'] !== false ? date('d/m/Y', strtotime($line['project_date_end'])) : '');
 					?>
 					<tr>
 						<td><?php echo $project->getNomUrl(1,'',1)  ?><br /><?php echo $client->getNomUrl(1); ?></td>
