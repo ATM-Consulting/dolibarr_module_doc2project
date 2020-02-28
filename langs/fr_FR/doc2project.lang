@@ -29,6 +29,7 @@ Doc2ProjectCreateSprintFromTitle=Créer les sprints en fonction des lignes titre
 DOC2PROJECT_TASK_NAME=Label à appliquer lors de la création des tâches
 DOC2PROJECT_TASK_NAME_HELP=Clés de substitutions :<br />- {product_ref} => référence du produit<br />- {product_label} => libellé de la ligne
 DOC2PROJECT_VALIDATE_CREATED_PROJECT=Valider automatiquement les projets créés depuis un devis ou une commande
+DOC2PROJECT_DISPLAY_LINKED_TASKS=Afficher sur les lignes de document les tâches qui leur sont liées (uniquement sur la fiche du document validé)
 
 Doc2ProjectTitle=%s
 Doc2ProjectProjectCreated=Projet %s créé
@@ -43,6 +44,7 @@ Doc2ProjectExcludedProducts=Ne pas convertir les services suivants
 Doc2ProjectExcludedProductsDesc=Renseigner les références des services à exclure, séparés par un point virgule
 Doc2ProjectDoNotConvertServiceWithPriceToZero=Ne pas convertir les services dont le prix est à 0
 Doc2ProjectDoNotConvertServiceWithQuantityToZero=Ne pas convertir les services dont la quantité est à 0
+LinkedTasks=Tâches liées
 
 
 SoldPrice=Prix vendu

@@ -19,6 +19,70 @@ class ActionsDoc2Project
 				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 				print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
 
+				// afficher les tâches liées aux lignes de document
+				if (!empty($conf->global->DOC2PROJECT_DISPLAY_LINKED_TASKS))
+				{
+					$jsonObjectData =array();
+
+					dol_include_once('/doc2project/lib/doc2project.lib.php');
+					foreach($object->lines as $i => $line)
+					{
+						$jsonObjectData[$line->id] = new stdClass();
+						$jsonObjectData[$line->id]->id = $line->id;
+						$tasksForLine = getTasksForLine($line);
+						$jsonObjectData[$line->id]->LinkedTask = empty($tasksForLine) ? '' : implode('<br>', $tasksForLine);
+					}
+					?>
+
+					<script type="application/javascript">
+						$( document ).ready(function() {
+
+							var jsonObjectData = <?php print json_encode($jsonObjectData) ; ?> ;
+
+							// ADD NEW COLS
+							$("#tablelines tr").each(function( index ) {
+
+								$colSpanBase = 1; // nombre de colonnes ajoutées
+
+								if($( this ).hasClass( "liste_titre" ))
+								{
+									// PARTIE TITRE
+									$('<td class="linecoltasks" style="width: 100px"><?php print $langs->transnoentities('LinkedTasks'); ?></td>').insertBefore($( this ).find("td.linecoldescription"));
+								}
+								else if($( this ).data( "product_type" ) == "9"){
+									$( this ).find("td[colspan]:first").attr('colspan',    parseInt($( this ).find("td[colspan]:first").attr('colspan')) + 1  );
+								}
+								else
+								{
+									// PARTIE LIGNE
+									var nobottom = '';
+									if($( this ).hasClass( "liste_titre_create" ) || $( this ).attr("data-element") == "extrafield" ){
+										nobottom = ' nobottom ';
+									}
+
+									// New columns
+									$('<td class="linecoltasks' + nobottom + '" style="width: 100px"></td>').insertBefore($( this ).find("td.linecoldescription"));
+
+
+									if($( this ).hasClass( "liste_titre_create" )){
+										$( this ).find("td.linecoledit").attr('colspan',    parseInt($( this ).find("td.linecoledit").attr('colspan')) + $colSpanBase  );
+									}
+
+								}
+							});
+
+							// Affichage des données
+							$.each(jsonObjectData, function(i, item) {
+								$("#row-" + jsonObjectData[i].id + " .linecoltasks:first").html(jsonObjectData[i].LinkedTask);
+								console.log("#row-" + jsonObjectData[i].id);
+							});
+
+						});
+					</script>
+					<?php
+
+				}
+
 				if(!empty($conf->global->DOC2PROJECT_PREVUE_BEFORE_CONVERT)){
 				    // Print la partie JS nécessaire à la popin
 				    dol_include_once('/doc2project/lib/doc2project.lib.php');

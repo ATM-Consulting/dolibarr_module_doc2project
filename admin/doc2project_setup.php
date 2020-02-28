@@ -105,6 +105,8 @@ if($ok) {
 
 	_print_title($langs->trans("Parameters"));
 
+	// Display linked tasks on document lines
+	_print_on_off('DOC2PROJECT_DISPLAY_LINKED_TASKS');
 
 	// Display convert button on proposal
 	if($conf->propal->enabled) {
