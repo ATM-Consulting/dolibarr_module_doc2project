@@ -118,7 +118,7 @@ class modDoc2Project extends DolibarrModules
 			array('DOC2PROJECT_AUTO_ON_ORDER_VALIDATE','chaine','0','Launch function when order is validated',1),
 			array('DOC2PROJECT_NB_HOURS_PER_DAY','chaine','7','Used to convert service duration in hours',1),
 			array('DOC2PROJECT_TASK_REF_PREFIX','chaine','TA','Prefix for task reference, will be used with proposal or order line ID to be unique',1)
-			
+
 		);
 
 		// Array to add new pages in new tabs
@@ -215,7 +215,7 @@ class modDoc2Project extends DolibarrModules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
-		 
+
 		 $this->menu[$r]=array(	'fk_menu'=>"fk_mainmenu=project,fk_leftmenu=doc2project",			                // Put 0 if this is a top menu
 								'type'=>'left',			                // This is a Top menu entry
 								'titre'=>'statistiques',
@@ -275,28 +275,28 @@ class modDoc2Project extends DolibarrModules
 	function init($options='')
 	{
 		global $langs;
-		
+
 		$sql = array();
 
 		$result=$this->_load_tables('/doc2project/sql/');
-		
+
 		$langs->load('doc2project@doc2prtoject');
-		
+
 		dol_include_once('/core/class/extrafields.class.php');
         $extrafields=new ExtraFields($this->db);
 		//$res = $extrafields->addExtraField('thm', $langs->trans('THM'), 'double', 0, '', 'user'); // existe déjà dans la base rajouté par MKO (même si moisi)
-		
+
 		if((float)DOL_VERSION<=3.5) {
 			$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'user ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
 	     	$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
 		}
-     	
+
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
 
         $extrafields=new ExtraFields($this->db);
         $param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
         $res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
-		
+
 		return $this->_init($sql, $options);
 	}
 
