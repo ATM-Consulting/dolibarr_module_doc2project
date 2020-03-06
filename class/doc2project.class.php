@@ -261,8 +261,8 @@ class Doc2Project {
 
 //var_dump($defaultref, $label,  $project->id);exit;
 		// si $line est de type 'stdClass', $line représente une ligne de nomenclature
-		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->rowid;
-		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $rowid, $object->element);
+//		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->rowid;
+		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $line->id, $line->element);
 
 
 	}
@@ -658,6 +658,9 @@ class Doc2Project {
 				if(! empty($fk_origin)) {
 					if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
 					elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+					elseif($origin_type == 'commandedet') $task->add_object_linked('orderline', $fk_origin);
+					elseif($origin_type == 'propaldet') $task->add_object_linked('propaldet', $fk_origin);
+					elseif($origin_type == 'nomenclaturedet') $task->add_object_linked('nomenclaturedet', $fk_origin);
 				}
 
 				return $task->id;
@@ -694,6 +697,9 @@ class Doc2Project {
 					if(! empty($fk_origin)) {
 						if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
 						elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+						elseif($origin_type == 'commandedet') $task->add_object_linked('orderline', $fk_origin);
+						elseif($origin_type == 'propaldet') $task->add_object_linked('propaldet', $fk_origin);
+						elseif($origin_type == 'nomenclaturedet') $task->add_object_linked('nomenclaturedet', $fk_origin);
 					}
 					return $r;
 				} else {
@@ -806,6 +812,8 @@ class Doc2Project {
             $lineNomenclature->array_options = $line->array_options;
             $lineNomenclature->date_start = $line->date_start;
             $lineNomenclature->date_end = $line->date_end;
+            $lineNomenclature->element = 'nomenclaturedet';
+            $lineNomenclature->id = $lineNomenclature->rowid;
             if (!empty($fk_task_parent)) $lineNomenclature->rowid = $fk_task_parent.'-'.$lineNomenclature->rowid;
             $new_fk_task_parent = self::lineToTask($object, $lineNomenclature, $project, $start, $end, $fk_task_parent, false, 0, $stories);
             if (!empty($detailNomen['childs']))
