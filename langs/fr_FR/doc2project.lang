@@ -46,8 +46,6 @@ Doc2ProjectDoNotConvertServiceWithPriceToZero=Ne pas convertir les services dont
 Doc2ProjectDoNotConvertServiceWithQuantityToZero=Ne pas convertir les services dont la quantité est à 0
 LinkedTasks=Tâches liées
 
-
-SoldPrice=Prix vendu
 CostEffective=Coût effectif (temps consommé)
 SoldPrice=Montant vendu
 TotalBill=Montant total des factures
