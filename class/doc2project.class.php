@@ -685,7 +685,7 @@ class Doc2Project {
 				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
-				if ($origin_type === ' propal') $task->origin = 'propaldet';
+				if ($origin_type === 'propal') $task->origin = 'propaldet';
 				elseif ($origin_type === 'commande') $task->origin = 'orderline';
 
 				$r = $task->create($user);
