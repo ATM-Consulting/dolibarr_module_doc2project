@@ -224,6 +224,7 @@ class Doc2Project {
 				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600 * $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
 				$nbDays = $line->qty * (empty($product->duration_value)?0:$product->duration_value);
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600;
 				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 			} else if($product->duration_unit == 'i') { // Service vendu à la minute
                 $durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 60;
