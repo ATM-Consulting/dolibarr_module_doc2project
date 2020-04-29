@@ -192,10 +192,10 @@ function _get_statistiques_projet(&$PDOdb){
     ) as total_cout_homme
 
 
-            FROM ".MAIN_DB_PREFIX."projet as p INNER JOIN ".MAIN_DB_PREFIX."projet_extrafields pe ON p.rowid = pe.fk_object
+            FROM ".MAIN_DB_PREFIX."projet as p INNER JOIN ".MAIN_DB_PREFIX."projet_extrafields pe ON p.rowid = pe.fk_object WHERE p.entity IN (".getEntity('project').")
      ";
 
-    if($idprojet > 0) $sql.= " WHERE p.rowid = ".$idprojet;
+    if($idprojet > 0) $sql.= " AND p.rowid = ".$idprojet;
 
     $sql.=" ORDER BY ";
 
