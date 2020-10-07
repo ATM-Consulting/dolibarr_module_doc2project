@@ -160,6 +160,8 @@ if($ok) {
     );
 	_print_input_form_part('DOC2PROJECT_NB_HOURS_PER_DAY', $langs->trans("NbHoursPerDay"), '', $metas);
 
+	// Calculer les dates des tâches ajoutées en fonction de la vélocité (Nombre d'heures journalier)
+	_print_on_off('DOC2PROJECT_TASK_RECALC_DATE_BY_VELOCITY');
 
 
 

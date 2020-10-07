@@ -168,6 +168,18 @@ class Doc2Project {
 		return false;
 	}
 
+	/**
+	 * @param $object
+	 * @param $line
+	 * @param $project
+	 * @param $start
+	 * @param $end
+	 * @param int $fk_task_parent
+	 * @param false $isParent
+	 * @param int $fk_workstation
+	 * @param string $story
+	 * @return int  0 on error and task rowid on success
+	 */
 	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_task_parent=0,$isParent=false,$fk_workstation=0,$story='') {
 
 		global $conf,$langs,$db,$user;
@@ -296,6 +308,8 @@ class Doc2Project {
 		$linesExcluded =0;
 		$linesImportError =0;
 
+		$TTaskAddedList = array(); // populate with task id
+
 		// CREATION DES TACHES PAR RAPPORT AUX LIGNES DE LA COMMANDE
 		foreach($object->lines as &$line)
 		{
@@ -339,6 +353,8 @@ class Doc2Project {
                         $object->element);
 
 					$TTask_id_parent[$index+1] = $fk_task_parent; //+1 pcq je replace le titre à son niveau (exemple : titre niveau 2 à l'indice 2)
+
+					$TTaskAddedList[] = $fk_task_parent;
 				}
 				elseif (TSubtotal::isFreeText($line))
                 {
@@ -369,6 +385,7 @@ class Doc2Project {
 						$lastCreateTask = self::nomenclatureToTask($nomenclature,$line,$object, $project, $start, $end,$story);
 					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
 					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,$fk_parent,$isParent,$fk_workstation,$story);
+						$TTaskAddedList[] = $lastCreateTask;
 					}
 				}
 			}
@@ -407,7 +424,8 @@ class Doc2Project {
 									$line->desc = '';
 									$line->total_ht = 0;
 
-									self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$story);
+									$resLineToTask = self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$story);
+									if($resLineToTask>0){ $TTaskAddedList[] = $resLineToTask; }
 								}
 							}
 						}
@@ -425,6 +443,8 @@ class Doc2Project {
 								$line->total_ht = $ss->price;
 
 								$new_fk_parent =   self::lineToTask($object,$line,$project,$start,$end,$fk_parent);
+
+								if($new_fk_parent>0){ $TTaskAddedList[] = $new_fk_parent; }
 
 								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
 									dol_include_once('/workstation/class/workstation.class.php');
@@ -444,9 +464,13 @@ class Doc2Project {
 											$line->desc = '';
 											$line->total_ht = 0;
 
-											if(!self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story))
+											$resLineToTask = self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story);
+
+											if(!$resLineToTask)
 											{
 											    $linesImportError ++;
+											}else{
+												$TTaskAddedList[] = $resLineToTask;
 											}
 										}
 									}
@@ -454,10 +478,14 @@ class Doc2Project {
 							}
 						}
 					}else{
+						$resLineToTask = self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story);
 
-					    if(!self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story)){
-					        $linesImportError ++;
-					    }
+						if(!$resLineToTask)
+						{
+							$linesImportError ++;
+						}else{
+							$TTaskAddedList[] = $resLineToTask;
+						}
 					}
 				}
 				else{
@@ -485,6 +513,8 @@ class Doc2Project {
                     if(!$skip && !$fk_task){
 				        $linesImportError ++;
 				    } else {
+                    	$TTaskAddedList[] = $fk_task;
+
                         if (!empty($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS) && !empty($conf->nomenclature->enabled))
                         {
                             if (in_array($conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS, array('onlyTNomenclatureDet', 'both')))
@@ -507,8 +537,104 @@ class Doc2Project {
 			$project->array_options['options_stories'] = implode(',', $TStory);
 			$project->update($user);
 		}
+
+		// recalcule les date des tâches et du projet en fonction de la vélocité
+		if(!empty($conf->global->DOC2PROJECT_TASK_RECALC_DATE_BY_VELOCITY)){
+			self::resetDateTaskForProjectFromTaskList($project, $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY * 3600, $TTaskAddedList);
+		}
 	}
 
+	/**
+	 * Function get from module Scrumboard
+	 * Calc task delivery date for task according to velocity
+	 *
+	 * @param Task $task
+	 * @param int $velocity time in second : 3600 = 1 hour
+	 * @param int $time timestamp for start date
+	 * @return float|int
+	 */
+	static function getDeliveryDateWithVelocity(&$task, $velocity, $time=null) {
+
+		if( (float)DOL_VERSION <= 3.4 || $velocity==0) {
+			return 0;
+		}
+		else {
+			$rest = $task->planned_workload - $task->duration_effective; // nombre de seconde restante
+
+			if(is_null($time)) {
+				$time = time();
+				if($time<$task->start_date)$time = $task->start_date;
+			}
+
+			$time += ( 86400 * $rest / $velocity  )  ;
+
+			return $time;
+		}
+	}
+
+	/**
+	 * Function get from module Scrumboard
+	 *
+	 * @param Project  $project
+	 * @param int $velocity
+	 * @return false
+	 */
+	static function resetDateTaskForProject($project, $velocity) {
+		global $user;
+
+		if($velocity==0) return false;
+
+		$TaskList = array();
+
+		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."projet_task ";
+		$sql.= " WHERE fk_projet=".$project->id." AND progress < 100 ";
+		$sql.= " ORDER BY rang ";
+
+		$res = $project->db->query($sql);
+
+		if($res){
+			while($obj =$project->db->fetch_object($res)) {
+				$TaskList[] = $obj->rowid;
+			}
+		}
+
+		return self::resetDateTaskForProjectFromTaskList($project, $velocity, $TaskList);
+	}
+
+	/**
+	 * Function get from module Scrumboard
+	 *
+	 * @param Project  $project
+	 * @param int $velocity
+	 * @param int[] $TaskList array of id of tasks
+	 * @return false
+	 */
+	static function resetDateTaskForProjectFromTaskList($project, $velocity, $TaskList = array()) {
+		global $user;
+
+		if($velocity==0) return false;
+
+		$current_time = time();
+		if(!empty($TaskList)){
+			foreach($TaskList as $id) {
+
+				$task=new Task($project->db);
+				$task->fetch($id);
+
+				if($task->progress>=100) continue;
+				if($task->progress==0) $task->date_start = $current_time;
+
+				$task->date_end = self::getDeliveryDateWithVelocity($task, $velocity, $current_time);
+
+				$current_time = $task->date_end;
+
+				$task->update($user);
+			}
+		}
+
+		$project->date_end = $current_time;
+		$project->update($user);
+	}
 
 	public static function searchTask($fk_project,$label='', $story='')
 	{
