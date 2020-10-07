@@ -103,10 +103,11 @@ if($ok) {
 	$var=false;
 	print '<table class="noborder liste" width="100%">';
 
-	_print_title($langs->trans("Parameters"));
+	/**
+	 * SOURCE DOCUMENTS PARAMETERS
+	 */
+	_print_title($langs->trans("Doc2ProjectDocumentsSourceParameters"));
 
-	// Display linked tasks on document lines
-	_print_on_off('DOC2PROJECT_DISPLAY_LINKED_TASKS');
 
 	// Display convert button on proposal
 	if($conf->propal->enabled) {
@@ -118,15 +119,38 @@ if($ok) {
 	    _print_on_off('DOC2PROJECT_DISPLAY_ON_ORDER', $langs->trans('DisplayOnOrder'));
 	}
 
-	_print_on_off('DOC2PROJECT_SET_PROJECT_DRAFT');
+	// Display linked tasks on document lines
+	_print_on_off('DOC2PROJECT_DISPLAY_LINKED_TASKS');
+
+	/**
+	 * PROJECT PARAMETERS
+	 */
+	_print_title($langs->trans("Doc2ProjectParameters"));
+
 
 	$metas = array( 'placeholder'=> $langs->trans('Doc2ProjectTitle', '{refclient/ref}').' '.$langs->trans('DocConverted') );
 	_print_input_form_part('DOC2PROJECT_TITLE_PROJECT', false, '', $metas, 'input', $langs->trans('DOC2PROJECT_TITLE_PROJECT_info'));
 
+	// Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
+	_print_on_off('DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER', $langs->trans('Doc2ProjectAutoAffectProjectLeader'));
+
+	_print_on_off('DOC2PROJECT_SET_PROJECT_DRAFT');
+
+	// Créer et valider un projet sur la validation d'une commande client
+	_print_on_off('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER', $langs->trans('Doc2ProjectValidateProjectOnValidateOrder'));
+
+	_print_on_off('DOC2PROJECT_VALIDATE_CREATED_PROJECT');
+
+	// Clôturer le projet sur la validation d'une expédition
+	_print_on_off('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION', $langs->trans('Doc2ProjectClotureProjectOnValidateExpedition'));
+
+	/**
+	 * TASK PARAMETERS
+	 */
+	_print_title($langs->trans("Doc2ProjectTasksParameters"));
 
 	// Task prefix
 	_print_input_form_part('DOC2PROJECT_TASK_REF_PREFIX', $langs->trans("TaskRefPrefix"));
-
 
 	// Nb hour a day
 	$metas = array(
@@ -136,12 +160,8 @@ if($ok) {
     );
 	_print_input_form_part('DOC2PROJECT_NB_HOURS_PER_DAY', $langs->trans("NbHoursPerDay"), '', $metas);
 
-	// Créer et valider un projet sur la validation d'une commande client
-	_print_on_off('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER', $langs->trans('Doc2ProjectValidateProjectOnValidateOrder'));
 
 
-	// Clôturer le projet sur la validation d'une expédition
-	_print_on_off('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION', $langs->trans('Doc2ProjectClotureProjectOnValidateExpedition'));
 
 	// Créer la le service initial en tant que tâche parente des sous-produits associés
 	_print_on_off('DOC2PROJECT_CREATE_TASK_FOR_PARENT', $langs->trans('Doc2ProjectCreateTaskForParent'));
@@ -164,8 +184,6 @@ if($ok) {
 	// Créer des tâches correspondant aux titres afin de garder une hiérarchie (module "Subtotal" requis)
 	_print_on_off('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL', $langs->trans('Doc2ProjectCreateTaskWithSubtotal'), '', $langs->trans("Doc2ProjectCreateTaskWithSubtotalTooltip"));
 
-	// Créer les sprints en fonction des lignes titres contenus dans le document
-	_print_on_off('DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER', $langs->trans('Doc2ProjectAutoAffectProjectLeader'));
 
 	// Créer les sprints en fonction des lignes titres contenus dans le document
 	if($conf->subtotal->enabled && $conf->scrumboard->enabled){
@@ -222,7 +240,6 @@ if($ok) {
     print '</form>';
     print '</td></tr>';
 
-    _print_on_off('DOC2PROJECT_VALIDATE_CREATED_PROJECT');
 
 } else {
 	print $langs->trans('ModuleNeedProposalOrOrderModule');
