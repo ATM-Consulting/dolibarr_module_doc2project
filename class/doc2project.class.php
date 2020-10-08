@@ -551,7 +551,7 @@ class Doc2Project {
 	 * @param Task $task
 	 * @param int $velocity time in second : 3600 = 1 hour
 	 * @param int $time timestamp for start date
-	 * @return float|int
+	 * @return int timestamp
 	 */
 	static function getDeliveryDateWithVelocity(&$task, $velocity, $time=null) {
 
@@ -566,7 +566,7 @@ class Doc2Project {
 				if($time<$task->start_date)$time = $task->start_date;
 			}
 
-			$time += ( 86400 * $rest / $velocity  )  ;
+			$time += intval( 86400 * $rest / $velocity  ) ;
 
 			return $time;
 		}
@@ -577,7 +577,7 @@ class Doc2Project {
 	 *
 	 * @param Project  $project
 	 * @param int $velocity
-	 * @return false
+	 * @return int                  <=0 if KO, >0 if OK
 	 */
 	static function resetDateTaskForProject($project, $velocity) {
 		global $user;
@@ -607,7 +607,7 @@ class Doc2Project {
 	 * @param Project  $project
 	 * @param int $velocity
 	 * @param int[] $TaskList array of id of tasks
-	 * @return false
+	 * @return int <=0 if KO, >0 if OK
 	 */
 	static function resetDateTaskForProjectFromTaskList($project, $velocity, $TaskList = array()) {
 		global $user;
@@ -633,7 +633,7 @@ class Doc2Project {
 		}
 
 		$project->date_end = $current_time;
-		$project->update($user);
+		return $project->update($user);
 	}
 
 	public static function searchTask($fk_project,$label='', $story='')
