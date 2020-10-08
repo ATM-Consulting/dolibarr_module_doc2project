@@ -473,12 +473,13 @@ function getTasksForLine($line)
 	global $conf, $db;
 	$tab = array();
 
-	if ($line->element == "commandedet") $line->element = 'orderline';
+	$elementToUse = $line->element;
+	if ($line->element == "commandedet") $elementToUse = 'orderline';
 
 	$sql = "SELECT rowid, fk_source, sourcetype, fk_target, targettype
 			FROM ".MAIN_DB_PREFIX."element_element
-			WHERE (fk_source = ".$line->id." AND sourcetype = 'orderline')
-			OR (fk_target = ".$line->id." AND targettype = 'orderline')
+			WHERE (fk_source = ".$line->id." AND sourcetype = '".$elementToUse."')
+			OR (fk_target = ".$line->id." AND targettype = '".$elementToUse."')
 			ORDER BY sourcetype";
 	$resql = $db->query($sql);
 	if ($resql)
