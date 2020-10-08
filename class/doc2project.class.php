@@ -169,13 +169,13 @@ class Doc2Project {
 	}
 
 	/**
-	 * @param $object
-	 * @param $line
-	 * @param $project
-	 * @param $start
-	 * @param $end
+	 * @param CommonObject $object
+	 * @param CommonObjectLine $line
+	 * @param Project $project
+	 * @param int $start timestamp
+	 * @param int $end timestamp
 	 * @param int $fk_task_parent
-	 * @param false $isParent
+	 * @param bool $isParent
 	 * @param int $fk_workstation
 	 * @param string $story
 	 * @return int  0 on error and task rowid on success
