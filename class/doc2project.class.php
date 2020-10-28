@@ -229,17 +229,20 @@ class Doc2Project {
 		else if($line->fk_product!=null){
 			$product->fetch($line->fk_product);
 
-			// On part du principe que les services sont vendus à l'heure ou au jour. Pas au mois ni autre.
-
-			$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600;
+            //ne gère que les services vendus par jour/heure/minute
 
 			$nbDays = 0;
 			if($product->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-				$durationInSec *= $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600 * $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
 				$nbDays = $line->qty * (empty($product->duration_value)?0:$product->duration_value);
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
+				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600;
 				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
-			}
+			} else if($product->duration_unit == 'i') { // Service vendu à la minute
+                $durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 60;
+            } else {
+                $durationInSec = 0;
+            }
 		}
 
 		// Si les 2 méthodes d'avant ne sont pas appelées ou que le résultat vos 0, alors on calcule avec la conf de doc2project
@@ -808,7 +811,7 @@ class Doc2Project {
 				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
-				if ($origin_type === ' propal') $task->origin = 'propaldet';
+				if ($origin_type === 'propal') $task->origin = 'propaldet';
 				elseif ($origin_type === 'commande') $task->origin = 'orderline';
 
 				$r = $task->create($user);
