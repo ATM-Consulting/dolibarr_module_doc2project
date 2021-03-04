@@ -117,14 +117,14 @@ class InterfaceDoc2Projecttrigger
         // Put here code you want to execute when a Dolibarr business events occurs.
         // Data and type of action are stored into $object and $action
         // Users
-        
+
     //    exit($action);
-        
+
         if ($action === 'TASK_TIMESPENT_CREATE') {
-        	
+
 			if((float)DOL_VERSION<=3.5) {
 				$ttId = (int)$this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
-				
+
 				$resql = $this->db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->timespent_fk_user);
 				$res =  $this->db->fetch_object($resql);
 				$thm = $res->thm;
@@ -136,19 +136,19 @@ class InterfaceDoc2Projecttrigger
                 $u->fetch($object->timespent_fk_user);
                 $thm = $u->thm;
 			}
-			
+
 			$this->db->commit();
 
 			$sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
 			$this->db->query($sql);
-			
+
 			dol_syslog(
                 "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
             );
-			
-        } 
+
+        }
 		else if($action==='USER_MODIFY') {
-			
+
 			if((float)DOL_VERSION>=3.6) {
 				$object->thm = price2num( GETPOST('thm') );
 	           	$object->update($user,1);
@@ -165,37 +165,46 @@ class InterfaceDoc2Projecttrigger
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
 			dol_include_once('/doc2project/class/doc2project.class.php');
-			
-			// Petit hack pour simuler la provenance de doc2project ("from" et "type" sont défini en paramètre sur le lien de création en manuel)
-			$_REQUEST['from'] = 'doc2project';
-			$_REQUEST['type'] = 'commande';
-			
-			if($project = Doc2Project::createProject($object)) {
-			
-				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
-				$end = '';
-				Doc2Project::parseLines($object, $project, $start, $end);
-				$project->setValid($user);
-			
+
+
+
+			if(!empty($object->socid)) {
+				$soc = new Societe($db);
+				$res = $soc->fetch($object->socid);
 			}
-				
-			
+
+			if($soc->name != "ECLATEC" && $soc->name != "METALEC") {
+
+				// Petit hack pour simuler la provenance de doc2project ("from" et "type" sont défini en paramètre sur le lien de création en manuel)
+				$_REQUEST['from'] = 'doc2project';
+				$_REQUEST['type'] = 'commande';
+
+				if ($project = Doc2Project::createProject($object)) {
+
+					$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
+					$end = '';
+					Doc2Project::parseLines($object, $project, $start, $end);
+					$project->setValid($user);
+
+				}
+			}
+
 		}
 		else if ($action == 'SHIPPING_VALIDATE' && !empty($conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION))
 		{
 			if ($object->origin == 'commande' && !empty($object->origin_id))
 			{
 				$langs->load('doc2project@doc2project');
-				
+
 				$commande = new Commande($db);
 				$r = $commande->fetch($object->origin_id);
-				
+
 				if ($r > 0)
 				{
 					dol_include_once('/projet/class/project.class.php');
 					$project = new Project($db);
 					$r = $project->fetch($commande->fk_project);
-					
+
 					if ($r > 0)
 					{
 						if ($project->statut == 0) setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorProjectCantBeClose', $project->ref), 'errors');
@@ -208,19 +217,19 @@ class InterfaceDoc2Projecttrigger
 						}
 					}
 					else setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorProjectNotFound'), 'errors');
-			
+
 				}
 				else setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCommandeNotFound'), 'errors');
-				
+
 			}
-			
+
 		}
-		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande') 
+		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande')
 		{
 			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
-			
+
 			if ($facture->type == Facture::TYPE_SITUATION)
 			{
 				$fk_commande = GETPOST('originid', 'int');
@@ -245,5 +254,5 @@ class InterfaceDoc2Projecttrigger
         return 0;
     }
 
-	
+
 }
