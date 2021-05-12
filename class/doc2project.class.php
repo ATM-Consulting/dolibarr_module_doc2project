@@ -243,7 +243,6 @@ class Doc2Project {
 			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,$Trans);
 
 			if(strpos($eval,'return ')===false)$eval = 'return ('.$eval.');';
-
 			$durationInSec = eval($eval) * 3600;
 			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
 
@@ -609,7 +608,7 @@ class Doc2Project {
 	 */
 	public static function nomenclatureToTask($detailsNomenclature,$line,$object, $project, $start, $end,$stories='')
 	{
-		global $db;
+		global $db, $user;
 		foreach ($detailsNomenclature as &$lineNomen)
 		{
 			//Conversion du tableau en objet
@@ -643,6 +642,7 @@ class Doc2Project {
 				}
 
 				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
+				if(empty($lineNomenclature->total_ht)) $lineNomenclature->total_ht = $line->total_ht;
 				self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
 
 			} elseif(!empty($lineNomenclature->childs)){
