@@ -193,7 +193,7 @@ if($ok) {
 	}
 
 	// Créer autant de tâches qu'il y a de postes de travail associés au produit/service
-	if($conf->workstation->enabled){
+	if($conf->workstationatm->enabled){
 	    _print_on_off('DOC2PROJECT_WITH_WORKSTATION', $langs->trans('Doc2projectWithWorkstation'), '', $langs->trans('Doc2projectWithWorkstation'));
 	}
 

@@ -38,13 +38,15 @@ class modDoc2Project extends DolibarrModules
 	 */
 	function __construct($db)
 	{
-        global $langs,$conf;
+		global $langs,$conf;
 
-        $this->db = $db;
+		$this->db = $db;
 
 		// Id for module (must be unique).
 		// Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
 		$this->numero = 104250; // 104000 to 104999 for ATM CONSULTING
+		$this->editor_name = 'ATM Consulting';
+		$this->editor_url = 'https://www.atm-consulting.fr';
 		// Key text used to identify module (for permissions, menus, etc...)
 		$this->rights_class = 'doc2project';
 
@@ -56,7 +58,7 @@ class modDoc2Project extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '2.2.0';
+		$this->version = '3.0.0';
 		// Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		// Where to store the module in setup page (0=common,1=interface,2=others,3=very specific)
@@ -123,8 +125,8 @@ class modDoc2Project extends DolibarrModules
 
 		// Array to add new pages in new tabs
 		// Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@doc2project:$user->rights->doc2project->read:/doc2project/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
-        //                              'objecttype:+tabname2:Title2:mylangfile@doc2project:$user->rights->othermodule->read:/doc2project/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
-        //                              'objecttype:-tabname:NU:conditiontoremove');                                                     						// To remove an existing tab identified by code tabname
+		//                              'objecttype:+tabname2:Title2:mylangfile@doc2project:$user->rights->othermodule->read:/doc2project/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
+		//                              'objecttype:-tabname:NU:conditiontoremove');                                                     						// To remove an existing tab identified by code tabname
 		// where objecttype can be
 		// 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
 		// 'contact'          to add a tab in contact view
@@ -145,34 +147,34 @@ class modDoc2Project extends DolibarrModules
 		// 'stock'            to add a tab in stock view
 		// 'thirdparty'       to add a tab in third party view
 		// 'user'             to add a tab in user view
-        $this->tabs = array();
+		$this->tabs = array();
 
-        // Dictionaries
-	    if (! isset($conf->doc2project->enabled))
-        {
-        	$conf->doc2project=new stdClass();
-        	$conf->doc2project->enabled=0;
-        }
+		// Dictionaries
+		if (! isset($conf->doc2project->enabled))
+		{
+			$conf->doc2project=new stdClass();
+			$conf->doc2project->enabled=0;
+		}
 		$this->dictionaries=array();
-        /* Example:
-        if (! isset($conf->doc2project->enabled)) $conf->doc2project->enabled=0;	// This is to avoid warnings
-        $this->dictionaries=array(
-            'langs'=>'mylangfile@doc2project',
-            'tabname'=>array(MAIN_DB_PREFIX."table1",MAIN_DB_PREFIX."table2",MAIN_DB_PREFIX."table3"),		// List of tables we want to see into dictonnary editor
-            'tablib'=>array("Table1","Table2","Table3"),													// Label of tables
-            'tabsql'=>array('SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table1 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table2 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table3 as f'),	// Request to select fields
-            'tabsqlsort'=>array("label ASC","label ASC","label ASC"),																					// Sort order
-            'tabfield'=>array("code,label","code,label","code,label"),																					// List of fields (result of select to show dictionary)
-            'tabfieldvalue'=>array("code,label","code,label","code,label"),																				// List of fields (list of fields to edit a record)
-            'tabfieldinsert'=>array("code,label","code,label","code,label"),																			// List of fields (list of fields for insert)
-            'tabrowid'=>array("rowid","rowid","rowid"),																									// Name of columns with primary key (try to always name it 'rowid')
-            'tabcond'=>array($conf->doc2project->enabled,$conf->doc2project->enabled,$conf->doc2project->enabled)												// Condition to show each dictionary
-        );
-        */
+		/* Example:
+		if (! isset($conf->doc2project->enabled)) $conf->doc2project->enabled=0;	// This is to avoid warnings
+		$this->dictionaries=array(
+			'langs'=>'mylangfile@doc2project',
+			'tabname'=>array(MAIN_DB_PREFIX."table1",MAIN_DB_PREFIX."table2",MAIN_DB_PREFIX."table3"),		// List of tables we want to see into dictonnary editor
+			'tablib'=>array("Table1","Table2","Table3"),													// Label of tables
+			'tabsql'=>array('SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table1 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table2 as f','SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table3 as f'),	// Request to select fields
+			'tabsqlsort'=>array("label ASC","label ASC","label ASC"),																					// Sort order
+			'tabfield'=>array("code,label","code,label","code,label"),																					// List of fields (result of select to show dictionary)
+			'tabfieldvalue'=>array("code,label","code,label","code,label"),																				// List of fields (list of fields to edit a record)
+			'tabfieldinsert'=>array("code,label","code,label","code,label"),																			// List of fields (list of fields for insert)
+			'tabrowid'=>array("rowid","rowid","rowid"),																									// Name of columns with primary key (try to always name it 'rowid')
+			'tabcond'=>array($conf->doc2project->enabled,$conf->doc2project->enabled,$conf->doc2project->enabled)												// Condition to show each dictionary
+		);
+		*/
 
-        // Boxes
+		// Boxes
 		// Add here list of php file(s) stored in core/boxes that contains class to show a box.
-        $this->boxes = array();			// List of boxes
+		$this->boxes = array();			// List of boxes
 		// Example:
 		//$this->boxes=array(array(0=>array('file'=>'myboxa.php','note'=>'','enabledbydefaulton'=>'Home'),1=>array('file'=>'myboxb.php','note'=>''),2=>array('file'=>'myboxc.php','note'=>'')););
 
@@ -252,7 +254,7 @@ class modDoc2Project extends DolibarrModules
 		// Example:
 		// $this->export_code[$r]=$this->rights_class.'_'.$r;
 		// $this->export_label[$r]='CustomersInvoicesAndInvoiceLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
-        // $this->export_enabled[$r]='1';                               // Condition to show export in list (ie: '$user->id==3'). Set to 1 to always show when module is enabled.
+		// $this->export_enabled[$r]='1';                               // Condition to show export in list (ie: '$user->id==3'). Set to 1 to always show when module is enabled.
 		// $this->export_permission[$r]=array(array("facture","facture","export"));
 		// $this->export_fields_array[$r]=array('s.rowid'=>"IdCompany",'s.nom'=>'CompanyName','s.address'=>'Address','s.zip'=>'Zip','s.town'=>'Town','s.fk_pays'=>'Country','s.phone'=>'Phone','s.siren'=>'ProfId1','s.siret'=>'ProfId2','s.ape'=>'ProfId3','s.idprof4'=>'ProfId4','s.code_compta'=>'CustomerAccountancyCode','s.code_compta_fournisseur'=>'SupplierAccountancyCode','f.rowid'=>"InvoiceId",'f.facnumber'=>"InvoiceRef",'f.datec'=>"InvoiceDateCreation",'f.datef'=>"DateInvoice",'f.total'=>"TotalHT",'f.total_ttc'=>"TotalTTC",'f.tva'=>"TotalVAT",'f.paye'=>"InvoicePaid",'f.fk_statut'=>'InvoiceStatus','f.note'=>"InvoiceNote",'fd.rowid'=>'LineId','fd.description'=>"LineDescription",'fd.price'=>"LineUnitPrice",'fd.tva_tx'=>"LineVATRate",'fd.qty'=>"LineQty",'fd.total_ht'=>"LineTotalHT",'fd.total_tva'=>"LineTotalTVA",'fd.total_ttc'=>"LineTotalTTC",'fd.date_start'=>"DateStart",'fd.date_end'=>"DateEnd",'fd.fk_product'=>'ProductId','p.ref'=>'ProductRef');
 		// $this->export_entities_array[$r]=array('s.rowid'=>"company",'s.nom'=>'company','s.address'=>'company','s.zip'=>'company','s.town'=>'company','s.fk_pays'=>'company','s.phone'=>'company','s.siren'=>'company','s.siret'=>'company','s.ape'=>'company','s.idprof4'=>'company','s.code_compta'=>'company','s.code_compta_fournisseur'=>'company','f.rowid'=>"invoice",'f.facnumber'=>"invoice",'f.datec'=>"invoice",'f.datef'=>"invoice",'f.total'=>"invoice",'f.total_ttc'=>"invoice",'f.tva'=>"invoice",'f.paye'=>"invoice",'f.fk_statut'=>'invoice','f.note'=>"invoice",'fd.rowid'=>'invoice_line','fd.description'=>"invoice_line",'fd.price'=>"invoice_line",'fd.total_ht'=>"invoice_line",'fd.total_tva'=>"invoice_line",'fd.total_ttc'=>"invoice_line",'fd.tva_tx'=>"invoice_line",'fd.qty'=>"invoice_line",'fd.date_start'=>"invoice_line",'fd.date_end'=>"invoice_line",'fd.fk_product'=>'product','p.ref'=>'product');
@@ -269,7 +271,7 @@ class modDoc2Project extends DolibarrModules
 	 *		The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
 	 *		It also creates data directories
 	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
+	 *      @param      string	$options    Options when enabling module ('', 'noboxes')
 	 *      @return     int             	1 if OK, 0 if KO
 	 */
 	function init($options='')
@@ -283,19 +285,19 @@ class modDoc2Project extends DolibarrModules
 		$langs->load('doc2project@doc2prtoject');
 
 		dol_include_once('/core/class/extrafields.class.php');
-        $extrafields=new ExtraFields($this->db);
+		$extrafields=new ExtraFields($this->db);
 		//$res = $extrafields->addExtraField('thm', $langs->trans('THM'), 'double', 0, '', 'user'); // existe déjà dans la base rajouté par MKO (même si moisi)
 
 		if((float)DOL_VERSION<=3.5) {
 			$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'user ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
-	     	$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
+		 	$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
 		}
 
 		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
 
-        $extrafields=new ExtraFields($this->db);
-        $param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
-        $res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
+		$extrafields=new ExtraFields($this->db);
+		$param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
+		$res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
 
 		return $this->_init($sql, $options);
 	}
@@ -305,7 +307,7 @@ class modDoc2Project extends DolibarrModules
 	 *      Remove from database constants, boxes and permissions from Dolibarr database.
 	 *		Data directories are not deleted
 	 *
-     *      @param      string	$options    Options when enabling module ('', 'noboxes')
+	 *      @param      string	$options    Options when enabling module ('', 'noboxes')
 	 *      @return     int             	1 if OK, 0 if KO
 	 */
 	function remove($options='')
