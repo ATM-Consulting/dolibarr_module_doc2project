@@ -1,4 +1,6 @@
 <?php 
+if (!defined("NOCSRFCHECK")) define('NOCSRFCHECK', 1);
+if (!defined("NOTOKENRENEWAL")) define('NOTOKENRENEWAL', 1);
 
 require('../config.php');
 /*if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL)){

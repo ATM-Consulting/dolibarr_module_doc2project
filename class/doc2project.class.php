@@ -208,10 +208,10 @@ class Doc2Project {
 
 			);
 
-			if(!empty($conf->workstation->enabled) && $fk_workstation>0) {
+			if(!empty($conf->workstationatm->enabled) && $fk_workstation>0) {
 				define('INC_FROM_DOLIBARR',true);
-				dol_include_once('/workstation/config.php');
-				dol_include_once('/workstation/class/workstation.class.php');
+				dol_include_once('/workstationatm/config.php');
+				dol_include_once('/workstationatm/class/workstation.class.php');
 				$PDOdb=new TPDOdb;
 				$ws = new TWorkstation;
 				$ws->load($PDOdb, $fk_workstation);
@@ -409,8 +409,8 @@ class Doc2Project {
 						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
 							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$story);
 
-							if($conf->workstation->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
-								dol_include_once('/workstation/class/workstation.class.php');
+							if($conf->workstationatm->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
+								dol_include_once('/workstationatm/class/workstation.class.php');
 
 								$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
 
@@ -449,8 +449,8 @@ class Doc2Project {
 
 								if($new_fk_parent>0){ $TTaskAddedList[] = $new_fk_parent; }
 
-								if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
-									dol_include_once('/workstation/class/workstation.class.php');
+								if(!empty($conf->workstationatm->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
+									dol_include_once('/workstationatm/class/workstation.class.php');
 
 									$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
 									if(!empty($Tids)) {
@@ -1003,10 +1003,10 @@ class Doc2Project {
 		}
 
 		// RECUPERATION DES WORKSTATIONS
-		if(!empty($conf->workstation->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION) && !empty($curentNomenclature) )
+		if(!empty($conf->workstationatm->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION) && !empty($curentNomenclature) )
 		{
 
-		    dol_include_once('/workstation/class/workstation.class.php');
+		    dol_include_once('/workstationatm/class/workstation.class.php');
 		    if(!empty($curentNomenclature->TNomenclatureWorkstation))
 		    {
 		        foreach ($curentNomenclature->TNomenclatureWorkstation as &$wsn)
