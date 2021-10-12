@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+## 3.0
 - FIX: compatibility with WorkstationATM for Dolibarr 14 - *12/10/2021* - 3.0.0
 - **REQUIRES WorkstationATM >= 2.0**
 
