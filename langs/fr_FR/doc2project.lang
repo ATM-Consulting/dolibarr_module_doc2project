@@ -79,3 +79,5 @@ DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS=Convertir les lignes de nomenclat
 d2p_onlyTNomenclatureDet=Uniquement les lignes de nomenclature
 d2p_onlyTNomenclatureWorkstation=Uniquement les lignes de poste de travail (TODO)
 d2p_Both=Les deux (TODO)
+DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE=Toujours avoir le nom de la société dans le titre du projet
+DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE_help=Par défaut si le document a une référence client non vide, c'est elle qui est utilisée comme titre, sinon c'est "nom de la société - référence du document convertie". <br> Cette configuration permet donc, dans le cas de la référence client d'avoir "nom de la société - référence client"

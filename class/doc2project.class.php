@@ -133,6 +133,7 @@ class Doc2Project {
 			}
 			else{
 				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
+                if (strpos($object->title, $object->thirdparty->name) === false && !empty($conf->global->DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE)) $title = $object->thirdparty->name.' - '.$title;
 				$title = $langs->trans('Doc2ProjectTitle', $title);
 			}
 
