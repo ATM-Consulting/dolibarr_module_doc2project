@@ -211,6 +211,8 @@ if($ok) {
 
 	_print_on_off('DOC2PROJECT_GROUP_TASKS_BY_SPRINT', $langs->trans('Doc2ProjectGroupTasksBySprint'));
 
+	_print_on_off('DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE',$langs->trans('DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE'), '',  $langs->transnoentitiesnoconv("DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE_help"));
+
 	// Conversion rule
 	$metas = array(
 	    'rows' => 5,

@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 3.1
+- NEW: Nouvelle conf permettant d'avoir en permanence le nom de la société dans le titre du projet - *17/11/2021* - 3.1.0
+
 ## 3.0
 - FIX: compatibility with WorkstationATM for Dolibarr 14 - *12/10/2021* - 3.0.0
 - **REQUIRES WorkstationATM >= 2.0**
