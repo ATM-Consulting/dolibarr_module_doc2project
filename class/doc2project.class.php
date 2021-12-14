@@ -404,35 +404,38 @@ class Doc2Project {
 					$s->fetch($line->fk_product);
 					$s->get_sousproduits_arbo();
 					$TProdArbo = $s->get_arbo_each_prod();
+                    $PDOdb = new TPDOdb;
+                    if(! empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)) {
+                        $fk_parent = self::lineToTask($object, $line, $project, $start, $end, 0, true, 0, $story);
 
+                        if($conf->workstationatm->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION) {
+                            dol_include_once('/workstationatm/class/workstation.class.php');
+
+                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
+
+                            foreach($Tids as $workstationProductid) {
+                                $TWorkstationProduct = new TWorkstationProduct;
+                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
+
+                                $TWorkstation = new TWorkstation;
+                                $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+
+                                $line->fk_product = $line->fk_product;
+                                //$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+                                $line->product_label = $TWorkstation->name;
+                                $line->desc = '';
+                                $line->total_ht = 0;
+
+                                $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $fk_parent, false, $TWorkstation->rowid, $story);
+                                if($resLineToTask > 0) {
+                                    $TTaskAddedList[] = $resLineToTask;
+                                }
+                            }
+                        }
+                    }
 					if(!empty($TProdArbo)){
 
-						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
-							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$story);
 
-							if($conf->workstationatm->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
-								dol_include_once('/workstationatm/class/workstation.class.php');
-
-								$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
-
-								foreach ($Tids as $workstationProductid) {
-									$TWorkstationProduct = new TWorkstationProduct;
-									$TWorkstationProduct->load($PDOdb, $workstationProductid);
-
-									$TWorkstation = new TWorkstation;
-									$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-
-									$line->fk_product = $line->fk_product;
-									//$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-									$line->product_label = $TWorkstation->name;
-									$line->desc = '';
-									$line->total_ht = 0;
-
-									$resLineToTask = self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$story);
-									if($resLineToTask>0){ $TTaskAddedList[] = $resLineToTask; }
-								}
-							}
-						}
 
 						foreach($TProdArbo as $prod){
 
@@ -480,15 +483,6 @@ class Doc2Project {
 									}
 								}
 							}
-						}
-					}else{
-						$resLineToTask = self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story);
-
-						if(!$resLineToTask)
-						{
-							$linesImportError ++;
-						}else{
-							$TTaskAddedList[] = $resLineToTask;
 						}
 					}
 				}
