@@ -404,94 +404,86 @@ class Doc2Project {
 					$s->fetch($line->fk_product);
 					$s->get_sousproduits_arbo();
 					$TProdArbo = $s->get_arbo_each_prod();
+                    $PDOdb = new TPDOdb;
+                    if(! empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT) || empty($TProdArbo)) {
+                        $fk_parent = self::lineToTask($object, $line, $project, $start, $end, 0, true, 0, $story);
 
-					if(!empty($TProdArbo)){
+                        if($conf->workstationatm->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION) {
+                            dol_include_once('/workstationatm/class/workstation.class.php');
 
-						if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_FOR_PARENT)){
-							$fk_parent = self::lineToTask($object, $line,$project,$start,$end,0,true,0,$story);
+                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
 
-							if($conf->workstationatm->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION){
-								dol_include_once('/workstationatm/class/workstation.class.php');
+                            foreach($Tids as $workstationProductid) {
+                                $TWorkstationProduct = new TWorkstationProduct;
+                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
 
-								$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
+                                $TWorkstation = new TWorkstation;
+                                $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
 
-								foreach ($Tids as $workstationProductid) {
-									$TWorkstationProduct = new TWorkstationProduct;
-									$TWorkstationProduct->load($PDOdb, $workstationProductid);
+                                $line->fk_product = $line->fk_product;
+                                //$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+                                $line->product_label = $TWorkstation->name;
+                                $line->desc = '';
+                                $line->total_ht = 0;
 
-									$TWorkstation = new TWorkstation;
-									$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+                                $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $fk_parent, false, $TWorkstation->rowid, $story);
+                                if($resLineToTask > 0) {
+                                    $TTaskAddedList[] = $resLineToTask;
+                                }
+                            }
+                        }
+                    }
+                    if(! empty($TProdArbo)) {
+                        foreach($TProdArbo as $prod) {
+                            if($prod['type'] == 1) { //Uniquement les services
 
-									$line->fk_product = $line->fk_product;
-									//$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-									$line->product_label = $TWorkstation->name;
-									$line->desc = '';
-									$line->total_ht = 0;
+                                $ss = new Product($db);
+                                $ss->fetch($prod['id']);
+                                $line->fk_product = $ss->id;
+                                $line->qty = $line->qty * $prod['nb'];
+                                $line->product_label = $prod['label'];
+                                $line->desc = ($ss->description) ? $ss->description : '';
+                                $line->total_ht = $ss->price;
 
-									$resLineToTask = self::lineToTask($object,$line, $project, $start,$end,$fk_parent,false,$TWorkstation->rowid,$story);
-									if($resLineToTask>0){ $TTaskAddedList[] = $resLineToTask; }
-								}
-							}
-						}
+                                $new_fk_parent = self::lineToTask($object, $line, $project, $start, $end, $fk_parent);
 
-						foreach($TProdArbo as $prod){
+                                if($new_fk_parent > 0) {
+                                    $TTaskAddedList[] = $new_fk_parent;
+                                }
 
-							if($prod['type'] == 1){ //Uniquement les services
+                                if(! empty($conf->workstationatm->enabled) && ! empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)) {
+                                    dol_include_once('/workstationatm/class/workstation.class.php');
 
-								$ss = new Product($db);
-								$ss->fetch($prod['id']);
-								$line->fk_product = $ss->id;
-								$line->qty = $line->qty * $prod['nb'];
-								$line->product_label = $prod['label'];
-								$line->desc = ($ss->description) ? $ss->description : '';
-								$line->total_ht = $ss->price;
+                                    $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $ss->id));
+                                    if(! empty($Tids)) {
+                                        foreach($Tids as $workstationProductid) {
+                                            $TWorkstationProduct = new TWorkstationProduct;
+                                            $TWorkstationProduct->load($PDOdb, $workstationProductid);
 
-								$new_fk_parent =   self::lineToTask($object,$line,$project,$start,$end,$fk_parent);
+                                            $TWorkstation = new TWorkstation;
+                                            $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
 
-								if($new_fk_parent>0){ $TTaskAddedList[] = $new_fk_parent; }
+                                            $line->fk_product = $ss->id;
+                                            $line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+                                            $line->product_label = $TWorkstation->name;
+                                            $line->desc = '';
+                                            $line->total_ht = 0;
 
-								if(!empty($conf->workstationatm->enabled) && !empty($conf->global->DOC2PROJECT_WITH_WORKSTATION)){
-									dol_include_once('/workstationatm/class/workstation.class.php');
+                                            $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $new_fk_parent, false, $TWorkstation->rowid, $story);
 
-									$Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$ss->id));
-									if(!empty($Tids)) {
-										foreach ($Tids as $workstationProductid) {
-											$TWorkstationProduct = new TWorkstationProduct;
-											$TWorkstationProduct->load($PDOdb, $workstationProductid);
-
-											$TWorkstation = new TWorkstation;
-											$TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
-
-											$line->fk_product = $ss->id;
-											$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-											$line->product_label = $TWorkstation->name;
-											$line->desc = '';
-											$line->total_ht = 0;
-
-											$resLineToTask = self::lineToTask($object,$line, $project, $start,$end,$new_fk_parent,false,$TWorkstation->rowid,$story);
-
-											if(!$resLineToTask)
-											{
-											    $linesImportError ++;
-											}else{
-												$TTaskAddedList[] = $resLineToTask;
-											}
-										}
-									}
-								}
-							}
-						}
-					}else{
-						$resLineToTask = self::lineToTask($object,$line,$project,$start,$end,$fk_task_parent,false,0,$story);
-
-						if(!$resLineToTask)
-						{
-							$linesImportError ++;
-						}else{
-							$TTaskAddedList[] = $resLineToTask;
-						}
-					}
-				}
+                                            if(! $resLineToTask) {
+                                                $linesImportError++;
+                                            }
+                                            else {
+                                                $TTaskAddedList[] = $resLineToTask;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 				else{
 				//var_dump($fk_task_parent);exit;
                     $skip = false;
