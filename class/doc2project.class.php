@@ -412,23 +412,34 @@ class Doc2Project {
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
-
-                            foreach($Tids as $workstationProductid) {
+                            if(count($Tids) == 1) {
+                                $task = new Task($db);
+                                $task->fetch($fk_parent);
                                 $TWorkstationProduct = new TWorkstationProduct;
-                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
-
+                                $TWorkstationProduct->load($PDOdb, $Tids[0]);
                                 $TWorkstation = new TWorkstation;
                                 $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+                                $task->array_options['options_fk_workstation'] = $TWorkstation->rowid;
+                                $task->insertExtraFields();
+                            }
+                            else if(count($Tids) > 0) {
+                                foreach($Tids as $workstationProductid) {
+                                    $TWorkstationProduct = new TWorkstationProduct;
+                                    $TWorkstationProduct->load($PDOdb, $workstationProductid);
 
-                                $line->fk_product = $line->fk_product;
-                                //$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-                                $line->product_label = $TWorkstation->name;
-                                $line->desc = '';
-                                $line->total_ht = 0;
+                                    $TWorkstation = new TWorkstation;
+                                    $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
 
-                                $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $fk_parent, false, $TWorkstation->rowid, $story);
-                                if($resLineToTask > 0) {
-                                    $TTaskAddedList[] = $resLineToTask;
+                                    $line->fk_product = $line->fk_product;
+                                    //$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+                                    $line->product_label = $TWorkstation->name;
+                                    $line->desc = '';
+                                    $line->total_ht = 0;
+
+                                    $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $fk_parent, false, $TWorkstation->rowid, $story);
+                                    if($resLineToTask > 0) {
+                                        $TTaskAddedList[] = $resLineToTask;
+                                    }
                                 }
                             }
                         }
