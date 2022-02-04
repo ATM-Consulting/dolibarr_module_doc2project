@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ## 3.1
+- FIX: lors de la génération d'un projet (déjà existant) depuis une propal un warning   - *04/02/2022* - 3.1.3
+    s'affichait sur l'affectation de valeur sur un extrafield
 - FIX: Création des postes de travail n'étaient pas fonctionnel en fonction des sous produits - *14/12/2021* - 3.1.1
 - NEW: Nouvelle conf permettant d'avoir en permanence le nom de la société dans le titre du projet - *17/11/2021* - 3.1.0
 
