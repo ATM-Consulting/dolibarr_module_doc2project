@@ -224,7 +224,8 @@ class Doc2Project {
 			if(strpos($eval,'return ')===false)$eval = 'return ('.$eval.');';
 
 			$durationInSec = eval($eval) * 3600;
-			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+
+			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
 
 		}
 		else if($line->fk_product!=null){
@@ -238,7 +239,7 @@ class Doc2Project {
 				$nbDays = $line->qty * (empty($product->duration_value)?0:$product->duration_value);
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600;
-				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
 			} else if($product->duration_unit == 'i') { // Service vendu à la minute
                 $durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 60;
             } else {
@@ -412,23 +413,34 @@ class Doc2Project {
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
-
-                            foreach($Tids as $workstationProductid) {
+                            if(count($Tids) == 1) {
+                                $task = new Task($db);
+                                $task->fetch($fk_parent);
                                 $TWorkstationProduct = new TWorkstationProduct;
-                                $TWorkstationProduct->load($PDOdb, $workstationProductid);
-
+                                $TWorkstationProduct->load($PDOdb, $Tids[0]);
                                 $TWorkstation = new TWorkstation;
                                 $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
+                                $task->array_options['options_fk_workstation'] = $TWorkstation->rowid;
+                                $task->insertExtraFields();
+                            }
+                            else if(count($Tids) > 0) {
+                                foreach($Tids as $workstationProductid) {
+                                    $TWorkstationProduct = new TWorkstationProduct;
+                                    $TWorkstationProduct->load($PDOdb, $workstationProductid);
 
-                                $line->fk_product = $line->fk_product;
-                                //$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
-                                $line->product_label = $TWorkstation->name;
-                                $line->desc = '';
-                                $line->total_ht = 0;
+                                    $TWorkstation = new TWorkstation;
+                                    $TWorkstation->load($PDOdb, $TWorkstationProduct->fk_workstation);
 
-                                $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $fk_parent, false, $TWorkstation->rowid, $story);
-                                if($resLineToTask > 0) {
-                                    $TTaskAddedList[] = $resLineToTask;
+                                    $line->fk_product = $line->fk_product;
+                                    //$line->qty = $line->qty * $TWorkstationProduct->nb_hour;
+                                    $line->product_label = $TWorkstation->name;
+                                    $line->desc = '';
+                                    $line->total_ht = 0;
+
+                                    $resLineToTask = self::lineToTask($object, $line, $project, $start, $end, $fk_parent, false, $TWorkstation->rowid, $story);
+                                    if($resLineToTask > 0) {
+                                        $TTaskAddedList[] = $resLineToTask;
+                                    }
                                 }
                             }
                         }
