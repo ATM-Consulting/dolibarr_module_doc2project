@@ -225,7 +225,7 @@ class Doc2Project {
 
 			$durationInSec = eval($eval) * 3600;
 
-			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
+			$nbDays = ceil(($durationInSec / 3600) / ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY ? $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY : 1)); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
 
 		}
 		else if($line->fk_product!=null){
