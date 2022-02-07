@@ -224,7 +224,8 @@ class Doc2Project {
 			if(strpos($eval,'return ')===false)$eval = 'return ('.$eval.');';
 
 			$durationInSec = eval($eval) * 3600;
-			$nbDays = ceil(($durationInSec / 3600) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+
+			$nbDays = ceil(($durationInSec / 3600) / ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY ? $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY : 1)); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
 
 		}
 		else if($line->fk_product!=null){
@@ -238,7 +239,7 @@ class Doc2Project {
 				$nbDays = $line->qty * (empty($product->duration_value)?0:$product->duration_value);
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600;
-				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY);
+				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY ? $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY : 1)); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
 			} else if($product->duration_unit == 'i') { // Service vendu à la minute
                 $durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 60;
             } else {
