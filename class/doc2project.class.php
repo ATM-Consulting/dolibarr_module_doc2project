@@ -748,7 +748,7 @@ class Doc2Project {
 
 			        //var_dump(array($task->planned_workload / 3600 , $planned_workload / 3600, ($task->planned_workload + $planned_workload) / 3600));
 			        $task->planned_workload = $task->planned_workload + $planned_workload;
-			        $task->array_options['options_soldprice'] = $task->array_options['options_soldprice'] + $total_ht;
+					$task->array_options['options_soldprice'] = floatval($task->array_options['options_soldprice']) + floatval($total_ht);
 
 			        // new planification calculation
 			        self::includeNewStartEndDateToTask($task,$start, $end);
