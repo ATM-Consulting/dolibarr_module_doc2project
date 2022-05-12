@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- NEW : Ajout de la class TechATM pour l'affichage de la page "A propos" *11/05/2022* 3.2.0
 
 ## 3.1
 - FIX: lors de la génération d'un projet (déjà existant) depuis une propal un warning   - *04/02/2022* - 3.1.5
