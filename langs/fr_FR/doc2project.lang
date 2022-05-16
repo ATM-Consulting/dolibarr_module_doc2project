@@ -9,6 +9,7 @@ Doc2ProjectAbout = A propos du module Doc2Project
 CreateProjectAndTasks = Créer projet et tâches
 CreateTasksInProject = Créer les tâches dans le projet associé
 DocConverted = convertie
+AbricotNeeded = Le module Abricot est nécessaire.
 
 # SETUP
 DisplayOnProposal = Afficher le bouton de conversion sur la fiche proposition
