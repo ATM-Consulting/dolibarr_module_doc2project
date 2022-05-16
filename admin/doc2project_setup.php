@@ -97,6 +97,13 @@ dol_fiche_head(
 
 $ok = $conf->propal->enabled || $conf->commande->enabled;
 
+$abricotIsPresent = dol_buildpath('abricot/langs/fr_FR/abricot.lang');
+if(empty($abricotIsPresent) || !file_exists($abricotIsPresent)){
+	// TODO modifier l'url avec TechATM une fois que les redirection de docs sera en ligne
+	print '<div class="warning" >'.$langs->trans('AbricotNeeded').' : <a href="http://wiki.atm-consulting.fr/index.php/Accueil#Abricot" target="_blank"><i class="fa fa-info"></i> Wiki</a></div>';
+}
+
+
 if($ok) {
 	// Setup page goes here
 	$form=new Form($db);
