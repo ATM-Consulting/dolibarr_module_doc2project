@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ## 3.1
+- FIX: Compatibility V16 - token and family - *07/06/2022* - 3.1.5
 - FIX : Missed traduction *03/02/2022* - 3.1.4
 - FIX: lors de la génération d'un projet (déjà existant) depuis une propal un warning   - *04/02/2022* - 3.1.3
     s'affichait sur l'affectation de valeur sur un extrafield
