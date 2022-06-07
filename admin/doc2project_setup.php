@@ -35,8 +35,6 @@ require_once '../lib/doc2project.lib.php';
 // Translations
 $langs->load("doc2project@doc2project");
 
-$newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
-
 // Access control
 if (! $user->admin) {
     accessforbidden();
@@ -233,6 +231,8 @@ if($ok) {
 
 	_print_on_off('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS', $langs->trans('Doc2ProjectUseSpecificStoryToCreateTasks'));
 
+    $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
+
 
     $var=!$var;
     print '<tr '.$bc[$var].'>';
@@ -283,6 +283,7 @@ function _print_on_off($confkey, $title = false, $desc ='', $help = false)
 {
     global $var, $bc, $langs, $conf;
     $var=!$var;
+    $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
 
     $form=new Form($db);
 
@@ -315,6 +316,7 @@ function _print_input_form_part($confkey, $title = false, $desc ='', $metas = ar
 {
     global $var, $bc, $langs, $conf, $db;
     $var=!$var;
+    $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
 
     $form=new Form($db);
 
