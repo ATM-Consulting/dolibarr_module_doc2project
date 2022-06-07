@@ -231,6 +231,8 @@ if($ok) {
 
 	_print_on_off('DOC2PROJECT_USE_SPECIFIC_STORY_TO_CREATE_TASKS', $langs->trans('Doc2ProjectUseSpecificStoryToCreateTasks'));
 
+    $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
+
 
     $var=!$var;
     print '<tr '.$bc[$var].'>';
@@ -238,7 +240,7 @@ if($ok) {
     print '<td align="center" width="20">&nbsp;</td>';
     print '<td align="right" width="300">';
     print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="token" value="'.$newToken.'">';
     print '<input type="hidden" name="action" value="set_DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS">';
     $TVal = array(
         '' => ''
@@ -281,6 +283,7 @@ function _print_on_off($confkey, $title = false, $desc ='', $help = false)
 {
     global $var, $bc, $langs, $conf;
     $var=!$var;
+    $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
 
     $form=new Form($db);
 
@@ -302,7 +305,7 @@ function _print_on_off($confkey, $title = false, $desc ='', $help = false)
     print '<td align="center" width="20">&nbsp;</td>';
     print '<td align="right" width="300">';
     print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="token" value="'.$newToken.'">';
     print '<input type="hidden" name="action" value="set_'.$confkey.'">';
     print ajax_constantonoff($confkey);
     print '</form>';
@@ -313,6 +316,7 @@ function _print_input_form_part($confkey, $title = false, $desc ='', $metas = ar
 {
     global $var, $bc, $langs, $conf, $db;
     $var=!$var;
+    $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
 
     $form=new Form($db);
 
@@ -352,7 +356,7 @@ function _print_input_form_part($confkey, $title = false, $desc ='', $metas = ar
     print '<td align="center" width="20">&nbsp;</td>';
     print '<td align="right" width="300">';
     print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
-    print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
+    print '<input type="hidden" name="token" value="'.$newToken.'">';
     print '<input type="hidden" name="action" value="set_'.$confkey.'">';
     if($type=='textarea'){
         print '<textarea '.$metascompil.'  >'.dol_htmlentities($conf->global->{$confkey}).'</textarea>';
