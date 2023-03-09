@@ -58,7 +58,7 @@ class modDoc2Project extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '3.2.0';
+		$this->version = '3.2.2';
 		// Url to the file with your last numberversion of this module
 		require_once __DIR__ . '/../../class/techatm.class.php';
 		$this->url_last_version = \doc2project\TechATM::getLastModuleVersionUrl($this);
@@ -302,6 +302,27 @@ class modDoc2Project extends DolibarrModules
 		$param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
 		$res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
 
+		//*********************************
+		// ******* MISE A JOUR BDD ********
+		//*********************************
+
+		if ($this->needUpdate('3.2.1')) {
+			/** Mise à jour de la structure de la table llx_projet_task_extrafields **/
+			$sqlUpdate = 'ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_extrafields MODIFY COLUMN soldprice DOUBLE (24,4)';
+			$this->db->query($sqlUpdate);
+
+			/** Mise à jour de la colonne size de la table llx_extrafields **/
+			$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."extrafields SET size = '24,4'";
+			$this->db->query($sqlUpdate);
+		}
+
+		//*************************************
+		// ******* FIN MISE A JOUR BDD ********
+		//*************************************
+
+		// Stock le numéro de version installé
+		dolibarr_set_const($this->db, 'DOC2PROJECT_MOD_LAST_RELOAD_VERSION', $this->version, 'chaine', 0, '', 0);
+
 		return $this->_init($sql, $options);
 	}
 
@@ -318,6 +339,25 @@ class modDoc2Project extends DolibarrModules
 		$sql = array();
 
 		return $this->_remove($sql, $options);
+	}
+
+	/**
+	 * Compare
+	 *
+	 * @param string $targetVersion numéro de version pour lequel il faut faire la comparaison
+	 * @return bool
+	 */
+	public function needUpdate($targetVersion){
+		global $conf;
+		if (empty($conf->global->DOC2PROJECT_MOD_LAST_RELOAD_VERSION)) {
+			return true;
+		}
+
+		if(versioncompare(explode('.',$targetVersion), explode('.', $conf->global->DOC2PROJECT_MOD_LAST_RELOAD_VERSION))>0){
+			return true;
+		}
+
+		return false;
 	}
 
 }

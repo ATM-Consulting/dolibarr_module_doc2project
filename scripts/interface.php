@@ -1,4 +1,4 @@
-<?php 
+<?php
 if (!defined("NOCSRFCHECK")) define('NOCSRFCHECK', 1);
 if (!defined("NOTOKENRENEWAL")) define('NOTOKENRENEWAL', 1);
 
@@ -19,10 +19,10 @@ if($get == 'convertToProjectLines' )
 {
     $element = GETPOST('element');
     $id = GETPOST('id');
-    
+
     if(!empty($element) && !empty($id) )
     {
-        
+
         $object = false;
         if($element=='propal'){
             dol_include_once('/comm/propal/class/propal.class.php');
@@ -32,17 +32,19 @@ if($get == 'convertToProjectLines' )
             dol_include_once('/commande/class/commande.class.php');
             $object = new Commande($db);
         }
-        
+
         if($object->fetch($id) > 0)
         {
             showLinesToParse($object);
-            
-            print '<input type="hidden" name="id" value="'.$id.'" />';
+			$newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
+
+			print '<input type="hidden" name="id" value="'.$id.'" />';
             print '<input type="hidden" name="type" value="'.$element.'" />';
-            print '<input type="hidden" name="action" value="create_project" />';
-            
+			print '<input type="hidden" name="token" value="'.$newToken.'">';
+			print '<input type="hidden" name="action" value="create_project" />';
+
         }
-        
+
     }
-    
+
 }
