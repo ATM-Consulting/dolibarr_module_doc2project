@@ -47,7 +47,7 @@ class ActionsDoc2Project
 								if($( this ).hasClass( "liste_titre" ))
 								{
 									// PARTIE TITRE
-									$('<td class="linecoltasks" style="width: 100px"><?php print $langs->transnoentities('LinkedTasks'); ?></td>').insertBefore($( this ).find("td.linecoldescription"));
+									$('<td class="linecoltasks" style="width: 100px"><?php print $langs->transnoentities('LinkedTasks'); ?></td>').insertBefore($( this ).find("th.linecoldescription,td.linecoldescription"));
 								}
 								else if($( this ).data( "product_type" ) == "9"){
 									$( this ).find("td[colspan]:first").attr('colspan',    parseInt($( this ).find("td[colspan]:first").attr('colspan')) + 1  );
