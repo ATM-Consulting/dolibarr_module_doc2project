@@ -195,11 +195,11 @@ function _get_statistiques_projet(&$PDOdb){
     {
         $sql .= ", (SELECT SUM(tt.element_duration) FROM ".MAIN_DB_PREFIX."element_time as tt WHERE tt.elementtype = 'task' AND tt.fk_element IN (";
         $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
-        $sql .= ($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_temps";
+        $sql .= ($t_deb>0 && $t_fin>0 ? " AND element_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_temps";
 
         $sql .= ", (SELECT SUM(tt.thm * tt.element_duration/3600) FROM ".MAIN_DB_PREFIX."element_time as tt WHERE tt.elementtype = 'task' AND tt.fk_element IN (";
         $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
-        $sql .= ($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_cout_homme";
+        $sql .= ($t_deb>0 && $t_fin>0 ? " AND element_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_cout_homme";
     }
 
 
