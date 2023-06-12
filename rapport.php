@@ -203,7 +203,7 @@ function _get_statistiques_projet(&$PDOdb){
     }
 
 
-    $sql .= " FROM ".MAIN_DB_PREFIX."projet as p INNER JOIN ".MAIN_DB_PREFIX."projet_extrafields pe ON p.rowid = pe.fk_object WHERE p.entity IN (".getEntity('project').")";
+    $sql .= " FROM ".MAIN_DB_PREFIX."projet as p LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields pe ON p.rowid = pe.fk_object WHERE p.entity IN (".getEntity('project').")";
 
 	if($idprojet > 0) $sql.= " AND p.rowid = ".$idprojet;
 
