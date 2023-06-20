@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## 3.2
+- FIX : update llx_extrafields sans where *10/03/2023* - 3.2.3
 - FIX : Compatibilité - Token  *21/01/2023* - 3.2.2
 - FIX : Missed size parameter in addExtrafield module's init *31/08/2022* - 3.2.1
 - NEW : Ajout de la class TechATM pour l'affichage de la page "A propos" *11/05/2022* 3.2.0

@@ -58,7 +58,7 @@ class modDoc2Project extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '3.2.2';
+		$this->version = '3.2.3';
 		// Url to the file with your last numberversion of this module
 		require_once __DIR__ . '/../../class/techatm.class.php';
 		$this->url_last_version = \doc2project\TechATM::getLastModuleVersionUrl($this);
@@ -296,7 +296,7 @@ class modDoc2Project extends DolibarrModules
 		 	$this->db->query('ALTER TABLE '.MAIN_DB_PREFIX.'projet_task_time ADD thm DOUBLE NOT NULL DEFAULT \'0\'');
 		}
 
-		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '', 'projet_task');
+		$res = $extrafields->addExtraField('soldprice', $langs->trans('SoldPrice'), 'double', 0, '24,4', 'projet_task');
 
 		$extrafields=new ExtraFields($this->db);
 		$param = array('options'=>array(1=>"Commercial", 2=>"Developpement", 3=>"Direction de projet", 4=>"Comptabilité"));
@@ -312,7 +312,7 @@ class modDoc2Project extends DolibarrModules
 			$this->db->query($sqlUpdate);
 
 			/** Mise à jour de la colonne size de la table llx_extrafields **/
-			$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."extrafields SET size = '24,4'";
+			$sqlUpdate = "UPDATE ".MAIN_DB_PREFIX."extrafields SET size = '24,4' WHERE name = 'soldprice' AND elementtype = 'projet_task'";
 			$this->db->query($sqlUpdate);
 		}
 
