@@ -150,6 +150,10 @@ class Doc2Project {
 			$r = $project->create($user);
 			if ($r > 0)
 			{
+				if (!empty($conf->global->DOC2PROJECT_CLONE_EXTRAFIELDS)) {
+					$project->array_options = $object->array_options;
+					$result = $project->insertExtraFields();
+				}
 				$object->setProject($r);
 
 				$action = 'afterCreateProject';

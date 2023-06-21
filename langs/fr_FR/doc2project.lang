@@ -19,6 +19,7 @@ NbHoursPerDay = Nombre d'heures journalier
 ModuleNeedProposalOrOrderModule = Le module proposition commerciale ou commande client doit être activé pour pouvoir utiliser ce module
 Doc2ProjectValidateProjectOnValidateOrder=Créer et valider un projet sur la validation d'une commande client
 Doc2ProjectClotureProjectOnValidateExpedition=Clôturer le projet sur la validation d'une expédition
+Doc2ProjectCloneExtrafields=Copier les attributs supplémentaires du document d'origine sur le projet
 Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-services associés au service parent
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
 Doc2projectWithWorkstation=Créer autant de tâches qu'il y a de postes de travail associés au produit/service
