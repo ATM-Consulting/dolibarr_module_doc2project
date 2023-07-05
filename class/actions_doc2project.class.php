@@ -156,7 +156,7 @@ class ActionsDoc2Project
 			}
 
 
-			if (version_compare('18.0.0', DOL_VERSION, '<'))
+			if (version_compare(DOL_VERSION, '18.0.0' , '<'))
 			{
 				$sql = "SELECT SUM(tt.task_duration) as duration_effective, SUM(tt.thm * tt.task_duration/3600) as costprice";
 				$sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_task)";
