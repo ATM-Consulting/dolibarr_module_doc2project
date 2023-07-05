@@ -58,7 +58,7 @@ class modDoc2Project extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '3.2.4';
+		$this->version = '3.2.5';
 		// Url to the file with your last numberversion of this module
 		require_once __DIR__ . '/../../class/techatm.class.php';
 		$this->url_last_version = \doc2project\TechATM::getLastModuleVersionUrl($this);

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## 3.2
+- FIX : Inversion du test de version - *05/07/2023* - 3.2.4  
 - FIX : Compat Dolibarr V18 *12/06/2023* - 3.2.4
 - FIX : update llx_extrafields sans where *10/03/2023* - 3.2.3
 - FIX : Compatibilité - Token  *21/01/2023* - 3.2.2
