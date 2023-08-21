@@ -156,9 +156,19 @@ class ActionsDoc2Project
 			}
 
 
-			$resultset = $db->query("SELECT SUM(tt.task_duration) as duration_effective, SUM(tt.thm * tt.task_duration/3600) as costprice
-			FROM ".MAIN_DB_PREFIX."projet_task_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_task)
-			WHERE t.fk_projet=".$object->id);
+			if (version_compare(DOL_VERSION, '18.0.0' , '<'))
+			{
+				$sql = "SELECT SUM(tt.task_duration) as duration_effective, SUM(tt.thm * tt.task_duration/3600) as costprice";
+				$sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_task)";
+			}
+			else
+			{
+				$sql = "SELECT SUM(tt.element_duration) as duration_effective, SUM(tt.thm * tt.element_duration/3600) as costprice";
+				$sql.= " FROM ".MAIN_DB_PREFIX."element_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_element AND tt.elementtype = 'task')";
+			}
+			$sql.= " WHERE t.fk_projet=".$object->id;
+
+			$resultset = $db->query($sql);
 			$obj=$db->fetch_object($resultset);
 
 
@@ -199,7 +209,18 @@ class ActionsDoc2Project
 			//$object->duration_effective souvent faux :-/ recalcule en requête
 			if(!empty($object->id))
 			{
-				$resultset = $db->query("SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice  FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id);
+				if (version_compare('18.0.0', DOL_VERSION, '<'))
+				{
+					$sql = "SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice";
+					$sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id;
+				}
+				else
+				{
+					$sql = "SELECT SUM(element_duration) as duration_effective, SUM(thm * element_duration/3600) as costprice";
+					$sql.= " FROM ".MAIN_DB_PREFIX."element_time WHERE elementtype = 'task' AND fk_element = ".$object->id;
+				}
+
+				$resultset = $db->query($sql);
 				$obj=$db->fetch_object($resultset);
 
 				?>

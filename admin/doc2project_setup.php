@@ -150,6 +150,9 @@ if($ok) {
 
 	// Clôturer le projet sur la validation d'une expédition
 	_print_on_off('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION', $langs->trans('Doc2ProjectClotureProjectOnValidateExpedition'));
+	
+	// Cloner les attributs suppémentaires du document source sur le projet
+	_print_on_off('DOC2PROJECT_CLONE_EXTRAFIELDS', $langs->trans('Doc2ProjectCloneExtrafields'));
 
 	/**
 	 * TASK PARAMETERS
