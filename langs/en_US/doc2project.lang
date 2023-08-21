@@ -24,3 +24,5 @@ Doc2ProjectPrevueBeforeConvert=Preview and select lines before import
 Doc2ProjectGroupTasksBySprint=Group task with same label by sprint
 Doc2ProjectGroupTasks=Group task with same label
 Doc2ProjectCloneExtrafields=Copy extrafields from the original document to the project
+Doc2ProjectShowMargin = Show project calculated slack on project page
+
