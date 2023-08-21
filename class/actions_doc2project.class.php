@@ -196,10 +196,12 @@ class ActionsDoc2Project
 				<td><?php echo $langs->trans('TotalBill'); ?></td>
 				<td><?php echo price($billsTotal) ?></td>
 			</tr>-->
-			<tr>
-				<td><?php echo $langs->trans('Margin'); ?></td>
-				<td><?php echo price($marge) ?></td>
-			</tr>
+			<?php if (!empty($conf->global->DOC2PROJECT_SHOWW_MARGIN)) { ?>
+				<tr>
+					<td><?php echo $langs->trans('Margin'); ?></td>
+					<td><?php echo price($marge) ?></td>
+				</tr>
+			<?php } ?>
 
 			<?php
 

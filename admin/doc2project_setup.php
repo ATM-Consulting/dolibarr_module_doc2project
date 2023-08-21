@@ -154,6 +154,9 @@ if($ok) {
 	// Cloner les attributs suppémentaires du document source sur le projet
 	_print_on_off('DOC2PROJECT_CLONE_EXTRAFIELDS', $langs->trans('Doc2ProjectCloneExtrafields'));
 
+	// Afficher la marge sur la page de page du projet
+	_print_on_off('DOC2PROJECT_SHOWW_MARGIN', $langs->trans('Doc2ProjectShowMargin'));
+
 	/**
 	 * TASK PARAMETERS
 	 */
