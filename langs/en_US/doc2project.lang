@@ -24,3 +24,4 @@ Doc2ProjectPrevueBeforeConvert=Preview and select lines before import
 Doc2ProjectGroupTasksBySprint=Group task with same label by sprint
 Doc2ProjectGroupTasks=Group task with same label
 Doc2ProjectCloneExtrafields=Copy extrafields from the original document to the project
+Doc2ProjectAddUsageTaskOnProject = Check the box to track tasks and time spent on automatic project creation
