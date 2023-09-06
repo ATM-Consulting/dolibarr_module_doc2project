@@ -343,8 +343,16 @@ class ActionsDoc2Project
 			$project = new Project($this->db);
 			if ($project->fetch($parameters['project']->id) > 0){
 				$project->usage_task = 1;
-				if ($project->update($user, 1) >= 0) return 0;
-				else return -1;
+				if ($project->update($user, 1) >= 0) {
+					return 0;
+				}
+				else {
+					setEventMessage($this->db->lastError());
+					return -1;
+				}
+			}else {
+				setEventMessage($this->db->lastError());
+				return -1;
 			}
 		}
 		return 0;
