@@ -338,16 +338,14 @@ class ActionsDoc2Project
 	 */
 	function afterCreateProject($parameters, &$object, &$action, $hookmanager): int
 	{
-		global $conf, $langs, $db, $user;
-		if ($action == 'afterCreateProject' && $conf->global->DOC2PROJECT_ADD_USAGE_TASK_ON_PROJECT){
-			$project = new Project($db);
-			$res = $project->fetch($parameters['project']->id);
-			if ($res){
+		global $conf, $user;
+		if ($action == 'afterCreateProject' && !empty($conf->global->DOC2PROJECT_ADD_USAGE_TASK_ON_PROJECT)){
+			$project = new Project($this->db);
+			if ($project->fetch($parameters['project']->id) > 0){
 				$project->usage_task = 1;
-				$project->update($user, 1);
-				return 0;
+				if ($project->update($user, 1) >= 0) return 0;
+				else return -1;
 			}
-			return -1;
 		}
 		return 0;
 	}

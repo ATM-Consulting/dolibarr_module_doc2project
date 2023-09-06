@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- NEW: Nouvelle conf permettant de cocher par défaut la case pour suivre les tâches et le temps passé lors de la création auto d'une projet après la signature d'un devis - *24/08/2023* - 3.3.0
+- NEW: Nouvelle conf permettant de cocher par défaut la case pour suivre les tâches et le temps passé lors de la création d'un projet - *24/08/2023* - 3.3.0
 
 ## 3.2
 - FIX : Inversion du test de version - *05/07/2023* - 3.2.4  
