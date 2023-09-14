@@ -22,6 +22,7 @@ Doc2ProjectClotureProjectOnValidateExpedition=Clôturer le projet sur la validat
 Doc2ProjectCloneExtrafields=Copier les attributs supplémentaires du document d'origine sur le projet
 Doc2ProjectCreateTaskForVirtualProduct=Créer autant de tâche que de sous-services associés au service parent
 Doc2ProjectCreateTaskForParent=Créer la le service initial en tant que tâche parente des sous-produits associés
+Doc2ProjectAddUsageTaskOnProject=Cocher la case "Suivre des tâches ou du temps passé" lors de la création automatique d'un projet
 Doc2projectWithWorkstation=Créer autant de tâches qu'il y a de postes de travail associés au produit/service
 Doc2ProjectAutoAffectProjectLeader=Affecter en tant que chef de projet l'utilisateur créant le projet depuis la propale, commande.
 DOC2PROJECT_TITLE_PROJECT=Titre du projet créé
