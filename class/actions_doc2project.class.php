@@ -351,7 +351,7 @@ class ActionsDoc2Project
 					return -1;
 				}
 			}else {
-				setEventMessage($this->db->lastError());
+				setEventMessage($this->db->lasterror());
 				return -1;
 			}
 		}
