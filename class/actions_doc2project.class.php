@@ -209,7 +209,7 @@ class ActionsDoc2Project
 			//$object->duration_effective souvent faux :-/ recalcule en requête
 			if(!empty($object->id))
 			{
-				if (version_compare('18.0.0', DOL_VERSION, '<'))
+				if (version_compare(DOL_VERSION, '18.0.0', '<'))
 				{
 					$sql = "SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice";
 					$sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id;

@@ -181,7 +181,7 @@ function _get_statistiques_projet(&$PDOdb){
 
 	$sql = "SELECT p.rowid as IdProject, p.ref, p.title, p.dateo, p.datee, pe.categorie as categorie ";
 
-    if (version_compare('18.0.0', DOL_VERSION, '<'))
+    if (version_compare(DOL_VERSION, '18.0.0', '<'))
     {
         $sql .= ", (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (";
         $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
