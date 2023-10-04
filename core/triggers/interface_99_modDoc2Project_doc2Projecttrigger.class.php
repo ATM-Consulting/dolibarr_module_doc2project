@@ -140,7 +140,7 @@ class InterfaceDoc2Projecttrigger
 			}
 
 			$this->db->commit();
-            if (version_compare('18.0.0', DOL_VERSION, '<'))
+            if (version_compare(DOL_VERSION, '18.0.0', '<'))
             {
                 $sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
             }
