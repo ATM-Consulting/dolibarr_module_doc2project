@@ -166,7 +166,7 @@ class InterfaceDoc2Projecttrigger
 				$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
 			}
 		}
-		else if ($action == 'ORDER_VALIDATE' && getDolGlobalString('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER'))
+		else if ($action == 'ORDER_VALIDATE' && getDolGlobalInt('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER'))
 		{
 			define('INC_FROM_DOLIBARR', true);
 			dol_include_once('/doc2project/config.php');
@@ -189,7 +189,7 @@ class InterfaceDoc2Projecttrigger
 
 
 		}
-		else if ($action == 'SHIPPING_VALIDATE' && getDolGlobalString('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION'))
+		else if ($action == 'SHIPPING_VALIDATE' && getDolGlobalInt('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION'))
 		{
 			if ($object->origin == 'commande' && !empty($object->origin_id))
 			{
