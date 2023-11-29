@@ -216,7 +216,7 @@ class modDoc2Project extends DolibarrModules
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>166,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
-								'perms'=>'$user->rights->doc2project->read',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'perms'=>'$user->hasRight(\'doc2project\',\'read\')',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
@@ -230,7 +230,7 @@ class modDoc2Project extends DolibarrModules
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>167,
 								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
-								'perms'=>'$user->rights->doc2project->read',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
+								'perms'=> '$user->hasRight(\'doc2project\',\'read\')',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 		 $r++;
