@@ -166,7 +166,7 @@ class InterfaceDoc2Projecttrigger
 				$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
 			}
 		}
-		else if ($action == 'ORDER_VALIDATE' && !empty($conf->global->DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER))
+		else if ($action == 'ORDER_VALIDATE' && getDolGlobalString('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER'))
 		{
 			define('INC_FROM_DOLIBARR', true);
 			dol_include_once('/doc2project/config.php');
@@ -189,7 +189,7 @@ class InterfaceDoc2Projecttrigger
 
 
 		}
-		else if ($action == 'SHIPPING_VALIDATE' && !empty($conf->global->DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION))
+		else if ($action == 'SHIPPING_VALIDATE' && getDolGlobalString('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION'))
 		{
 			if ($object->origin == 'commande' && !empty($object->origin_id))
 			{
@@ -236,7 +236,7 @@ class InterfaceDoc2Projecttrigger
 				$commande = new Commande($db);
 				$commande->fetch($fk_commande);
 
-				$ref_task = $conf->global->DOC2PROJECT_TASK_REF_PREFIX.$object->origin_id;
+				$ref_task = getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $object->origin_id;
 
 				//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
 				$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';

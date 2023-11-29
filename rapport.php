@@ -3,7 +3,7 @@ require('config.php');
 
 
 
-if(!$user->rights->doc2project->read) accessforbidden();
+if(!$user->hasRight('doc2project', 'read')) accessforbidden();
 
 dol_include_once("/doc2project/lib/report.lib.php");
 dol_include_once("/doc2project/filtres.php");

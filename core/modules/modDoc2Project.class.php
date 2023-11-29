@@ -349,7 +349,7 @@ class modDoc2Project extends DolibarrModules
 	 */
 	public function needUpdate($targetVersion){
 		global $conf;
-		if (empty($conf->global->DOC2PROJECT_MOD_LAST_RELOAD_VERSION)) {
+		if (!getDolGlobalString('DOC2PROJECT_MOD_LAST_RELOAD_VERSION')) {
 			return true;
 		}
 
