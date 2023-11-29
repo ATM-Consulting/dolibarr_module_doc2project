@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 
+## 3.4
+
+- NEW : compatibilité dolibarr v19 & PHP8 - *29/11/2023* - 3.4.0
+
+
 ## 3.2
 
 - FIX : DA023853 - Inversion du test de version - *27/09/2023* - 3.2.6  
