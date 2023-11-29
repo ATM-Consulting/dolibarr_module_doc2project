@@ -123,7 +123,7 @@ function showLinesToParse(&$object)
         {
             //Avec les postes de travails liés à la nomenclature
             if(!empty($line->fk_product) || (getDolGlobalInt('DOC2PROJECT_ALLOW_FREE_LINE') && $line->fk_product === null) ) {
-                define('INC_FROM_DOLIBARR',true);
+                if(!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR',true);
                 $Tcrawl = nomenclatureProductDeepCrawl($line->rowid, $object->element,$line->fk_product,$line->qty);
                 if(!empty($Tcrawl))
                 {

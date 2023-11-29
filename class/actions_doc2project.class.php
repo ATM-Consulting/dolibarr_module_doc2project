@@ -287,7 +287,7 @@ class ActionsDoc2Project extends CommonHookActions
 		{
 			$langs->load('doc2project@doc2project');
 
-			define('INC_FROM_DOLIBARR', true);
+			if(!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR', true);
 			dol_include_once('/doc2project/config.php');
 			dol_include_once('/projet/class/project.class.php');
 			dol_include_once('/projet/class/task.class.php');
@@ -307,7 +307,7 @@ class ActionsDoc2Project extends CommonHookActions
 
 				// LIEN OBJECT / PROJECT
 				$project->date_end = $end;
-				if($resetProjet) $project->statut = 0;
+				if(!empty($resetProjet)) $project->statut = 0;
 				$project->update($user);
 
 				if (getDolGlobalInt('DOC2PROJECT_VALIDATE_CREATED_PROJECT')) $project->setValid($user);

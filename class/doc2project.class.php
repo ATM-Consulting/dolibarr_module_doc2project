@@ -133,7 +133,7 @@ class Doc2Project {
 			}
 			else{
 				$title = (!empty($object->ref_client)) ? $object->ref_client : $object->thirdparty->name.' - '.$object->ref.' '.$langs->trans('DocConverted');
-                if (strpos($object->title, $object->thirdparty->name) === false && getDolGlobalInt('DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE')) $title = $object->thirdparty->name.' - '.$title;
+                if (!empty($object->title) && str_contains($object->title, $object->thirdparty->name) && getDolGlobalInt('DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE')) $title = $object->thirdparty->name.' - '.$title;
 				$title = $langs->trans('Doc2ProjectTitle', $title);
 			}
 
@@ -142,7 +142,7 @@ class Doc2Project {
 			$project->description    = '';
 			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
 			$project->datec			 = dol_now();
-			$project->date_start	 = empty($object->delivery_date) ?? dol_now();
+			$project->date_start	 = !empty($object->delivery_date) ? $object->delivery_date : dol_now();
 			$project->date_end		 = null;
 
 			$project->ref 			 = self::get_project_ref($project);
@@ -162,7 +162,7 @@ class Doc2Project {
 			else
 			{
 			    setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r.$project->error), 'errors');
-			}e
+			}
 		}
 
 
@@ -210,7 +210,7 @@ class Doc2Project {
 			);
 
 			if(!empty($conf->workstationatm->enabled) && $fk_workstation>0) {
-				define('INC_FROM_DOLIBARR',true);
+                if(!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR',true);
 				dol_include_once('/workstationatm/config.php');
 				dol_include_once('/workstationatm/class/workstation.class.php');
 				$PDOdb=new TPDOdb;
@@ -341,7 +341,7 @@ class Doc2Project {
 					$label = !empty($line->product_label) ? $line->product_label : $line->label;
 					$desc =  !empty($line->description) ? $line->description : $line->desc;
 
-                    $task_parent_ref = (!empty(getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX')) ? getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $line->rowid : self::getNewDefaultTaskRef($line) ;
+                    $task_parent_ref = !empty(getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX')) ? getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $line->rowid : self::getNewDefaultTaskRef($line);
 					$fk_task_parent = self::createOneTask($project->id,
                         $task_parent_ref,
                         $label,
@@ -375,7 +375,7 @@ class Doc2Project {
 			{
 				//self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
 				if(!empty($line->fk_product)) {
-					define('INC_FROM_DOLIBARR',true);
+                    if(!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR',true);
 					dol_include_once('/nomenclature/config.php');
 					dol_include_once('/nomenclature/class/nomenclature.class.php');
 					$nomenclature = new TNomenclature($db);
