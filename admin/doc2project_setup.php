@@ -195,12 +195,12 @@ if($ok) {
 
 
 	// Créer les sprints en fonction des lignes titres contenus dans le document
-	if($conf->subtotal->enabled && $conf->scrumboard->enabled){
+	if(!empty($conf->subtotal->enabled) && !empty($conf->scrumboard->enabled)){
 	    _print_on_off('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE', $langs->trans('Doc2ProjectCreateSprintFromTitle'));
 	}
 
 	// Créer autant de tâches qu'il y a de postes de travail associés au produit/service
-	if($conf->workstationatm->enabled){
+	if(!empty($conf->workstationatm->enabled)){
 	    _print_on_off('DOC2PROJECT_WITH_WORKSTATION', $langs->trans('Doc2projectWithWorkstation'), '', $langs->trans('Doc2projectWithWorkstation'));
 	}
 
@@ -281,7 +281,7 @@ function _print_title($title="")
 
 function _print_on_off($confkey, $title = false, $desc ='', $help = false)
 {
-    global $var, $bc, $langs, $conf;
+    global $var, $bc, $langs, $conf, $db;
     $var=!$var;
     $newToken = function_exists('newToken') ? newToken() : $_SESSION['newtoken'];
 
@@ -326,7 +326,7 @@ function _print_input_form_part($confkey, $title = false, $desc ='', $metas = ar
 
     if($type!='textarea'){
         $defaultMetas['type']   = 'text';
-        $defaultMetas['value']  = $conf->global->{$confkey};
+        $defaultMetas['value']  = getDolGlobalString($confkey) ?? getDolGlobalInt($confkey);
     }
 
 
@@ -359,7 +359,7 @@ function _print_input_form_part($confkey, $title = false, $desc ='', $metas = ar
     print '<input type="hidden" name="token" value="'.$newToken.'">';
     print '<input type="hidden" name="action" value="set_'.$confkey.'">';
     if($type=='textarea'){
-        print '<textarea '.$metascompil.'  >'.dol_htmlentities($conf->global->{$confkey}).'</textarea>';
+        print '<textarea '.$metascompil.'  >'.dol_htmlentities(getDolGlobalString($confkey)).'</textarea>';
     }
     else {
         print '<input '.$metascompil.'  />';

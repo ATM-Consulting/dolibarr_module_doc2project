@@ -25,7 +25,7 @@
 
 function doc2projectAdminPrepareHead()
 {
-    global $langs, $conf;
+    global $langs, $conf, $object;
 
     $langs->load("doc2project@doc2project");
 
