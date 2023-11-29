@@ -28,8 +28,8 @@ class Doc2Project {
 		if (getDolGlobalInt('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO') && $line->qty == 0) return   true;
 
 		// FROM CONFIG : PRODUCT REF
-		$TExclude = explode(';', $conf->global->DOC2PROJECT_EXCLUDED_PRODUCTS);
-		if (getDolGlobalInt('DOC2PROJECT_EXCLUDED_PRODUCTS') && in_array($line->ref, $TExclude)) return  true;
+		$TExclude = explode(';', getDolGlobalString('DOC2PROJECT_EXCLUDED_PRODUCTS'));
+		if (count($TExclude) > 0 && in_array($line->ref, $TExclude)) return  true;
 
 		// Subtotal
 		if (!getDolGlobalInt('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL') && !empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line)) return true;
@@ -128,7 +128,7 @@ class Doc2Project {
 					}
 				}
 
-				$title = strtr($conf->global->DOC2PROJECT_TITLE_PROJECT,$Trans);
+				$title = strtr(getDolGlobalString('DOC2PROJECT_TITLE_PROJECT'),$Trans);
 
 			}
 			else{
@@ -142,7 +142,7 @@ class Doc2Project {
 			$project->description    = '';
 			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
 			$project->datec			 = dol_now();
-			$project->date_start	 = (!empty($object->date_livraison))?$object->date_livraison:dol_now();
+			$project->date_start	 = empty($object->delivery_date) ?? dol_now();
 			$project->date_end		 = null;
 
 			$project->ref 			 = self::get_project_ref($project);
@@ -162,7 +162,7 @@ class Doc2Project {
 			else
 			{
 			    setEventMessage($langs->transnoentitiesnoconv('Doc2ProjectErrorCreateProject', $r.$project->error), 'errors');
-			}
+			}e
 		}
 
 
@@ -219,12 +219,12 @@ class Doc2Project {
 				$Trans['{workstation_code}']=$ws->code;
 			}
 
-			$eval = strtr($conf->global->DOC2PROJECT_CONVERSION_RULE,$Trans);
+			$eval = strtr(getDolGlobalString('DOC2PROJECT_CONVERSION_RULE'),$Trans);
 
 			if(strpos($eval,'return ')===false)$eval = 'return ('.$eval.');';
 
 			$durationInSec = eval($eval) * 3600;
-			$nbDays = ceil(($durationInSec / 3600) / ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY ? $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY : 1)); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
+			$nbDays = ceil(($durationInSec / 3600) / (getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') ?? 1));
 
 		}
 		else if($line->fk_product!=null){
@@ -234,11 +234,11 @@ class Doc2Project {
 
 			$nbDays = 0;
 			if($product->duration_unit == 'd') { // Service vendu au jour, la date de fin dépend du nombre de jours vendus
-				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600 * $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY;
+				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600 * getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY');
 				$nbDays = $line->qty * (empty($product->duration_value)?0:$product->duration_value);
 			} else if($product->duration_unit == 'h') { // Service vendu à l'heure, la date de fin dépend du nombre d'heure vendues
 				$durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 3600;
-				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / ($conf->global->DOC2PROJECT_NB_HOURS_PER_DAY ? $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY : 1)); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
+				$nbDays = ceil($line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) / (getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') ?? 1)); //@todo et si DOC2PROJECT_NB_HOURS_PER_DAY == 0 ? manque un test
 			} else if($product->duration_unit == 'i') { // Service vendu à la minute
                 $durationInSec = $line->qty * (empty($product->duration_value) ? 0 : $product->duration_value) * 60;
             } else {
@@ -249,7 +249,7 @@ class Doc2Project {
 		// Si les 2 méthodes d'avant ne sont pas appelées ou que le résultat vos 0, alors on calcule avec la conf de doc2project
 		if (empty($durationInSec))
 		{
-			$durationInSec = $line->qty * $conf->global->DOC2PROJECT_NB_HOURS_PER_DAY * 3600;
+			$durationInSec = $line->qty * getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 3600;
 			$nbDays = $line->qty;
 
 		}
@@ -409,7 +409,7 @@ class Doc2Project {
                     if(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_FOR_PARENT') || empty($TProdArbo)) {
                         $fk_parent = self::lineToTask($object, $line, $project, $start, $end, 0, true, 0, $story);
 
-                        if($conf->workstationatm->enabled && $conf->global->DOC2PROJECT_WITH_WORKSTATION) {
+                        if($conf->workstationatm->enabled && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
@@ -539,7 +539,7 @@ class Doc2Project {
 			}
 		}
 
-		if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && $conf->subtotal->enabled)
+		if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && $conf->subtotal->enabled)
 		{
 			$project->statut=0;
 			$project->array_options['options_stories'] = implode(',', $TStory);
@@ -785,7 +785,7 @@ class Doc2Project {
 				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 				$task->update($user);
-				if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !is_null($story_k)){
+				if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && !is_null($story_k)){
 					Doc2Project::setStoryK($db, $task->id, $story_k);
 				}
 
@@ -918,7 +918,7 @@ class Doc2Project {
 	public static function getStoryL($story_k) {
 	    global $conf, $TStory;
 
-	    if($conf->global->DOC2PROJECT_CREATE_SPRINT_FROM_TITLE && !empty($story_k)) {
+	    if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && !empty($story_k)) {
 	        if(isset($TStory[$story_k-1])) return $TStory[$story_k-1];
 	    }
 

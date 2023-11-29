@@ -1,6 +1,6 @@
 <?php
 
-class ActionsDoc2Project
+class ActionsDoc2Project extends CommonHookActions
 {
 	// Affichage du bouton d'action => 3.6 uniquement.....
 	function addMoreActionsButtons($parameters, &$object, &$action, $hookmanager)
@@ -8,8 +8,8 @@ class ActionsDoc2Project
 		global $conf,$langs,$db,$user;
 
 		if($user->hasRight('projet', 'all', 'creer') &&
-			((in_array('propalcard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL && $object->statut == 2)
-			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1))
+			((in_array('propalcard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_PROPOSAL') && $object->statut == 2)
+			|| (in_array('ordercard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_ORDER') && $object->statut == 1))
 		)
 		{
 			if((float)DOL_VERSION>=3.6) {
@@ -98,8 +98,8 @@ class ActionsDoc2Project
 
 		global $langs,$db,$user,$conf;
 		if($user->hasRight('projet', 'all', 'creer') &&
-			((in_array('propalcard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_PROPOSAL && $object->statut == 2)
-			|| (in_array('ordercard',explode(':',$parameters['context'])) && $conf->global->DOC2PROJECT_DISPLAY_ON_ORDER && $object->statut == 1))
+			((in_array('propalcard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_PROPOSAL') && $object->statut == 2)
+			|| (in_array('ordercard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_ORDER') && $object->statut == 1))
 			&& (float)DOL_VERSION < 3.6
 		)
 		{
@@ -177,7 +177,7 @@ class ActionsDoc2Project
 			?>
 			<tr>
 				<td><?php echo $langs->trans('DurationEffective'); ?> (Jours Homme)</td>
-				<td><?php echo convertSecondToTime( $obj->duration_effective,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+				<td><?php echo convertSecondToTime( $obj->duration_effective,'all',getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 60 * 60) ?></td>
 
 			</tr>
 			<tr>
@@ -313,7 +313,7 @@ class ActionsDoc2Project
 				if (getDolGlobalInt('DOC2PROJECT_VALIDATE_CREATED_PROJECT')) $project->setValid($user);
 
 				//$object->setProject($project->id);
-				if($conf->global->DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER) $project->add_contact($user->id,'PROJECTLEADER','internal');
+				if(getDolGlobalInt('DOC2PROJECT_AUTO_AFFECT_PROJECTLEADER')) $project->add_contact($user->id,'PROJECTLEADER','internal');
 				//exit;
 				header('Location:'.dol_buildpath('/projet/tasks.php?id='.$project->id,1));
 			}

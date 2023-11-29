@@ -290,7 +290,7 @@ function _print_statistiques_projet(&$TRapport){
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?>
-						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 60 * 60) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
@@ -313,7 +313,7 @@ function _print_statistiques_projet(&$TRapport){
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
 					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?>
-					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td><?php echo convertSecondToTime($total_temps,'all',getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 60 * 60) ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
 				</tr>
@@ -442,7 +442,7 @@ function print_statistiques_categorie($PDOdb, &$TReport){
 						<td nowrap="nowrap"><?php echo price(round($line['total_vente'],2)) ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_achat'],2)) ?></td>
 						<?php if($conf->ndfp->enabled){ ?><td nowrap="nowrap"><?php echo price(round($line['total_ndf'],2)) ?></td><?php } ?>
-						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+						<td nowrap="nowrap"><?php echo convertSecondToTime($line['total_temps'],'all',getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 60 * 60)  ?></td>
 						<td nowrap="nowrap"><?php echo price(round($line['total_cout_homme'],2)) ?></td>
 						<td<?php echo ($line['marge'] < 0) ? ' style="color:red;font-weight: bold" ' : ' style="color:green" ' ?> nowrap="nowrap"><?php echo price(round($line['marge'],2)) ?></td>
 					</tr>
@@ -464,7 +464,7 @@ function print_statistiques_categorie($PDOdb, &$TReport){
 					<td><?php echo price($total_vente) ?></td>
 					<td><?php echo price($total_achat) ?></td>
 					<?php if($conf->ndfp->enabled){ ?><td><?php echo price($total_ndf) ?></td><?php } ?>
-					<td><?php echo convertSecondToTime($total_temps,'all',$conf->global->DOC2PROJECT_NB_HOURS_PER_DAY*60*60) ?></td>
+					<td><?php echo convertSecondToTime($total_temps,'all',getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 60 * 60)  ?></td>
 					<td><?php echo price($total_cout_homme) ?></td>
 					<td<?php echo ($total_marge < 0) ? ' style="color:red" ' : ' style="color:green" ' ?>><?php echo price($total_marge) ?></td>
 				</tr>

@@ -248,7 +248,7 @@ if($ok) {
         ,'onlyTNomenclatureWorkstation' => $langs->trans('d2p_onlyTNomenclatureWorkstation')
         ,'both' => $langs->trans('d2p_Both')
     );
-    print Form::selectarray('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS', $TVal, $conf->global->DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS);
+    print Form::selectarray('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS', $TVal, getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS'));
     print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
     print '</form>';
     print '</td></tr>';

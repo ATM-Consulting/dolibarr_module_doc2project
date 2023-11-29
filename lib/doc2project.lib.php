@@ -375,7 +375,7 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
 function getWorkdays($start, $end) {
     global $conf;
 
-    $defaultWorkingDays = explode('-',(isset($conf->global->MAIN_DEFAULT_WORKING_DAYS)?$conf->global->MAIN_DEFAULT_WORKING_DAYS:'1-5')); // yes, it's true dolibarr don't create a default '1-5' value so on fresh install of dolibarr this conf is empty. ENJOY!
+    $defaultWorkingDays = explode('-',(getDolGlobalInt('MAIN_DEFAULT_WORKING_DAYS') ?? '1-5')); // yes, it's true dolibarr don't create a default '1-5' value so on fresh install of dolibarr this conf is empty. ENJOY!
 
     $start = strtotime($date1);
     $end   = strtotime($date2);

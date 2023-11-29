@@ -353,7 +353,7 @@ class modDoc2Project extends DolibarrModules
 			return true;
 		}
 
-		if(versioncompare(explode('.',$targetVersion), explode('.', $conf->global->DOC2PROJECT_MOD_LAST_RELOAD_VERSION))>0){
+		if(versioncompare(explode('.',$targetVersion), explode('.', getDolGlobalString('DOC2PROJECT_MOD_LAST_RELOAD_VERSION')))>0){
 			return true;
 		}
 
