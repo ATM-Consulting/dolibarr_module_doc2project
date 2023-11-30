@@ -28,3 +28,4 @@ Doc2ProjectErrorUpdateProject=Erreur saving project's updates.
 Doc2ProjectTaskCreationMessage_mesgs=%s lines converted as tasks.
 Doc2ProjectTaskCreationMessage_warnings=%s lines ignored during task conversion.
 Doc2ProjectTaskCreationMessage_errors=error converting %s lines as task.
+Doc2ProjectTaskCreationMessage_NoTasksCreated=No line converted as task.
