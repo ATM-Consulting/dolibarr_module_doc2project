@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-
+- NEW: Nouvelle conf permettant de cocher par défaut la case pour suivre les tâches et le temps passé lors de la création d'un projet - *24/08/2023* - 3.3.0
 
 ## 3.4
 

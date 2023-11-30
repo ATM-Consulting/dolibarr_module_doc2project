@@ -122,7 +122,8 @@ class modDoc2Project extends DolibarrModules
 			array('DOC2PROJECT_AUTO_ON_PROPOSAL_CLOSE','chaine','0','Launch function when proposal is closed signed',1),
 			array('DOC2PROJECT_AUTO_ON_ORDER_VALIDATE','chaine','0','Launch function when order is validated',1),
 			array('DOC2PROJECT_NB_HOURS_PER_DAY','chaine','7','Used to convert service duration in hours',1),
-			array('DOC2PROJECT_TASK_REF_PREFIX','chaine','TA','Prefix for task reference, will be used with proposal or order line ID to be unique',1)
+			array('DOC2PROJECT_TASK_REF_PREFIX','chaine','TA','Prefix for task reference, will be used with proposal or order line ID to be unique',1),
+			array('DOC2PROJECT_ADD_USAGE_TASK_ON_PROJECT','chaine','0','Check the box to track tasks and time spent on automatic project creation',1)
 
 		);
 
