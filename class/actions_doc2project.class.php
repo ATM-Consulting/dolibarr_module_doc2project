@@ -307,7 +307,7 @@ class ActionsDoc2Project extends CommonHookActions
                 // un peu d'info c'est mieux que rien. Pour les détails par contre l'user peut se gratter
                 if(!empty(getDolGlobalInt('DOC2PROJECT_DEBUGCREATETASK'))) {
                     $TmsgsDef = array(
-                        'linesImported' => 'mesgs',
+                        'linesActuallyAdded' => 'mesgs', // plus fiable que linesImported
                         'linesExcluded' => 'warnings',
                         'linesImportError' => 'errors'
                     );

@@ -327,12 +327,13 @@ class Doc2Project {
 			}
 
 			// EXCLUDED LINES
+            // on test maintenant puis plus bas on reteste pour refaire rien :/
 			if(self::isExclude($line)){
 			    $linesExcluded ++;
 			    continue;
 			}
 
-			$linesImported++;
+			// $linesImported++; un peu useless de faire ça _AVANT_ d'importer
 
 			if (!empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line))
 			{
@@ -391,7 +392,8 @@ class Doc2Project {
 					$nomenclature->loadByObjectId($PDOdb,$line->rowid, $object->element, false, $line->fk_product);//get lines of nomenclature
 					if(!empty($nomenclature->TNomenclatureDet) || !empty($nomenclature->TNomenclatureWorkstation )){
 						$lastCreateTask = self::nomenclatureToTask($nomenclature,$line,$object, $project, $start, $end,$story);
-					}elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
+                        $TTaskAddedList[] = $lastCreateTask;
+                    }elseif( (!empty($line->fk_product) && $line->fk_product_type == 1)){
 					    $lastCreateTask = self::lineToTask($object,$line,$project,$start,$end,$fk_parent,$isParent,$fk_workstation,$story);
 						$TTaskAddedList[] = $lastCreateTask;
 					}
@@ -412,7 +414,7 @@ class Doc2Project {
                     if(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_FOR_PARENT') || empty($TProdArbo)) {
                         $fk_parent = self::lineToTask($object, $line, $project, $start, $end, 0, true, 0, $story);
 
-                        if($conf->workstationatm->enabled && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
+                        if( !empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
@@ -466,7 +468,7 @@ class Doc2Project {
                                     $TTaskAddedList[] = $new_fk_parent;
                                 }
 
-                                if(! empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
+                                if( !empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                                     dol_include_once('/workstationatm/class/workstation.class.php');
 
                                     $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $ss->id));
@@ -543,7 +545,7 @@ class Doc2Project {
 			}
 		}
 
-		if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && $conf->subtotal->enabled)
+		if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && !empty($conf->subtotal->enabled))
 		{
 			$project->statut=0;
 			$project->array_options['options_stories'] = implode(',', $TStory);
@@ -555,6 +557,7 @@ class Doc2Project {
 			self::resetDateTaskForProjectFromTaskList($project, getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 3600, $TTaskAddedList);
 		}
 
+        $TremonterDesInfosCestBien['linesActuallyAdded'] = count($TTaskAddedList);
         return $TremonterDesInfosCestBien;
 	}
 
