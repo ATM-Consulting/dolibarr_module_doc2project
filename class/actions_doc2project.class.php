@@ -303,12 +303,30 @@ class ActionsDoc2Project extends CommonHookActions
 				$start = strtotime('today'); // La 1ère tâche démarre à la même date que la date de début du projet
 				$end = '';
 
-				Doc2Project::parseLines($object, $project, $start,$end);
+				$TlinesInfos = Doc2Project::parseLines($object, $project, $start,$end);
+                // un peu d'info c'est mieux que rien. Pour les détails par contre l'user peut se gratter
+                if(!empty(getDolGlobalInt('DOC2PROJECT_DEBUGCREATETASK'))) {
+                    $TmsgsDef = array(
+                        'linesImported' => 'mesgs',
+                        'linesExcluded' => 'warnings',
+                        'linesImportError' => 'errors'
+                    );
+                    foreach ($TmsgsDef as $info => $level) {
+                        if (! empty($TlinesInfos[$info])) {
+                            $msgTradKey = 'Doc2ProjectTaskCreationMessage_' . $level;
+                            $msg = $langs->trans($msgTradKey, $TlinesInfos[$info]);
+                            setEventMessage($msg, $level);
+                        }
+                    }
+                }
+
 
 				// LIEN OBJECT / PROJECT
 				$project->date_end = $end;
+                // il vient d'où celui-là on sait pas ???
 				if(!empty($resetProjet)) $project->statut = 0;
-				$project->update($user);
+				$ret = $project->update($user);
+                if($ret < 0) setEventMessage($langs->trans('Doc2ProjectErrorUpdateProject'), 'errors');
 
 				if (getDolGlobalInt('DOC2PROJECT_VALIDATE_CREATED_PROJECT')) $project->setValid($user);
 

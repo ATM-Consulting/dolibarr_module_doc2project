@@ -285,8 +285,9 @@ class Doc2Project {
 
 
 
-
-	public static function parseLines(&$object,&$project,&$start,&$end, &$story = '')
+    // return array 'linesImported' => int, 'linesExcluded' => int, 'linesImportError' => int
+    // parce que c'est mieux que ce qu'il y avait avant ie fck all
+	public static function parseLines(&$object,&$project,&$start,&$end, &$story = '') : array
 	{
 		global $conf,$langs,$db,$user,$TStory;
 
@@ -309,8 +310,10 @@ class Doc2Project {
 		$fk_task_parent = 0;
 
 		$linesImported = 0;
-		$linesExcluded =0;
-		$linesImportError =0;
+		$linesExcluded = 0;
+		$linesImportError = 0;
+
+        $TremonterDesInfosCestBien = array ('linesImported' => &$linesImported, 'linesExcluded' => &$linesExcluded, 'linesImportError' => &$linesImportError);
 
 		$TTaskAddedList = array(); // populate with task id
 
@@ -532,6 +535,7 @@ class Doc2Project {
                             if (in_array(getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS'), array('onlyTNomenclatureWorkstation', 'both')))
                             {
                                 // TODO ... create project task from TNomenclatureWorkstation
+                                // EDIT: c'est toujours d'actualité ce truc ?
                             }
                         }
                     }
@@ -550,6 +554,8 @@ class Doc2Project {
 		if(getDolGlobalInt('DOC2PROJECT_TASK_RECALC_DATE_BY_VELOCITY')){
 			self::resetDateTaskForProjectFromTaskList($project, getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 3600, $TTaskAddedList);
 		}
+
+        return $TremonterDesInfosCestBien;
 	}
 
 	/**

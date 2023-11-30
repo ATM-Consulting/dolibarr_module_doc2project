@@ -85,3 +85,8 @@ DOC2PROJECT_ALWAYS_ADD_THIRDPARTY_PROJECT_TITLE_help=Par défaut si le document 
 Doc2ProjectGroupTasksBySprint=Grouper les tâches par nom dans un sprint
 Doc2ProjectGroupTasks=Grouper les tâches par nom
 Doc2ProjectPrevueBeforeConvert=prévisualisation et selection des lignes avant l'import
+
+Doc2ProjectErrorUpdateProject=Erreur à la sauvegarde du projet
+Doc2ProjectTaskCreationMessage_mesgs=%s lignes converties en tâches.
+Doc2ProjectTaskCreationMessage_warnings=%s lignes ignorées à la conversion en tâches.
+Doc2ProjectTaskCreationMessage_errors=erreur à la conversion de %s lignes en tâches.
