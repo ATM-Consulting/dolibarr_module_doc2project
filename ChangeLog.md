@@ -2,11 +2,16 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- NEW: Nouvelle conf permettant de cocher par défaut la case pour suivre les tâches et le temps passé lors de la création d'un projet - *24/08/2023* - 3.3.0
 
 ## 3.4
 
-- NEW : compatibilité dolibarr v19 & PHP8 - *29/11/2023* - 3.4.0
+- NEW :   Changed Dolibarr compatibility range to 12 min - 19 max  	- *29/11/2023* - 3.4.0
+	  Changed PHP compatibility range to 7.0 min - 8.2 max		- *29/11/2023* - 3.4.0
+
+
+## 3.3
+
+- NEW: Nouvelle conf permettant de cocher par défaut la case pour suivre les tâches et le temps passé lors de la création d'un projet - *24/08/2023* - 3.3.0
 
 
 ## 3.2
