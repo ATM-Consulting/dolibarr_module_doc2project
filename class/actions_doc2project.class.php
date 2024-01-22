@@ -361,9 +361,9 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 	 */
 	function afterCreateProject($parameters, &$object, &$action, $hookmanager): int
 	{
-		global $conf, $user;
+		global $conf, $user, $db;
 		if ($action == 'afterCreateProject' && !empty($conf->global->DOC2PROJECT_ADD_USAGE_TASK_ON_PROJECT)){
-			$project = new Project($this->db);
+			$project = new Project($db);
 			if ($project->fetch($parameters['project']->id) > 0){
 				$project->usage_task = 1;
 				if ($project->update($user, 1) >= 0) {
