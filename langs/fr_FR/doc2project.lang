@@ -32,7 +32,7 @@ Doc2ProjectCreateSprintFromTitle=Créer les sprints en fonction des lignes titre
 DOC2PROJECT_TASK_NAME=Label à appliquer lors de la création des tâches
 DOC2PROJECT_TASK_NAME_HELP=Clés de substitutions :<br />- {product_ref} => référence du produit<br />- {product_label} => libellé de la ligne
 DOC2PROJECT_VALIDATE_CREATED_PROJECT=Valider automatiquement les projets créés depuis un devis ou une commande
-DOC2PROJECT_DISPLAY_LINKED_TASKS=Afficher sur les lignes de document les tâches qui leur sont liées (uniquement sur la fiche du document validé)
+DOC2PROJECT_DISPLAY_LINKED_TASKS=Afficher sur les lignes de document les tâches qui leur sont liées (uniquement sur la fiche du document validé, non fonctionnel avel le module nomenclature/ouvrage  )
 DOC2PROJECT_TASK_RECALC_DATE_BY_VELOCITY = Lors de l'ajout des tâches au projet, prendre en compte la vélocité (nombre d'heures journalier) dans la planification
 Doc2ProjectUseSpecificStoryToCreateTasks = Permet de passer un libellé de sprint pour spécifier un sprint dans lequel créer les tâches
 Doc2ProjectDocumentsSourceParameters = Paramètres liés aux documents source

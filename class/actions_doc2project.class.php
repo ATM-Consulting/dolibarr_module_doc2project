@@ -370,11 +370,11 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 					return 0;
 				}
 				else {
-					setEventMessage($this->db->lasterror());
+					setEventMessage($db->lasterror());
 					return -1;
 				}
 			}else {
-				setEventMessage($this->db->lasterror());
+				setEventMessage($db->lasterror());
 				return -1;
 			}
 		}
