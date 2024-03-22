@@ -1,4 +1,9 @@
 <?php
+/**
+* SPDX-License-Identifier: GPL-3.0-or-later
+* This file is part of Dolibarr module Doc2Project
+*/
+
 
 function reportPrepareHead($type='report') {
 	global $user,$langs;

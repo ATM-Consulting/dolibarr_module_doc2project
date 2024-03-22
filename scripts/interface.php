@@ -1,4 +1,9 @@
 <?php
+/**
+* SPDX-License-Identifier: GPL-3.0-or-later
+* This file is part of Dolibarr module Doc2Project
+*/
+
 if (!defined("NOCSRFCHECK")) define('NOCSRFCHECK', 1);
 if (!defined("NOTOKENRENEWAL")) define('NOTOKENRENEWAL', 1);
 
