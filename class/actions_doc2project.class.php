@@ -1,4 +1,9 @@
 <?php
+/**
+* SPDX-License-Identifier: GPL-3.0-or-later
+* This file is part of Dolibarr module Doc2Project
+*/
+
 
 require_once __DIR__ . '/../backport/v19/core/class/commonhookactions.class.php';
 

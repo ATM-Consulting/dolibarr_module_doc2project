@@ -1,4 +1,9 @@
 <?php
+/**
+* SPDX-License-Identifier: GPL-3.0-or-later
+* This file is part of Dolibarr module Doc2Project
+*/
+
 function _print_filtre_fournisseur(&$form,&$PDOdb){
 	
 	$PDOdb->Execute("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe WHERE fournisseur = 1 ORDER BY nom");
