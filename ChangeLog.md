@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ## 3.4
+- FIX : DA024918 - les lignes libres de service n'étaient plus reprises lors de la création d'un projet et de ses tâches depuis une proposition commerciale - *30/04/2024* - 3.4.3  
 - FIX : $this->db remove and msg  added on conf description   - *27/02/2024* - 3.4.2  
 - FIX : Fatal this->db was always empty - *22/01/2024* - 3.4.1
 - NEW :   Changed Dolibarr compatibility range to 12 min - 19 max  	- *29/11/2023* - 3.4.0

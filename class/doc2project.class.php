@@ -33,8 +33,10 @@ class Doc2Project {
 		if (getDolGlobalInt('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO') && $line->qty == 0) return   true;
 
 		// FROM CONFIG : PRODUCT REF
-		$TExclude = explode(';', getDolGlobalString('DOC2PROJECT_EXCLUDED_PRODUCTS'));
-		if (count($TExclude) > 0 && in_array($line->ref, $TExclude)) return  true;
+		if(!empty(getDolGlobalString('DOC2PROJECT_EXCLUDED_PRODUCTS'))) {
+			$TExclude = explode(';', getDolGlobalString('DOC2PROJECT_EXCLUDED_PRODUCTS'));
+			if (count($TExclude) > 0 && in_array($line->ref, $TExclude)) return  true;
+		}
 
 		// Subtotal
 		if (!getDolGlobalInt('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL') && !empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line)) return true;
@@ -292,11 +294,18 @@ class Doc2Project {
 
 	}
 
-
-
-    // return array 'linesImported' => int, 'linesExcluded' => int, 'linesImportError' => int
-    // parce que c'est mieux que ce qu'il y avait avant ie fck all
-	public static function parseLines(&$object,&$project,&$start,&$end, &$story = '') : array
+	/**
+	 *
+	 * Création des tâches liées au projet renseigné en paramètre depuis l'objet lui même renseigné en paramètre
+	 *
+	 * @param CommonObject $object
+	 * @param Project $project
+	 * @param int $start
+	 * @param int $end
+	 * @param string $story
+	 * @return array
+	 */
+	public static function parseLines(&$object, &$project, &$start, &$end, &$story = '') : array
 	{
 		global $conf,$langs,$db,$user,$TStory;
 
@@ -315,14 +324,13 @@ class Doc2Project {
 		// Par contre il faut les titres suivants correctement, T1 => T2 => T3 ... et pas de T1 => T3, dans ce cas T3 sera du même niveau que T1
 		$TTask_id_parent = array();
 		$index = 1;
-        //var_dump($object->lines);exit;
 		$fk_task_parent = 0;
 
 		$linesImported = 0;
 		$linesExcluded = 0;
 		$linesImportError = 0;
 
-        $TremonterDesInfosCestBien = array ('linesImported' => &$linesImported, 'linesExcluded' => &$linesExcluded, 'linesImportError' => &$linesImportError);
+        $TInfos = array ('linesImported' => &$linesImported, 'linesExcluded' => &$linesExcluded, 'linesImportError' => &$linesImportError);
 
 		$TTaskAddedList = array(); // populate with task id
 
@@ -336,13 +344,10 @@ class Doc2Project {
 			}
 
 			// EXCLUDED LINES
-            // on test maintenant puis plus bas on reteste pour refaire rien :/
 			if(self::isExclude($line)){
-			    $linesExcluded ++;
+				$linesExcluded ++;
 			    continue;
 			}
-
-			// $linesImported++; un peu useless de faire ça _AVANT_ d'importer
 
 			if (!empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line))
 			{
@@ -566,8 +571,8 @@ class Doc2Project {
 			self::resetDateTaskForProjectFromTaskList($project, getDolGlobalInt('DOC2PROJECT_NB_HOURS_PER_DAY') * 3600, $TTaskAddedList);
 		}
 
-        $TremonterDesInfosCestBien['linesActuallyAdded'] = count($TTaskAddedList);
-        return $TremonterDesInfosCestBien;
+		$TInfos['linesActuallyAdded'] = count($TTaskAddedList);
+        return $TInfos;
 	}
 
 	/**
