@@ -294,10 +294,6 @@ class Doc2Project {
 
 	}
 
-
-
-    // return array
-
 	/**
 	 *
 	 * Création des tâches liées au projet renseigné en paramètre depuis l'objet lui même renseigné en paramètre
@@ -307,7 +303,7 @@ class Doc2Project {
 	 * @param $start
 	 * @param $end
 	 * @param $story
-	 * @return int[]
+	 * @return array
 	 */
 	public static function parseLines(&$object, &$project, &$start, &$end, &$story = '') : array
 	{
