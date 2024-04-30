@@ -293,11 +293,11 @@ class Doc2Project {
 	 *
 	 * Création des tâches liées au projet renseigné en paramètre depuis l'objet lui même renseigné en paramètre
 	 *
-	 * @param $object
-	 * @param $project
-	 * @param $start
-	 * @param $end
-	 * @param $story
+	 * @param CommonObject $object
+	 * @param Project $project
+	 * @param int $start
+	 * @param int $end
+	 * @param string $story
 	 * @return array
 	 */
 	public static function parseLines(&$object, &$project, &$start, &$end, &$story = '') : array
