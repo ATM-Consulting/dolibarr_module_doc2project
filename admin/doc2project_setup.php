@@ -188,6 +188,8 @@ if($ok) {
 	// Coupler l'utilisation du module à "Nomenclature" et "Workstation"
 	_print_on_off('DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION', $langs->trans('Doc2ProjectUseNomenclatureAndWorkstation'));
 
+	_print_on_off('DOC2PROJECT_USE_QTY_OF_NOMENCLATURE', $langs->trans('Doc2ProjectUseQtyOfNomenclature'));
+
 	// Autoriser la création de tâche pour une ligne libre
 	_print_on_off('DOC2PROJECT_ALLOW_FREE_LINE', $langs->trans('Doc2ProjectAllowFreeLine'));
 

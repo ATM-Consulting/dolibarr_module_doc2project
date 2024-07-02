@@ -10,6 +10,7 @@ CreateProjectAndTasks = Créer projet et tâches
 CreateTasksInProject = Créer les tâches dans le projet associé
 DocConverted = convertie
 AbricotNeeded = Le module Abricot est nécessaire.
+Doc2ProjectUseQtyOfNomenclature=Lors de la conversion d'une nomenclature en tâche, prendre uniquement la quantité de la nomenclature sans multiplier par la quantité de la ligne du document
 
 # SETUP
 DisplayOnProposal = Afficher le bouton de conversion sur la fiche proposition

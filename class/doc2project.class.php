@@ -251,7 +251,6 @@ class Doc2Project {
                 $durationInSec = 0;
             }
 		}
-
 		// Si les 2 méthodes d'avant ne sont pas appelées ou que le résultat vos 0, alors on calcule avec la conf de doc2project
 		if (empty($durationInSec))
 		{
@@ -259,6 +258,7 @@ class Doc2Project {
 			$nbDays = $line->qty;
 
 		}
+
 
 		// TODO à voir si la conf ne doit pas réinit la valeur des dates à vide s'il n'y en a pas sur la ligne pour éviter d'avoir 2 modes d'affectation des dates
         if (getDolGlobalInt('DOC2PROJECT_USE_DATE_FROM_LINE') && !empty($line->date_start) && !empty($line->date_end))
@@ -541,7 +541,7 @@ class Doc2Project {
                         {
                             if (in_array(getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS'), array('onlyTNomenclatureDet', 'both')))
                             {
-                                self::nomenclaturedetToTask($detailsNomenclature, $line, $object, $project, $start, $end, ($skip ? $fk_task_parent : $fk_task), $story);
+                                self::nomenclaturedetToTask($detailsNomenclature ?? [], $line, $object, $project, $start, $end, ($skip ? $fk_task_parent : $fk_task), $story);
                             }
                             if (in_array(getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS'), array('onlyTNomenclatureWorkstation', 'both')))
                             {
@@ -980,7 +980,7 @@ class Doc2Project {
 
 	    if(is_object($curentNomenclature) && get_class($curentNomenclature) == 'TNomenclature')
 	    {
-	        $detailsNomenclature=$curentNomenclature->getDetails($line->qty);
+	        $detailsNomenclature=$curentNomenclature->getDetails(getDolGlobalInt('DOC2PROJECT_USE_QTY_OF_NOMENCLATURE') ? 1 : $line->qty);
 	    }
 	    else
 	    {
@@ -1016,7 +1016,6 @@ class Doc2Project {
 				{
 					$idWorkstation = 0;
 				}
-
 				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
 				$fk_ParentTask = self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
 
@@ -1041,6 +1040,7 @@ class Doc2Project {
 		            $fk_task_parent = 0;
 		            $fk_workstation = $wsn->workstation->rowid;
 		            $durationInSec = $line->qty * $wsn->nb_hour * 3600;
+
 		            $label = $wsn->workstation->name;
 		            self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$stories);
 
