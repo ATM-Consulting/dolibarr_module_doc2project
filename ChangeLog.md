@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ## 3.4
+- FIX : Missing feature allowing, during the conversion of a nomenclature into a task, to take only the quantity of the nomenclature without multiplying by the quantity of the document line   - *02/07/2024* - 3.4.3  
 - FIX : $this->db remove and msg  added on conf description   - *27/02/2024* - 3.4.2  
 - FIX : Fatal this->db was always empty - *22/01/2024* - 3.4.1
 - NEW :   Changed Dolibarr compatibility range to 12 min - 19 max  	- *29/11/2023* - 3.4.0
