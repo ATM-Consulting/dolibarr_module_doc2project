@@ -306,7 +306,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 				$end = '';
 
 				$TlinesInfos = Doc2Project::parseLines($object, $project, $start,$end);
-                // un peu d'info c'est mieux que rien. Pour les détails par contre on peut se gratter
+
                 if(!empty(getDolGlobalInt('DOC2PROJECT_DEBUGCREATETASK'))) {
                     $TmsgsDef = array(
                         'linesActuallyAdded' => 'mesgs', // plus fiable que linesImported
