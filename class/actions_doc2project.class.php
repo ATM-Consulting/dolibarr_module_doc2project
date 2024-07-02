@@ -152,7 +152,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 				}
 			}
 
-			if ($conf->ndfp->enabled)
+			if (!empty($conf->ndfp->enabled))
 			{
 				$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
 				$res=$db->query($sql);

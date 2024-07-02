@@ -244,7 +244,6 @@ function taskViewToHtml($Tlines)
         if($task['element'] == 'workstation' && empty($task['infos']['object']->nb_hour)){
             $style = 'text-decoration: line-through;';
         }
-
         print '<li style="'.$style.'">';
 
 
@@ -304,9 +303,12 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
     $i=0;
     if(!empty($nomenclature->TNomenclatureDet)){
         $detailsNomenclature=$nomenclature->getDetails($qty);
+
         // PARCOURS DE LA NOMENCLATURE
         foreach ($nomenclature->TNomenclatureDet as &$det)
         {
+			if(getDolGlobalInt('DOC2PROJECT_USE_QTY_OF_NOMENCLATURE')) $displayedQty = $qty;
+			else $displayedQty = $qty * $det->qty;
             $i++;
 
             $Tlines[$i] = array(
@@ -316,12 +318,12 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
                 'infos'   => array(
                     'label' => '',
                     'desc' => '',
-                    'qty' => $qty * $det->qty,
+                    'qty' => $displayedQty,
                     'object' => $det,
                 ),
             );
 
-            $childs = nomenclatureProductDeepCrawl($det->fk_product, 'product', $det->fk_product,$qty * $det->qty, $deep+1, $maxDeep);
+            $childs = nomenclatureProductDeepCrawl($det->fk_product, 'product', $det->fk_product,$displayedQty, $deep+1, $maxDeep);
 
             if(!empty($childs))
             {
