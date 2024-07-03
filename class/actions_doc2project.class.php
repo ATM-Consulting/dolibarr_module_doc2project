@@ -111,7 +111,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 		)
 		{
 			$langs->load('doc2project@doc2project');
-			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element;
+			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element. '&token='.newToken();
 			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 			?>
 			<script type="text/javascript">
