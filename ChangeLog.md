@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- NEW : Compatibilité V20 - *03/07/2024* - 3.5.0
+
 
 ## 3.4
 - FIX : Missing feature allowing, during the conversion of a nomenclature into a task, to take only the quantity of the nomenclature without multiplying by the quantity of the document line   - *02/07/2024* - 3.4.4  
