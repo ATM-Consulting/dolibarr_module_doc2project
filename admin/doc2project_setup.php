@@ -95,7 +95,7 @@ dol_fiche_head(
     "project"
 );
 
-$ok = $conf->propal->enabled || $conf->commande->enabled;
+$ok = isModEnabled('propal') || isModEnabled('commande');
 
 $abricotIsPresent = dol_buildpath('abricot/langs/fr_FR/abricot.lang');
 if(empty($abricotIsPresent) || !file_exists($abricotIsPresent)){
@@ -117,12 +117,12 @@ if($ok) {
 
 
 	// Display convert button on proposal
-	if($conf->propal->enabled) {
+	if(isModEnabled('propal')) {
 	    _print_on_off('DOC2PROJECT_DISPLAY_ON_PROPOSAL', $langs->trans('DisplayOnProposal'));
 	}
 
 	// Display convert button on order
-	if($conf->commande->enabled) {
+	if(isModEnabled('commande')) {
 	    _print_on_off('DOC2PROJECT_DISPLAY_ON_ORDER', $langs->trans('DisplayOnOrder'));
 	}
 
@@ -204,12 +204,12 @@ if($ok) {
 
 
 	// Créer les sprints en fonction des lignes titres contenus dans le document
-	if(!empty($conf->subtotal->enabled) && !empty($conf->scrumboard->enabled)){
+	if(isModEnabled('subtotal') && isModEnabled('scrumboard')){
 	    _print_on_off('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE', $langs->trans('Doc2ProjectCreateSprintFromTitle'));
 	}
 
 	// Créer autant de tâches qu'il y a de postes de travail associés au produit/service
-	if(!empty($conf->workstationatm->enabled)){
+	if(isModEnabled('workstationatm')){
 	    _print_on_off('DOC2PROJECT_WITH_WORKSTATION', $langs->trans('Doc2projectWithWorkstation'), '', $langs->trans('Doc2projectWithWorkstation'));
 	}
 
