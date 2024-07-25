@@ -21,7 +21,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 		{
 			if((float)DOL_VERSION>=3.6) {
 				$langs->load('doc2project@doc2project');
-				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element;
+				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type=' .$object->element. '&token='.newToken();
 				if(getDolGlobalInt('DOC2PROJECT_PREVUE_BEFORE_CONVERT')){ $link = '#'; }
 				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 				print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
@@ -111,7 +111,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 		)
 		{
 			$langs->load('doc2project@doc2project');
-			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element;
+			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element. '&token='.newToken();
 			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
 			?>
 			<script type="text/javascript">
@@ -152,7 +152,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 				}
 			}
 
-			if (!empty($conf->ndfp->enabled))
+			if (!empty(isModEnabled('ndfp')))
 			{
 				$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
 				$res=$db->query($sql);

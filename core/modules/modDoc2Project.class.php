@@ -58,7 +58,7 @@ class modDoc2Project extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '3.4.4';
+		$this->version = '3.5.0';
 		// Url to the file with your last numberversion of this module
 		require_once __DIR__ . '/../../class/techatm.class.php';
 		$this->url_last_version = \doc2project\TechATM::getLastModuleVersionUrl($this);
@@ -108,7 +108,7 @@ class modDoc2Project extends DolibarrModules
 		$this->requiredby = array();	// List of modules id to disable if this one is disabled
 		$this->conflictwith = array();	// List of modules id this module is in conflict with
 		$this->phpmin = array(7,0);					// Minimum version of PHP required by module
-		$this->need_dolibarr_version = array(15,0);	// Minimum version of Dolibarr required by module
+		$this->need_dolibarr_version = array(16,0);	// Minimum version of Dolibarr required by module
 		$this->langfiles = array("doc2project@doc2project");
 
 		// Constants
@@ -154,7 +154,7 @@ class modDoc2Project extends DolibarrModules
 		$this->tabs = array();
 
 		// Dictionaries
-		if (! isset($conf->doc2project->enabled))
+		if (!isModEnabled('doc2project'))
 		{
 			$conf->doc2project=new stdClass();
 			$conf->doc2project->enabled=0;
@@ -216,7 +216,7 @@ class modDoc2Project extends DolibarrModules
 								'url'=>'/doc2project/rapport.php',
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>166,
-								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
+								'enabled'=>'isModEnabled("doc2project")',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
 								'perms'=>'$user->hasRight(\'doc2project\',\'read\')',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
@@ -230,7 +230,7 @@ class modDoc2Project extends DolibarrModules
 								'url'=>'/doc2project/rapport.php',
 								'langs'=>'mylangfile@doc2project',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 								'position'=>167,
-								'enabled'=>'$conf->doc2project->enabled',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
+								'enabled'=>'isModEnabled("doc2project")',	// Define condition to show or hide menu entry. Use '$conf->doc2project->enabled' if entry must be visible if module is enabled.
 								'perms'=> '$user->hasRight(\'doc2project\',\'read\')',			                // Use 'perms'=>'$user->rights->doc2project->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
