@@ -2,8 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- NEW : Compatibilité V20 - *03/07/2024* - 3.5.0
 
+
+
+## 3.5
+- NEW : Compatibility V20, changed Dolibarr  compatibility 16 min - 20 max -  *03/07/2024* - 3.5.0
 
 ## 3.4
 - FIX : Missing feature allowing, during the conversion of a nomenclature into a task, to take only the quantity of the nomenclature without multiplying by the quantity of the document line   - *02/07/2024* - 3.4.4  
@@ -13,14 +16,10 @@ All notable changes to this project will be documented in this file.
 - NEW :   Changed Dolibarr compatibility range to 12 min - 19 max  	- *29/11/2023* - 3.4.0
 	  Changed PHP compatibility range to 7.0 min - 8.2 max		- *29/11/2023* - 3.4.0
 
-
 ## 3.3
-
 - NEW: Nouvelle conf permettant de cocher par défaut la case pour suivre les tâches et le temps passé lors de la création d'un projet - *24/08/2023* - 3.3.0
 
-
 ## 3.2
-
 - FIX : DA023853 - Inversion du test de version - *27/09/2023* - 3.2.6  
 - FIX : Inversion du test de version - *05/07/2023* - 3.2.4  
 - FIX : Compat Dolibarr V18 *12/06/2023* - 3.2.4
@@ -44,6 +43,6 @@ All notable changes to this project will be documented in this file.
 ## 2.1
 - FIX: Dolibarr V13 Trigger compatibility - *25/03/2021* - 2.1.1
 
-## Version 2.0
+## 2.0
 - no change log up to this point
 
