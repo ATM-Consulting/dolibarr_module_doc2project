@@ -483,11 +483,9 @@ function print_statistiques_categorie($PDOdb, &$TReport){
 
 function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 	global $db, $conf;
-	$vente = $achat = $ndf = 0;
-	$factureTotalHTSQLField = 'total_ht';
-	if ((float)DOL_VERSION <= 13) $factureTotalHTSQLField = 'total';
+	
 	 $sqlClient = "
-		SELECT DISTINCT(f.rowid), f.".$factureTotalHTSQLField." as total
+		SELECT DISTINCT(f.rowid), f.total_ht as total
 		FROM ".MAIN_DB_PREFIX."facture as f LEFT JOIN ".MAIN_DB_PREFIX."element_element el ON (el.fk_source=f.rowid)
 		WHERE (f.fk_projet = ".$fk_projet." OR (el.fk_target=".$fk_projet." AND el.sourcetype LIKE 'facture' AND el.targettype LIKE 'project'))
 		".($t_deb>0 && $t_fin>0 ? " AND f.datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  );
@@ -505,7 +503,6 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 	WHERE 1
 	AND f.fk_projet = '.$fk_projet.' OR (el.fk_target='.$fk_projet.' AND el.sourcetype LIKE "facturefournisseur" AND el.targettype LIKE "project")
 	';
-	//var_dump($sql);
 
 	$PDOdb2->Execute($sqlAchat);
 
@@ -514,7 +511,8 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 		$achat+=$obj2->total;
 	}
 
-	 if(isModEnabled('ndfp')){
+	$ndf = 0;
+    if(isModEnabled('ndfp')){
 		$sqlNdf=" , (
 			SELECT SUM(DISTINCT(ndfp.total_ht)) AS totalNdf FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1
 			".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
@@ -524,7 +522,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 		$obj3 = $PDOdb2->Get_line();
 		$ndf=$obj3->totalNdf;
 
-	 }
+	}
 
 
 	//var_dump($sqlAchat);
