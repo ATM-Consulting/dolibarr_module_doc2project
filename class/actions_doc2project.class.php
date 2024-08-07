@@ -9,7 +9,6 @@ require_once __DIR__ . '/../backport/v19/core/class/commonhookactions.class.php'
 
 class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 {
-	// Affichage du bouton d'action => 3.6 uniquement.....
 	function addMoreActionsButtons($parameters, &$object, &$action, $hookmanager)
 	{
 		global $conf,$langs,$db,$user;
@@ -19,82 +18,80 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 			|| (in_array('ordercard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_ORDER') && $object->statut == 1))
 		)
 		{
-			if((float)DOL_VERSION>=3.6) {
-				$langs->load('doc2project@doc2project');
-				$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type=' .$object->element. '&token='.newToken();
-				if(getDolGlobalInt('DOC2PROJECT_PREVUE_BEFORE_CONVERT')){ $link = '#'; }
-				$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
-				print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
+			$langs->load('doc2project@doc2project');
+			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type=' .$object->element. '&token='.newToken();
+			if(getDolGlobalInt('DOC2PROJECT_PREVUE_BEFORE_CONVERT')){ $link = '#'; }
+			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
+			print '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>';
 
-				// afficher les tâches liées aux lignes de document
-				if (getDolGlobalInt('DOC2PROJECT_DISPLAY_LINKED_TASKS'))
+			// afficher les tâches liées aux lignes de document
+			if (getDolGlobalInt('DOC2PROJECT_DISPLAY_LINKED_TASKS'))
+			{
+				$jsonObjectData =array();
+
+				dol_include_once('/doc2project/lib/doc2project.lib.php');
+				foreach($object->lines as $i => $line)
 				{
-					$jsonObjectData =array();
+					$jsonObjectData[$line->id] = new stdClass();
+					$jsonObjectData[$line->id]->id = $line->id;
+					$tasksForLine = getTasksForLine($line);
+					$jsonObjectData[$line->id]->LinkedTask = empty($tasksForLine) ? '' : implode('<br>', $tasksForLine);
+				}
+				?>
 
-					dol_include_once('/doc2project/lib/doc2project.lib.php');
-					foreach($object->lines as $i => $line)
-					{
-						$jsonObjectData[$line->id] = new stdClass();
-						$jsonObjectData[$line->id]->id = $line->id;
-						$tasksForLine = getTasksForLine($line);
-						$jsonObjectData[$line->id]->LinkedTask = empty($tasksForLine) ? '' : implode('<br>', $tasksForLine);
-					}
-					?>
+				<script type="application/javascript">
+					$( document ).ready(function() {
 
-					<script type="application/javascript">
-						$( document ).ready(function() {
+						var jsonObjectData = <?php print json_encode($jsonObjectData) ; ?> ;
 
-							var jsonObjectData = <?php print json_encode($jsonObjectData) ; ?> ;
+						// ADD NEW COLS
+						$("#tablelines tr").each(function( index ) {
 
-							// ADD NEW COLS
-							$("#tablelines tr").each(function( index ) {
+							$colSpanBase = 1; // nombre de colonnes ajoutées
 
-								$colSpanBase = 1; // nombre de colonnes ajoutées
-
-								if($( this ).hasClass( "liste_titre" ))
-								{
-									// PARTIE TITRE
-									$('<td class="linecoltasks" style="width: 100px"><?php print $langs->transnoentities('LinkedTasks'); ?></td>').insertBefore($( this ).find("th.linecoldescription,td.linecoldescription"));
+							if($( this ).hasClass( "liste_titre" ))
+							{
+								// PARTIE TITRE
+								$('<td class="linecoltasks" style="width: 100px"><?php print $langs->transnoentities('LinkedTasks'); ?></td>').insertBefore($( this ).find("th.linecoldescription,td.linecoldescription"));
+							}
+							else if($( this ).data( "product_type" ) == "9"){
+								$( this ).find("td[colspan]:first").attr('colspan',	parseInt($( this ).find("td[colspan]:first").attr('colspan')) + 1  );
+							}
+							else
+							{
+								// PARTIE LIGNE
+								var nobottom = '';
+								if($( this ).hasClass( "liste_titre_create" ) || $( this ).attr("data-element") == "extrafield" ){
+									nobottom = ' nobottom ';
 								}
-								else if($( this ).data( "product_type" ) == "9"){
-									$( this ).find("td[colspan]:first").attr('colspan',    parseInt($( this ).find("td[colspan]:first").attr('colspan')) + 1  );
+
+								// New columns
+								$('<td class="linecoltasks' + nobottom + '" style="width: 100px"></td>').insertBefore($( this ).find("td.linecoldescription"));
+
+
+								if($( this ).hasClass( "liste_titre_create" )){
+									$( this ).find("td.linecoledit").attr('colspan',	parseInt($( this ).find("td.linecoledit").attr('colspan')) + $colSpanBase  );
 								}
-								else
-								{
-									// PARTIE LIGNE
-									var nobottom = '';
-									if($( this ).hasClass( "liste_titre_create" ) || $( this ).attr("data-element") == "extrafield" ){
-										nobottom = ' nobottom ';
-									}
 
-									// New columns
-									$('<td class="linecoltasks' + nobottom + '" style="width: 100px"></td>').insertBefore($( this ).find("td.linecoldescription"));
-
-
-									if($( this ).hasClass( "liste_titre_create" )){
-										$( this ).find("td.linecoledit").attr('colspan',    parseInt($( this ).find("td.linecoledit").attr('colspan')) + $colSpanBase  );
-									}
-
-								}
-							});
-
-							// Affichage des données
-							$.each(jsonObjectData, function(i, item) {
-								$("#row-" + jsonObjectData[i].id + " .linecoltasks:first").html(jsonObjectData[i].LinkedTask);
-								console.log("#row-" + jsonObjectData[i].id);
-							});
-
+							}
 						});
-					</script>
-					<?php
 
-				}
+						// Affichage des données
+						$.each(jsonObjectData, function(i, item) {
+							$("#row-" + jsonObjectData[i].id + " .linecoltasks:first").html(jsonObjectData[i].LinkedTask);
+							console.log("#row-" + jsonObjectData[i].id);
+						});
 
-				if(getDolGlobalInt('DOC2PROJECT_PREVUE_BEFORE_CONVERT')){
-				    // Print la partie JS nécessaire à la popin
-				    dol_include_once('/doc2project/lib/doc2project.lib.php');
-				    printJSPopinBeforeAddTasksInProject($parameters, $object, $action, $hookmanager,$label);
-				}
+					});
+				</script>
+				<?php
+
+			}
+
+			if(getDolGlobalInt('DOC2PROJECT_PREVUE_BEFORE_CONVERT')){
+				// Print la partie JS nécessaire à la popin
+				dol_include_once('/doc2project/lib/doc2project.lib.php');
+				printJSPopinBeforeAddTasksInProject($parameters, $object, $action, $hookmanager,$label);
 			}
 		}
 
@@ -104,23 +101,6 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 	function formObjectOptions($parameters, &$object, &$action, $hookmanager) {
 
 		global $langs,$db,$user,$conf;
-		if($user->hasRight('projet', 'all', 'creer') &&
-			((in_array('propalcard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_PROPOSAL') && $object->statut == 2)
-			|| (in_array('ordercard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_ORDER') && $object->statut == 1))
-			&& (float)DOL_VERSION < 3.6
-		)
-		{
-			$langs->load('doc2project@doc2project');
-			$link = $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&action=create_project&from=doc2project&type='.$object->element. '&token='.newToken();
-			$label = empty($object->fk_project) ? $langs->trans('CreateProjectAndTasks') : $langs->trans('CreateTasksInProject');
-			?>
-			<script type="text/javascript">
-				$(document).ready(function(){
-					$('.tabsAction').append('<?php echo '<div class="inline-block divButAction"><a class="butAction" id="doc2project_create_project" href="' . $link . '">' . $label . '</a></div>'; ?>');
-				});
-			</script>
-			<?php
-		}
 
 		if(in_array('projectcard',explode(':',$parameters['context'])) && $object->id > 0) {
 			$langs->load('doc2project@doc2project');
@@ -199,10 +179,6 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 				<td><?php echo $langs->trans('TotalPropal'); ?></td>
 				<td><?php echo price($propalTotal) ?></td>
 			</tr>
-			<!-- <tr>
-				<td><?php echo $langs->trans('TotalBill'); ?></td>
-				<td><?php echo price($billsTotal) ?></td>
-			</tr>-->
 			<tr>
 				<td><?php echo $langs->trans('Margin'); ?></td>
 				<td><?php echo price($marge) ?></td>
@@ -244,43 +220,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 
 				<?php
 			}
-
 		}
-		else if(in_array('usercard',explode(':',$parameters['context']))) {
-
-			if((float)DOL_VERSION>=4.0) { //TODO check version à partir de laquelle c'est dispo
-				null;
-			}
-			else{
-				if((float)DOL_VERSION>=3.6) {
-					$thm = $object->thm;
-				}
-				else{
-					$resql = $db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->id);
-					$res = $db->fetch_object($resql);
-					$thm = $res->thm;
-				}
-				?>
-				<tr>
-					<td><?php echo $langs->trans('THM'); ?></td>
-					<td><?php
-
-						if($action=='edit') {
-							echo '<input id="thm" type="text" value="'.$thm.'" maxlength="11" size="9" name="thm">';
-						}
-						else{
-							echo price($thm);
-						}
-
-					?></td>
-
-				</tr>
-				<?php
-
-			}
-
-		}
-
 	}
 
 	function doActions($parameters, &$object, &$action, $hookmanager)
@@ -312,31 +252,31 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 
 				$TlinesInfos = Doc2Project::parseLines($object, $project, $start,$end);
 
-                if(!empty(getDolGlobalInt('DOC2PROJECT_DEBUGCREATETASK'))) {
-                    $TmsgsDef = array(
-                        'linesActuallyAdded' => 'mesgs', // plus fiable que linesImported
-                        'linesExcluded' => 'warnings',
-                        'linesImportError' => 'errors'
-                    );
-                    $linesThatHaveInfos = 0;
-                    foreach ($TmsgsDef as $info => $level) {
-                        if (! empty($TlinesInfos[$info])) {
-                            $linesThatHaveInfos += $TlinesInfos[$info];
-                            $msgTradKey = 'Doc2ProjectTaskCreationMessage_' . $level;
-                            $msg = $langs->trans($msgTradKey, $TlinesInfos[$info]);
-                            setEventMessage($msg, $level);
-                        }
-                    }
-                    if($linesThatHaveInfos < 1) setEventMessage($langs->trans('Doc2ProjectTaskCreationMessage_NoTasksCreated'), 'warnings');
-                }
+				if(!empty(getDolGlobalInt('DOC2PROJECT_DEBUGCREATETASK'))) {
+					$TmsgsDef = array(
+						'linesActuallyAdded' => 'mesgs', // plus fiable que linesImported
+						'linesExcluded' => 'warnings',
+						'linesImportError' => 'errors'
+					);
+					$linesThatHaveInfos = 0;
+					foreach ($TmsgsDef as $info => $level) {
+						if (! empty($TlinesInfos[$info])) {
+							$linesThatHaveInfos += $TlinesInfos[$info];
+							$msgTradKey = 'Doc2ProjectTaskCreationMessage_' . $level;
+							$msg = $langs->trans($msgTradKey, $TlinesInfos[$info]);
+							setEventMessage($msg, $level);
+						}
+					}
+					if($linesThatHaveInfos < 1) setEventMessage($langs->trans('Doc2ProjectTaskCreationMessage_NoTasksCreated'), 'warnings');
+				}
 
 
 				// LIEN OBJECT / PROJECT
 				$project->date_end = $end;
-                // il vient d'où celui-là on sait pas ???
+				// il vient d'où celui-là on sait pas ???
 				if(!empty($resetProjet)) $project->statut = 0;
 				$ret = $project->update($user);
-                if($ret < 0) setEventMessage($langs->trans('Doc2ProjectErrorUpdateProject'), 'errors');
+				if($ret < 0) setEventMessage($langs->trans('Doc2ProjectErrorUpdateProject'), 'errors');
 
 				if (getDolGlobalInt('DOC2PROJECT_VALIDATE_CREATED_PROJECT')) $project->setValid($user);
 
@@ -358,11 +298,11 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 	/**
 	 * afterCreateProject
 	 *
-	 * @param array()		   $parameters	  Hook metadatas (context, etc...)
-	 * @param CommonObject    &$object        The object being processed (e.g., an invoice, proposal, etc...)
-	 * @param string          &$action        The current action (usually create, edit, or null)
-	 * @param HookManager      $hookmanager   Hook manager instance to allow calling another hook
-	 * @return int                            Returns < 0 on error, 0 on success, 1 to replace standard code
+	 * @param array()		$parameters		Hook metadatas (context, etc...)
+	 * @param CommonObject	&$object		The object being processed (e.g., an invoice, proposal, etc...)
+	 * @param string		&$action		The current action (usually create, edit, or null)
+	 * @param HookManager	$hookmanager	Hook manager instance to allow calling another hook
+	 * @return int			Returns < 0 on error, 0 on success, 1 to replace standard code
 	 */
 	function afterCreateProject($parameters, &$object, &$action, $hookmanager): int
 	{
