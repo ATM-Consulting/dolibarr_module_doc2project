@@ -154,10 +154,6 @@ if($ok) {
 	// Cloner les attributs suppémentaires du document source sur le projet
 	_print_on_off('DOC2PROJECT_CLONE_EXTRAFIELDS', $langs->trans('Doc2ProjectCloneExtrafields'));
 
-	// Cocher la case pour suivre les tâches et le temps passé à la création auto d'un projet
-	_print_on_off('DOC2PROJECT_ADD_USAGE_TASK_ON_PROJECT', $langs->trans('Doc2ProjectAddUsageTaskOnProject'));
-
-
 	/**
 	 * TASK PARAMETERS
 	 */
