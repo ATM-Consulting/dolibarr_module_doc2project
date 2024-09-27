@@ -11,9 +11,12 @@ All notable changes to this project will be documented in this file.
 - NEW : Compatibility V20, changed Dolibarr compatibility 16 min - 20 max - *03/07/2024* - 3.5.0
 
 ## 3.4
-- FIX : Missing feature allowing, during the conversion of a nomenclature into a task, to take only the quantity of the nomenclature without multiplying by the quantity of the document line - *02/07/2024* - 3.4.4 
-- FIX : DA024918 - les lignes libres de service n'étaient plus reprises lors de la création d'un projet et de ses tâches depuis une proposition commerciale - *30/04/2024* - 3.4.3 
-- FIX : $this->db remove and msg added on conf description - *27/02/2024* - 3.4.2 
+
+- FIX DA025560 : Line date wasn't following on tasks - *27/09/2024* - 3.4.5
+- FIX : Missing feature allowing, during the conversion of a nomenclature into a task, to take only the quantity of the nomenclature without multiplying by the quantity of the document line   - *02/07/2024* - 3.4.4  
+- FIX : DA024918 - les lignes libres de service n'étaient plus reprises lors de la création d'un projet et de ses tâches depuis une proposition commerciale - *30/04/2024* - 3.4.3  
+- FIX : $this->db remove and msg  added on conf description   - *27/02/2024* - 3.4.2  
+
 - FIX : Fatal this->db was always empty - *22/01/2024* - 3.4.1
 - NEW : Changed Dolibarr compatibility range to 12 min - 19 max - *29/11/2023* - 3.4.0
 - NEW : Changed PHP compatibility range to 7.0 min - 8.2 max - *29/11/2023* - 3.4.0
