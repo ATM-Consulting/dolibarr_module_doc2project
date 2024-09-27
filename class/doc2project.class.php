@@ -1,4 +1,9 @@
 <?php
+/**
+* SPDX-License-Identifier: GPL-3.0-or-later
+* This file is part of Dolibarr module Doc2Project
+*/
+
 
 class Doc2Project {
 
@@ -15,14 +20,14 @@ class Doc2Project {
 		    // var_dump(array( !empty($linecheckbox), !isset($linecheckbox[$line->id]) ));
 		    if(!empty($linecheckbox) && !isset($linecheckbox[$line->id]))
 		    {
-                if (!empty($conf->subtotal->enabled) && (TSubtotal::isFreeText($line) || TSubtotal::isSubtotal($line)) ) { /* nothing to do */ }
+                if (isModEnabled('subtotal') && (TSubtotal::isFreeText($line) || TSubtotal::isSubtotal($line)) ) { /* nothing to do */ }
 		        else return true;
 		    }
 		}
 
 		if (getDolGlobalInt('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_PRICE_ZERO') && $line->subprice == 0)
         {
-            if (!empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line)) { /* nothing to do */ }
+            if (isModEnabled('subtotal') && TSubtotal::isModSubtotalLine($line)) { /* nothing to do */ }
             else return true;
         }
 		if (getDolGlobalInt('DOC2PROJECT_DO_NOT_CONVERT_SERVICE_WITH_QUANTITY_ZERO') && $line->qty == 0) return   true;
@@ -34,7 +39,7 @@ class Doc2Project {
 		}
 
 		// Subtotal
-		if (!getDolGlobalInt('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL') && !empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line)) return true;
+		if (!getDolGlobalInt('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL') && isModEnabled('subtotal') && TSubtotal::isModSubtotalLine($line)) return true;
 
 		return $exclude;
 	}
@@ -139,15 +144,15 @@ class Doc2Project {
 				$title = $langs->trans('Doc2ProjectTitle', $title);
 			}
 
-			$project->title			 = $title;
-			$project->socid          = $object->socid;
-			$project->description    = '';
-			$project->public         = 1; // 0 = Contacts du projet  ||  1 = Tout le monde
-			$project->datec			 = dol_now();
-			$project->date_start	 = !empty($object->delivery_date) ? $object->delivery_date : dol_now();
-			$project->date_end		 = null;
+			$project->title			= $title;
+			$project->socid			= $object->socid;
+			$project->description	= '';
+			$project->public		= 1; // 0 = Contacts du projet  ||  1 = Tout le monde
+			$project->usage_task	= 1;
+			$project->date_start	= !empty($object->delivery_date) ? $object->delivery_date : dol_now();
+			$project->date_end		= null;
 
-			$project->ref 			 = self::get_project_ref($project);
+			$project->ref			= self::get_project_ref($project);
 
 			$r = $project->create($user);
 			if ($r > 0)
@@ -215,7 +220,7 @@ class Doc2Project {
 
 			);
 
-			if(!empty($conf->workstationatm->enabled) && $fk_workstation>0) {
+			if(isModEnabled('workstationatm') && $fk_workstation>0) {
                 if(!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR',true);
 				dol_include_once('/workstationatm/config.php');
 				dol_include_once('/workstationatm/class/workstation.class.php');
@@ -334,7 +339,7 @@ class Doc2Project {
 		foreach($object->lines as &$line)
 		{
 
-		    if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && !empty($conf->subtotal->enabled) && TSubtotal::isTitle($line)){
+		    if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && isModEnabled('subtotal') && TSubtotal::isTitle($line)){
 				$story = TSubtotal::getTitleLabel($line);
 				self::add_story($TStory,$story,$project->id);
 			}
@@ -345,7 +350,7 @@ class Doc2Project {
 			    continue;
 			}
 
-			if (!empty($conf->subtotal->enabled) && TSubtotal::isModSubtotalLine($line))
+			if (isModEnabled('subtotal') && TSubtotal::isModSubtotalLine($line))
 			{
 				if (TSubtotal::isTitle($line)) // TITRE
 				{
@@ -385,7 +390,7 @@ class Doc2Project {
 					$fk_task_parent = isset($TTask_id_parent[$index]) && !empty($TTask_id_parent[$index]) ? $TTask_id_parent[$index] : 0;
 				}
 			}
-            elseif (getDolGlobalString('DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION') && !empty($conf->nomenclature->enabled))
+            elseif (getDolGlobalString('DOC2PROJECT_USE_NOMENCLATURE_AND_WORKSTATION') && isModEnabled('nomenclature'))
 			{
 				//self::createOneTask(...); //Avec les postes de travails liés à la nomenclature
 				if(!empty($line->fk_product)) {
@@ -424,7 +429,7 @@ class Doc2Project {
                     if(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_FOR_PARENT') || empty($TProdArbo)) {
                         $fk_parent = self::lineToTask($object, $line, $project, $start, $end, 0, true, 0, $story);
 
-                        if( !empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
+                        if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
@@ -478,7 +483,7 @@ class Doc2Project {
                                     $TTaskAddedList[] = $new_fk_parent;
                                 }
 
-                                if( !empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
+                                if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                                     dol_include_once('/workstationatm/class/workstation.class.php');
 
                                     $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $ss->id));
@@ -514,7 +519,7 @@ class Doc2Project {
 				else{
 				//var_dump($fk_task_parent);exit;
                     $skip = false;
-                    if (getDolGlobalInt('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS') && !empty($conf->nomenclature->enabled))
+                    if (getDolGlobalInt('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS') && isModEnabled('nomenclature'))
                     {
                         if (!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR', true);
                         dol_include_once('/nomenclature/config.php');
@@ -538,7 +543,7 @@ class Doc2Project {
 				    } else {
                     	$TTaskAddedList[] = $fk_task;
 
-                        if (getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS') && !empty($conf->nomenclature->enabled))
+                        if (getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS') && isModEnabled('nomenclature'))
                         {
                             if (in_array(getDolGlobalString('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS'), array('onlyTNomenclatureDet', 'both')))
                             {
@@ -555,7 +560,7 @@ class Doc2Project {
 			}
 		}
 
-		if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && !empty($conf->subtotal->enabled))
+		if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && isModEnabled('subtotal'))
 		{
 			$project->statut=0;
 			$project->array_options['options_stories'] = implode(',', $TStory);
@@ -1030,7 +1035,7 @@ class Doc2Project {
 		}
 
 		// RECUPERATION DES WORKSTATIONS
-		if(!empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') && !empty($curentNomenclature) )
+		if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') && !empty($curentNomenclature) )
 		{
 
 		    dol_include_once('/workstationatm/class/workstation.class.php');
