@@ -284,6 +284,7 @@ class Doc2Project {
 //var_dump($defaultref, $label,  $project->id);exit;
 		// si $line est de type 'stdClass', $line représente une ligne de nomenclature
 		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->rowid;
+
 		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $rowid, $object->element);
 
 
@@ -1004,6 +1005,10 @@ class Doc2Project {
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
 
 				$lineNomenclature->desc = $product->description;
+				if(getDolGlobalInt('DOC2PROJECT_USE_DATE_FROM_LINE')) {
+					$lineNomenclature->date_start = $line->date_start;
+					$lineNomenclature->date_end = $line->date_end;
+				}
 				$nomenclature = new TNomenclature($db);
 				$PDOdb = new TPDOdb($db);
 
