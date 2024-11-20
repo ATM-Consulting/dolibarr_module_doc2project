@@ -192,6 +192,9 @@ if($ok) {
 	// Récupérer la progression des tâches pour les reporter dans les factures de situations
 	_print_on_off('DOC2PROJECT_UPDATE_PROGRESS_SITUATION_INVOICE', $langs->trans('Doc2ProjectUpdateProgressOfSituationInvoice'));
 
+	// Récupérer la progression de la ligne de service d'une facture pour l'intégrer sur la tâche liée à ce service
+	_print_on_off('DOC2PROJECT_UPDATE_PROGRESS_TASK', $langs->trans('Doc2ProjectUpdateProgressOfTask'));
+
 	// Créer une tâche globale lors de la validation d'une commande
 	_print_on_off('DOC2PROJECT_CREATE_GLOBAL_TASK', $langs->trans('Doc2ProjectCreateGlobalTask'));
 

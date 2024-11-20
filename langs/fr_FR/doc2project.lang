@@ -64,6 +64,8 @@ TotalPropal=Montant total des propositions signées
 Doc2ProjectUseNomenclatureAndWorkstation=Si une "Nomenclature" est présente sur la ligne du produit/service, alors on cherche à créer une tâche projet avec le service de plus bas niveau pour chaque ligne de nomenclature (attention s'il y a des sous nomenclatures, une seul tâche est créer avec la ligne service de plus bas niveau)
 Doc2ProjectAllowFreeLine=Autoriser la création de tâche pour une ligne libre
 Doc2ProjectUpdateProgressOfSituationInvoice=Récupérer la progression des tâches pour les reporter dans les factures de situations
+Doc2ProjectUpdateProgressOfTask = Récupérer la progression de la ligne de service d'une facture pour l'intégrer sur la tâche liée à ce service
+
 
 Doc2ProjectCreateGlobalTask=Créer une tâche globale lors de la validation d'une commande
 Doc2ProjectGlobalTaskLabel=Tâche globale
