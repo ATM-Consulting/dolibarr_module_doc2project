@@ -198,46 +198,92 @@ class InterfaceDoc2Projecttrigger
 				}
 			}
 		}
-		elseif ($action = 'BILL_VALIDATE' && !empty(getDolGlobalString('DOC2PROJECT_UPDATE_PROGRESS_TASK')))
-		{
+		elseif ($action == 'LINEBILL_INSERT' && (GETPOST('origin', 'alpha') == 'commande' || GETPOST('origin', 'alpha') == 'propal') && $object instanceof FactureLigne) {
 
-			$sql = ' SELECT f.fk_product, p.label, MAX(f.situation_percent) as max_situation_percent';
+			$object->fk_parent_line = $object->origin_id;
+			$object->update($user,1);
+		}
+		elseif ($action == 'BILL_CREATE' && $object->type == Facture::TYPE_SITUATION ){
+				include_once DOL_DOCUMENT_ROOT."/compta/facture/class/facture.class.php";
+
+				$sql = 'SELECT rowid ';
+				$sql .= 'FROM '.$this->db->prefix().'facture f ';
+				$sql .= 'WHERE f.situation_cycle_ref = '.$object->situation_cycle_ref .' AND situation_counter = 1';
+				$resql = $db->query($sql);
+			if ($resql && $db->num_rows($resql) > 0) {
+				$obj = $db->fetch_object($resql);
+				$facture = new Facture($db);
+
+				if ($facture->fetch($obj->rowid)) {
+					$facture->fetch_lines();
+
+					if (!empty($facture->lines) && !empty($object->lines)) {
+						$factureIndex = 0;
+
+						foreach ($object->lines as $key => $lineObject) {
+							if (isset($facture->lines[$factureIndex])) {
+								$lineFacture = $facture->lines[$factureIndex];
+
+								$lineObject->fk_parent_line = $lineFacture->fk_parent_line;
+								$lineObject->update($user, 1);
+								dol_syslog("Mise à jour de fk_parent_line pour la ligne $key : ".$lineObject->fk_parent_line);
+
+								$factureIndex++; // Passer à la ligne suivante de $facture
+							} else {
+								dol_syslog("Plus de lignes disponibles dans la facture !");
+								break; // Sortir de la boucle si on a épuisé les lignes de $facture
+							}
+						}
+					} else {
+						dol_syslog("Les lignes de la facture ou de l'objet sont vides !");
+					}
+				} else {
+					dol_syslog('Impossible de charger la facture');
+				}
+			}
+		}
+		elseif ($action == 'BILL_VALIDATE' && !empty(getDolGlobalString('DOC2PROJECT_UPDATE_PROGRESS_TASK')))
+		{
+			include_once DOL_DOCUMENT_ROOT."/projet/class/task.class.php";
+
+			$sql = ' SELECT f.fk_parent_line,fac.type, f.situation_percent';
 			$sql .= ' FROM '.$this->db->prefix().'facturedet f';
-			$sql .= ' INNER JOIN '.$this->db->prefix().'product p on p.rowid = f.fk_product ';
-			$sql .= ' WHERE fk_facture = '.$object->fk_element;
-			$sql .= ' GROUP BY fk_product';
+			$sql .= " JOIN ".$this->db->prefix()."facture fac ON fac.rowid = f.fk_facture";
+			$sql .= ' WHERE f.fk_facture = '.$object->fk_element;
 
 			$resql = $db->query($sql);
-
+			var_dump($sql);exit();
 			if ($resql && $db->num_rows($resql) > 0) {
+				while ($obj = $db->fetch_object($resql)){
+					if ($obj->type == Facture::TYPE_SITUATION){
+						if (!empty($obj->fk_parent_line)) {
+							$sql2 = ' SELECT el.fk_target ';
+							$sql2 .= ' FROM ' . $this->db->prefix() . 'element_element el ';
+							$sql2 .= " WHERE el.fk_source = " . intval($obj->fk_parent_line) . " AND el.sourcetype = 'propaldet' AND el.targettype = 'project_task'";
+							$resql2 = $db->query($sql2);
 
-				// $results est un tableau associatif qui stocke les résultats de la requête SQL
-				while ($obj = $db->fetch_object($resql)) {
-					$results[$obj->fk_product] = [
-						'max_situation_percent' => $obj->max_situation_percent,
-						'another_column' => $obj->another_column,
-					];
-				}
-				var_dump($results);exit();
-				$staticProject = new Project($db);
-				$staticProject->fetch($object->project->id);
-				$staticProject->getLinesArray($user);
-				foreach ($staticProject->lines as $line){
-					if (!empty($line->ref) && in_array($line->ref, $results)) {
-						$staticTask = new Task($db);
-						$staticTask->fetch($line->ref);
-//						xdebug_var_dump('test');exit();
-						if (!empty($staticTask->progress)){
+							if (!$resql2) {
+								dol_syslog("Erreur SQL : " . $db->lasterror(), LOG_ERR);
+							} else {
+								$obj2 = $db->fetch_object($resql2);
+								$staticTask = new Task($this->db);
+								$staticTask->fetch($obj2->fk_target);
+//								var_dump($obj->situation_percent);exit();
+								$staticTask->progress = $obj->situation_percent;
+//								var_dump($staticTask->progress);exit();
 
+//								var_dump($staticTask->progress);exit();
+
+								$staticTask->update($user, 1);
+							}
+						} else {
+							dol_syslog('fk_parent_line est vide', LOG_ERR);
 						}
-					}else{
-						setEventMessage('test',"errors");
+					}elseif ($obj->type == Facture::TYPE_STANDARD){
+
 					}
+
 				}
-
-
-//				xdebug_var_dump('hello');exit();
-
 			}
 		}
 

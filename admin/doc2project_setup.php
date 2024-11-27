@@ -194,6 +194,12 @@ if($ok) {
 
 	// Récupérer la progression de la ligne de service d'une facture pour l'intégrer sur la tâche liée à ce service
 	_print_on_off('DOC2PROJECT_UPDATE_PROGRESS_TASK', $langs->trans('Doc2ProjectUpdateProgressOfTask'));
+	if (getDolGlobalInt('DOC2PROJECT_UPDATE_PROGRESS_TASK')) {
+		if (empty($conf->global->MAIN_CREATEFROM_KEEP_LINE_ORIGIN_INFORMATION)) {
+			dolibarr_set_const($db, 'MAIN_CREATEFROM_KEEP_LINE_ORIGIN_INFORMATION', '1', 'chaine', 0, '', $user);
+		}
+	}
+
 
 	// Créer une tâche globale lors de la validation d'une commande
 	_print_on_off('DOC2PROJECT_CREATE_GLOBAL_TASK', $langs->trans('Doc2ProjectCreateGlobalTask'));
