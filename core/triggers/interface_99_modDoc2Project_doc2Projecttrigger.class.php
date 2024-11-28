@@ -171,32 +171,149 @@ class InterfaceDoc2Projecttrigger
 
 			}
 
-		}
-		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande')
+		} elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande'
+			|| $action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'propal'
+			|| $action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'facture'
+		)
 		{
 			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
 
-			if ($facture->type == Facture::TYPE_SITUATION)
-			{
-				$fk_commande = GETPOST('originid', 'int');
+			$fk_originId = GETPOST('originid', 'int');
+			$fk_origin = GETPOST('origin', 'alpha');
 
-				$commande = new Commande($db);
-				$commande->fetch($fk_commande);
+			if ($facture->type == Facture::TYPE_SITUATION) {
+				if ($fk_origin == 'commande') {
+					$commande = new Commande($db);
+					$commande->fetch($fk_originId);
 
-				$ref_task = getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $object->origin_id;
+					$ref_task = getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $object->origin_id;
 
-				//[PH] OVER Badtrip - ne cherche pas à load la liste des taches via un objet ça sert à rien pour le moment ...
-				$sql = 'SELECT rowid, progress FROM '.MAIN_DB_PREFIX.'projet_task WHERE fk_projet = '.$commande->fk_project.' AND ref = "'.$db->escape($ref_task).'"';
-				$resql = $db->query($sql);
+					$sql = 'SELECT rowid, progress FROM ' . MAIN_DB_PREFIX . 'projet_task WHERE fk_projet = ' . $commande->fk_project . ' AND ref = "' . $db->escape($ref_task) . '"';
+					$resql = $db->query($sql);
 
-				if ($resql && $db->num_rows($resql) > 0)
-				{
-					$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
-					$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+					if ($resql && $db->num_rows($resql) > 0) {
+						$obj = $db->fetch_object($resql); //Attention le %tage de la tache doit être >= au %tage précédent
+						$facture->updateline($object->id, $object->desc, $object->subprice, $object->qty, $object->remise_percent, $object->date_start, $object->date_end, $object->tva_tx, $object->localtax1_tx, $object->localtax2_tx, 'HT', $object->info_bits, $object->product_type, $object->fk_parent_line, $object->skip_update_total, $object->fk_fournprice, $object->pa_ht, $object->label, $object->special_code, $object->array_options, $obj->progress, $object->fk_unit);
+					} else {
+						dol_syslog($db->lasterror(), LOG_ERR);
+						setEventMessages($db->lasterror(), null, 'errors');
+					}
 				}
 			}
+
+			if (getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')) {
+					$objectToInstanciate = ucfirst($fk_origin);
+
+					$newObject = new $objectToInstanciate($db);
+					$newObject->fetch($fk_originId);
+
+					$ref_task = getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $object->origin_id;
+
+					if ($fk_origin == 'facture') {
+						$sql = "SELECT fk_source, sourcetype FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . $object->origin_id;
+					} else {
+						$sql = 'SELECT rowid FROM ' . $db->prefix() . 'projet_task WHERE fk_projet = ' . $newObject->fk_project . ' AND ref = "' . $db->escape($ref_task) . '"';
+					}
+					$resql = $db->query($sql);
+
+					if ($resql && $db->num_rows($resql) > 0) {
+						$obj = $db->fetch_object($resql);
+						if ($fk_origin == 'facture') {
+							$object->add_object_linked($obj->sourcetype, $obj->fk_source, $user);
+						} else {
+							$object->add_object_linked('task', $obj->rowid, $user);
+							$object->add_object_linked($object->origin, $object->origin_id, $user);
+						}
+						// Besoin du rowid de l'objet d'origine pour le calcule du $ de progretion lors d'une facture standard
+						$object->fk_parent_line = $object->origin_id;
+						$object->update($user,1);
+					} else {
+						dol_syslog($db->lasterror(), LOG_ERR);
+						setEventMessages($db->lasterror(), null, 'errors');
+					}
+			}
+		} elseif ($action == 'LINEBILL_MODIFY' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')){
+			$facture = new Facture($db);
+			$facture->fetch($object->fk_facture);
+
+			dol_include_once('/projet/class/task.class.php');
+
+			$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . $object->id . " AND sourcetype = 'task'";
+
+			$resql = $db->query($sql);
+
+			if ($resql->num_rows > 0) {
+				$obj = $db->fetch_object($resql);
+				$object->origin = $obj->sourcetype;
+				$object->origin_id = $obj->fk_source;
+				$object->fetch_origin();
+
+				$task = new Task($db);
+				$res = $task->fetch($object->origin_id);
+
+				if ($res) {
+					if ($facture->type == Facture::TYPE_SITUATION){
+						$task->progress = $object->situation_percent;
+					} elseif ($facture->type == Facture::TYPE_STANDARD) {
+
+						$propalLine = new PropaleLigne($db);
+						$res = $propalLine->fetch($object->fk_parent_line);
+
+						if ($res) {
+							$qtyTotal = $propalLine->qty;
+							$qty = $object->qty;// la qty dans la facture
+							$task->progress = round(($qty / $qtyTotal) * 100, 0);
+						}
+					}
+					$task->update($user);
+				}
+			} else {
+				dol_syslog($db->lasterror(), LOG_ERR);
+				setEventMessages($db->lasterror(), null, 'errors');
+			}
+
+		} elseif ($action == 'BILL_VALIDATE' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')) {
+
+			dol_include_once('/projet/class/task.class.php');
+
+			foreach ($object->lines as $line) {
+				$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . $line->id . " AND sourcetype = 'task'";
+
+				$resql = $db->query($sql);
+
+				if ($resql->num_rows > 0) {
+					$obj = $db->fetch_object($resql);
+					$line->origin = $obj->sourcetype;
+					$line->origin_id = $obj->fk_source;
+					$line->fetch_origin();
+
+					$task = new Task($db);
+					$res = $task->fetch($line->origin_id);
+
+					if ($res) {
+						if ($object->type == Facture::TYPE_SITUATION){
+							$task->progress = $line->situation_percent;
+						} elseif ($object->type == Facture::TYPE_STANDARD) {
+
+							$propalLine = new PropaleLigne($db);
+							$res = $propalLine->fetch($line->fk_parent_line);
+
+							if ($res) {
+								$qtyTotal = $propalLine->qty;
+								$qty = $line->qty;// la qty dans la facture
+								$task->progress = round(($qty / $qtyTotal) * 100, 0);
+							}
+						}
+						$task->update($user);
+					}
+				} else {
+					dol_syslog($db->lasterror(), LOG_ERR);
+					setEventMessages($db->lasterror(), null, 'errors');
+				}
+			}
+
 		}
 
         return 0;
