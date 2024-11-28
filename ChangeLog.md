@@ -3,7 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-
+## 3.6
+- NEW : Automatisation de la progression sur les tâches depuis la validation/modification d'une facture - *28/11/2024* - 3.6.0
 
 ## 3.5
 - FIX : remove useless function, usage_task is standard behaviour - *07/08/2024* - 3.5.2
