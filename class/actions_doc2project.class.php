@@ -301,9 +301,8 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 		if (in_array('projecttaskcard', explode(':', $parameters['context'])) && getDolGlobalString('DOC2PROJECT_DISABLE_TASK_PROGRESS')) {
 			?>
 				<script type="application/javascript">
-					document.addEventListener('DOMContentLoaded', function() {
-						const selectElement = document.querySelector('select[name="progress"]');
-						selectElement.disabled = true; // Désactive le select
+					$(document).ready(function(){
+						$('select[name="progress"]').attr('disabled',true);
 					});
 				</script>
 			<?php
