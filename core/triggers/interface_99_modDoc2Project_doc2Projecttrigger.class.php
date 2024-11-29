@@ -190,7 +190,7 @@ class InterfaceDoc2Projecttrigger
 
 					$ref_task = getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $object->origin_id;
 
-					$sql = 'SELECT rowid, progress FROM ' . MAIN_DB_PREFIX . 'projet_task WHERE fk_projet = ' . $commande->fk_project . ' AND ref = "' . $db->escape($ref_task) . '"';
+					$sql = 'SELECT rowid, progress FROM ' . $db->prefix() . 'projet_task WHERE fk_projet = ' . $commande->fk_project . ' AND ref = "' . $db->escape($ref_task) . '"';
 					$resql = $db->query($sql);
 
 					if ($resql && $db->num_rows($resql) > 0) {
@@ -212,7 +212,7 @@ class InterfaceDoc2Projecttrigger
 					$ref_task = getDolGlobalString('DOC2PROJECT_TASK_REF_PREFIX') . $object->origin_id;
 
 					if ($fk_origin == 'facture') {
-						$sql = "SELECT fk_source, sourcetype FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . $object->origin_id;
+						$sql = "SELECT fk_source, sourcetype FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($object->origin_id);
 					} else {
 						$sql = 'SELECT rowid FROM ' . $db->prefix() . 'projet_task WHERE fk_projet = ' . $newObject->fk_project . ' AND ref = "' . $db->escape($ref_task) . '"';
 					}
@@ -238,9 +238,9 @@ class InterfaceDoc2Projecttrigger
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
 
-			dol_include_once('/projet/class/task.class.php');
+			include_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 
-			$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . $object->id . " AND sourcetype = 'task'";
+			$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($object->id) . " AND sourcetype = 'task'";
 
 			$resql = $db->query($sql);
 
@@ -279,7 +279,7 @@ class InterfaceDoc2Projecttrigger
 			dol_include_once('/projet/class/task.class.php');
 
 			foreach ($object->lines as $line) {
-				$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . $line->id . " AND sourcetype = 'task'";
+				$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($line->id) . " AND sourcetype = 'task'";
 
 				$resql = $db->query($sql);
 
