@@ -94,3 +94,7 @@ Doc2ProjectTaskCreationMessage_mesgs=%s lignes converties en tâches.
 Doc2ProjectTaskCreationMessage_warnings=%s lignes ignorées à la conversion en tâches.
 Doc2ProjectTaskCreationMessage_errors=erreur à la conversion de %s lignes en tâches.
 Doc2ProjectTaskCreationMessage_NoTasksCreated=Aucune ligne convertie en tâche.
+Doc2ProjectProgressByPercentSituationInvoice=Activer le suivis du pourcentage de progression dans les tâches associées
+Doc2ProjectDisableProgressTasks=Empêcher la saisie manuelle de l'avancement d'une tâche.
+
+

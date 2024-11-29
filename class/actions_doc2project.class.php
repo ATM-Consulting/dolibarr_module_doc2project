@@ -15,7 +15,8 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 
 		if($user->hasRight('projet', 'all', 'creer') &&
 			((in_array('propalcard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_PROPOSAL') && $object->statut == 2)
-			|| (in_array('ordercard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_ORDER') && $object->statut == 1))
+			|| (in_array('ordercard',explode(':',$parameters['context'])) && getDolGlobalInt('DOC2PROJECT_DISPLAY_ON_ORDER') && $object->statut == 1)
+			)
 		)
 		{
 			$langs->load('doc2project@doc2project');
@@ -293,5 +294,19 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 		}
 
 		return 0;
+	}
+
+	function printCommonFooter($parameters, &$object, &$action, $hookmanager)
+	{
+		if (in_array('projecttaskcard', explode(':', $parameters['context'])) && getDolGlobalString('DOC2PROJECT_DISABLE_TASK_PROGRESS')) {
+			?>
+				<script type="application/javascript">
+					document.addEventListener('DOMContentLoaded', function() {
+						const selectElement = document.querySelector('select[name="progress"]');
+						selectElement.disabled = true; // Désactive le select
+					});
+				</script>
+			<?php
+		}
 	}
 }

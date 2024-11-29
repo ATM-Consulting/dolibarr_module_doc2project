@@ -59,7 +59,7 @@ class modDoc2Project extends DolibarrModules
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
 
-		$this->version = '3.5.2';
+		$this->version = '3.6.0';
 
 		// Url to the file with your last numberversion of this module
 		require_once __DIR__ . '/../../class/techatm.class.php';
@@ -94,7 +94,7 @@ class modDoc2Project extends DolibarrModules
 		//                        );
 		$this->module_parts = array(
 			'triggers' => 1,
-			'hooks' => array('propalcard','ordercard','projecttaskcard','projectcard','usercard')
+			'hooks' => array('propalcard','ordercard','projecttaskcard','projectcard','usercard', 'invoicecard', 'projecttaskcard')
 		);
 
 		// Data directories to create when module is enabled.
