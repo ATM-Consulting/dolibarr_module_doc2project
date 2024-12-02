@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ## 3.6
+- FIX : Gestion des factures standard depuis les commandes - *2/12/2024* - 3.6.1
 - NEW : Automatisation de la progression sur les tâches depuis la validation/modification d'une facture - *28/11/2024* - 3.6.0
 
 ## 3.5
