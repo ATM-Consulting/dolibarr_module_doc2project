@@ -226,7 +226,7 @@ class InterfaceDoc2Projecttrigger
 							$object->add_object_linked('task', $obj->rowid, $user);
 							$object->add_object_linked($object->origin, $object->origin_id, $user);
 						}
-						// Besoin du rowid de l'objet d'origine pour le calcule du $ de progretion lors d'une facture standard
+						// Besoin du rowid de l'objet d'origine pour le calcule du $ de progression lors d'une facture standard
 						$object->fk_parent_line = $object->origin_id;
 						$object->update($user,1);
 					} else {
@@ -255,7 +255,8 @@ class InterfaceDoc2Projecttrigger
 
 				if ($res) {
 					if ($facture->type == Facture::TYPE_SITUATION){
-						$task->progress = $object->situation_percent;
+						$task->array_options["options_tauxfacturationeffectif"] = $object->situation_percent;
+
 					} elseif ($facture->type == Facture::TYPE_STANDARD) {
 
 						$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($object->id);
@@ -279,7 +280,7 @@ class InterfaceDoc2Projecttrigger
 							if ($res) {
 								$qtyTotal = $objOrigin->qty;
 								$qty = $object->qty;// la qty dans la facture
-								$task->progress = round(($qty / $qtyTotal) * 100, 0);
+								$task->array_options["options_tauxfacturationeffectif"] = round(($qty / $qtyTotal) * 100, 0);
 							}
 
 						}
@@ -312,16 +313,34 @@ class InterfaceDoc2Projecttrigger
 
 					if ($res) {
 						if ($object->type == Facture::TYPE_SITUATION){
-							$task->progress = $line->situation_percent;
+							$task->array_options["options_tauxfacturationeffectif"] = $line->situation_percent;
+
 						} elseif ($object->type == Facture::TYPE_STANDARD) {
 
-							$propalLine = new PropaleLigne($db);
-							$res = $propalLine->fetch($line->fk_parent_line);
+							$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($object->id);
+							$sql .= " AND targettype = 'facturedet'  AND sourcetype IN ('commande', 'propal')";
 
-							if ($res) {
-								$qtyTotal = $propalLine->qty;
-								$qty = $line->qty;// la qty dans la facture
-								$task->progress = round(($qty / $qtyTotal) * 100, 0);
+							$resql = $db->query($sql);
+
+							if ($resql && $db->num_rows($resql) > 0) {
+								$obj = $db->fetch_object($resql);
+
+								if($obj->sourcetype == 'commande'){
+									$objectToInstanciate = "OrderLine";
+								} else {
+									$objectToInstanciate = "PropaleLigne";
+								}
+
+
+								$objOrigin = new $objectToInstanciate($db);
+								$res = $objOrigin->fetch($object->fk_parent_line);
+
+								if ($res) {
+									$qtyTotal = $objOrigin->qty;
+									$qty = $object->qty;// la qty dans la facture
+									$task->array_options["options_tauxfacturationeffectif"] = round(($qty / $qtyTotal) * 100, 0);
+								}
+
 							}
 						}
 						$task->update($user);
