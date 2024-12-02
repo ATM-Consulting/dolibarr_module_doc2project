@@ -132,6 +132,9 @@ if($ok) {
 	if (getDolGlobalString('DOC2PROJECT_DISPLAY_LINKED_TASKS')) {
 		_print_on_off('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE', $langs->trans('Doc2ProjectProgressByPercentSituationInvoice'));
 		_print_on_off('DOC2PROJECT_DISABLE_TASK_PROGRESS', $langs->trans('Doc2ProjectDisableProgressTasks'));
+		if (getDolGlobalString('MAIN_CREATEFROM_KEEP_LINE_ORIGIN_INFORMATION') != 1) {
+			dolibarr_set_const($db, "MAIN_CREATEFROM_KEEP_LINE_ORIGIN_INFORMATION", 1 );
+		}
 	}
 
 

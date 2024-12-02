@@ -296,16 +296,4 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 		return 0;
 	}
 
-	function printCommonFooter($parameters, &$object, &$action, $hookmanager)
-	{
-		if (in_array('projecttaskcard', explode(':', $parameters['context'])) && getDolGlobalString('DOC2PROJECT_DISABLE_TASK_PROGRESS')) {
-			?>
-				<script type="application/javascript">
-					$(document).ready(function(){
-						$('select[name="progress"]').attr('disabled',true);
-					});
-				</script>
-			<?php
-		}
-	}
 }
