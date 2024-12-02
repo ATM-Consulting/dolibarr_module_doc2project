@@ -258,14 +258,32 @@ class InterfaceDoc2Projecttrigger
 						$task->progress = $object->situation_percent;
 					} elseif ($facture->type == Facture::TYPE_STANDARD) {
 
-						$propalLine = new PropaleLigne($db);
-						$res = $propalLine->fetch($object->fk_parent_line);
+						$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($object->id);
+						$sql .= " AND targettype = 'facturedet'  AND sourcetype IN ('commande', 'propal')";
 
-						if ($res) {
-							$qtyTotal = $propalLine->qty;
-							$qty = $object->qty;// la qty dans la facture
-							$task->progress = round(($qty / $qtyTotal) * 100, 0);
+						$resql = $db->query($sql);
+
+						if ($resql && $db->num_rows($resql) > 0) {
+							$obj = $db->fetch_object($resql);
+
+							if($obj->sourcetype == 'commande'){
+								$objectToInstanciate = "OrderLine";
+							} else {
+								$objectToInstanciate = "PropaleLigne";
+							}
+
+
+							$objOrigin = new $objectToInstanciate($db);
+							$res = $objOrigin->fetch($object->fk_parent_line);
+
+							if ($res) {
+								$qtyTotal = $objOrigin->qty;
+								$qty = $object->qty;// la qty dans la facture
+								$task->progress = round(($qty / $qtyTotal) * 100, 0);
+							}
+
 						}
+
 					}
 					$task->update($user);
 				}
@@ -276,7 +294,7 @@ class InterfaceDoc2Projecttrigger
 
 		} elseif ($action == 'BILL_VALIDATE' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')) {
 
-			dol_include_once('/projet/class/task.class.php');
+			include_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 
 			foreach ($object->lines as $line) {
 				$sql = "SELECT * FROM " . $db->prefix() . "element_element WHERE `fk_target` = " . intval($line->id) . " AND sourcetype = 'task'";
