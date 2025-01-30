@@ -511,7 +511,6 @@ class Doc2Project {
                     }
                 }
 				else{
-				//var_dump($fk_task_parent);exit;
                     $skip = false;
                     if (getDolGlobalInt('DOC2PROJECT_CONVERT_NOMENCLATUREDET_INTO_TASKS') && !empty($conf->nomenclature->enabled))
                     {
