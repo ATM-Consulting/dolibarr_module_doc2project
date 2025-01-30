@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 3.5
+- NEW : ajout du fk_parent_line afin de conserver l'origine de la ligne - *30/01/2025* - 3.5.0
+
 ## 3.4
 - FIX : Missing feature allowing, during the conversion of a nomenclature into a task, to take only the quantity of the nomenclature without multiplying by the quantity of the document line   - *02/07/2024* - 3.4.4  
 - FIX : DA024918 - les lignes libres de service n'étaient plus reprises lors de la création d'un projet et de ses tâches depuis une proposition commerciale - *30/04/2024* - 3.4.3  
