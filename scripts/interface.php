@@ -1,9 +1,14 @@
 <?php
+/**
+* SPDX-License-Identifier: GPL-3.0-or-later
+* This file is part of Dolibarr module Doc2Project
+*/
+
 if (!defined("NOCSRFCHECK")) define('NOCSRFCHECK', 1);
 if (!defined("NOTOKENRENEWAL")) define('NOTOKENRENEWAL', 1);
 
 require('../config.php');
-/*if(!empty($conf->global->DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL)){
+/*if(!empty(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_WITH_SUBTOTAL'))){
     dol_include_once('/subtotal/class/subtotal.class.php');
 }*/
 dol_include_once('/projet/class/project.class.php');

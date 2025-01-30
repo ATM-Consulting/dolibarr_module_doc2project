@@ -116,57 +116,8 @@ class InterfaceDoc2Projecttrigger
     public function run_trigger($action, $object, $user, $langs, $conf)
     {
     	global $db;
-        // Put here code you want to execute when a Dolibarr business events occurs.
-        // Data and type of action are stored into $object and $action
-        // Users
 
-    //    exit($action);
-
-        if ($action === 'TASK_TIMESPENT_CREATE') {
-			$this->db->begin();
-			if((float)DOL_VERSION<=3.5) {
-				$ttId = (int)$this->db->last_insert_id(MAIN_DB_PREFIX."projet_task_time");
-
-				$resql = $this->db->query('SELECT thm FROM '.MAIN_DB_PREFIX.'user WHERE rowid = '.$object->timespent_fk_user);
-				$res =  $this->db->fetch_object($resql);
-				$thm = $res->thm;
-			}
-			else{
-				$ttId = $object->timespent_id;
-
-				$u=new User($this->db);
-                $u->fetch($object->timespent_fk_user);
-                $thm = $u->thm;
-			}
-
-			$this->db->commit();
-            if (version_compare(DOL_VERSION, '18.0.0', '<'))
-            {
-                $sql = "UPDATE ".MAIN_DB_PREFIX."projet_task_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
-            }
-            else
-            {
-                $sql = "UPDATE ".MAIN_DB_PREFIX."element_time SET thm=".(double)$thm."  WHERE rowid=".$ttId;
-            }
-			$this->db->query($sql);
-
-			dol_syslog(
-                "Trigger '" . $this->name . "' for action '$action' launched by " . __FILE__ . ". id=" . $object->id
-            );
-
-        }
-		else if($action==='USER_MODIFY') {
-
-			if((float)DOL_VERSION>=3.6) {
-				$object->thm = price2num( GETPOST('thm') );
-	           	$object->update($user,1);
-			}
-			else{
-				$thm = price2num( GETPOST('thm') );
-				$this->db->query('UPDATE '.MAIN_DB_PREFIX.'user SET thm = '.$thm.' WHERE rowid = '.$object->id);
-			}
-		}
-		else if ($action == 'ORDER_VALIDATE' && getDolGlobalInt('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER'))
+		if ($action == 'ORDER_VALIDATE' && getDolGlobalInt('DOC2PROJECT_VALID_PROJECT_ON_VALID_ORDER'))
 		{
             if(!defined('INC_FROM_DOLIBARR')) define('INC_FROM_DOLIBARR', true);
 			dol_include_once('/doc2project/config.php');
@@ -186,8 +137,6 @@ class InterfaceDoc2Projecttrigger
 				$project->setValid($user);
 
 			}
-
-
 		}
 		else if ($action == 'SHIPPING_VALIDATE' && getDolGlobalInt('DOC2PROJECT_CLOTURE_PROJECT_ON_VALID_EXPEDITION'))
 		{
@@ -223,7 +172,7 @@ class InterfaceDoc2Projecttrigger
 			}
 
 		}
-		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande')
+		elseif (($action == 'LINEBILL_INSERT' || $action == 'LINEBILL_CREATE') && ($object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande'))
 		{
 			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
@@ -252,6 +201,4 @@ class InterfaceDoc2Projecttrigger
 
         return 0;
     }
-
-
 }
