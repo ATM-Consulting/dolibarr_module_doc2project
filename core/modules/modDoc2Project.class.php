@@ -94,7 +94,7 @@ class modDoc2Project extends DolibarrModules
 		//                        );
 		$this->module_parts = array(
 			'triggers' => 1,
-			'hooks' => array('propalcard','ordercard','projecttaskcard','projectcard','usercard')
+			'hooks' => array('propalcard','ordercard','projecttaskcard','projectcard','usercard', 'invoicecard', 'projecttaskcard')
 		);
 
 		// Data directories to create when module is enabled.

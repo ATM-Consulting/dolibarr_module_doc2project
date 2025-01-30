@@ -31,3 +31,7 @@ Doc2ProjectTaskCreationMessage_errors=error converting %s lines as task.
 Doc2ProjectTaskCreationMessage_NoTasksCreated=No line converted as task.
 Doc2ProjectCloneExtrafields=Copy extrafields from the original document to the project
 Doc2ProjectAddUsageTaskOnProject = Check the box "track tasks and time spent" on automatic project creation
+Doc2ProjectProgressByPercentSituationInvoice=Enable tracking of the percentage of progress in associated tasks
+Doc2ProjectDisableProgressTasks=Block manual input of task progress.
+
+
