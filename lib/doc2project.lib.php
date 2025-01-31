@@ -64,7 +64,7 @@ function showLinesToParse(&$object)
     $Tlines = array();
 
     // LOAD subtotal class if needed
-    if(!empty($conf->subtotal->enabled)){
+    if(isModEnabled("subtotal")){
         dol_include_once('/subtotal/class/subtotal.class.php');
     }
 
@@ -102,7 +102,7 @@ function showLinesToParse(&$object)
         // Dans le cas de sous total
         if ( $line->product_type == 9)
         {
-            if (!empty($conf->subtotal->enabled)) $title = TSubtotal::getTitleLabel($line);
+            if (isModEnabled("subtotal")) $title = TSubtotal::getTitleLabel($line);
             else {
                 $title = $line->label;
                 if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;
@@ -152,7 +152,7 @@ function showLinesToParse(&$object)
                 if(!empty($TProdArbo)){
 
                     if(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_FOR_PARENT')){
-                        if($conf->workstationatm->enabled && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')){
+                        if(isModEnabled("workstationatm") && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')){
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
@@ -333,7 +333,7 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
         }
 
         // RECUPERATION DES WORKSTATIONS
-        if(!empty($conf->workstationatm->enabled) && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') )
+        if(isModEnabled("workstationatm") && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') )
         {
             dol_include_once('/workstationatm/class/workstation.class.php');
             if(!empty($nomenclature->TNomenclatureWorkstation))
