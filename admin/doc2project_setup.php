@@ -129,6 +129,12 @@ if($ok) {
 	// Display linked tasks on document lines
 	_print_on_off('DOC2PROJECT_DISPLAY_LINKED_TASKS');
 
+	if (getDolGlobalString('DOC2PROJECT_DISPLAY_LINKED_TASKS')) {
+		_print_on_off('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE', $langs->trans('Doc2ProjectProgressByPercentSituationInvoice'));
+		_print_on_off('DOC2PROJECT_DISABLE_TASK_PROGRESS', $langs->trans('Doc2ProjectDisableProgressTasks'));
+	}
+
+
 	/**
 	 * PROJECT PARAMETERS
 	 */

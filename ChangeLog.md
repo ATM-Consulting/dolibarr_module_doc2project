@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 
+## 3.7
+- NEW : ajout du fk_parent_line afin de conserver l'origine de la ligne - *30/01/2025* - 3.7.0
+
+## 3.6
+- NEW : Automatisation de la progression sur les tâches depuis la validation/modification d'une facture - *28/11/2024* - 3.6.0
+
 
 ## 3.5
 - FIX : conf DOC2PROJECT_TASK_NAME for {product_ref} - *05/02/2025* - 3.5.4
