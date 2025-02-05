@@ -1006,6 +1006,7 @@ class Doc2Project {
 			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomen['childs'],1) || empty($lineNomenclature->childs)))
 			{
 				//Le calcul des quantités est déjà fait grâce à getDetails
+				$lineNomenclature->ref = $product->ref;
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
 
 				$lineNomenclature->desc = $product->description;
