@@ -836,7 +836,7 @@ class Doc2Project {
 				$task->array_options['options_soldprice'] = $total_ht;
 
 				$action = 'createOneTask';
-				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line,'fk_parent_line' => $fk_parent_line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
 				if ($origin_type === 'propal') $task->origin = 'propaldet';
