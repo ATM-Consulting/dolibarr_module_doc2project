@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## 3.7
-- FIX : fk_parent_line missing on create  - *06/03/2025* - 3.7.1  
+- FIX : DA025845 fk_parent_line missing on create  - *06/03/2025* - 3.7.1  
 - NEW : ajout du fk_parent_line afin de conserver l'origine de la ligne - *30/01/2025* - 3.7.0
 
 ## 3.6
