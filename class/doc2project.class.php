@@ -766,6 +766,12 @@ class Doc2Project {
 				{
 					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
 				}
+
+				if (!empty($line->fk_product)) {
+					$task->array_options['options_fk_product'] = $line->fk_product;
+				} else {
+					dol_syslog('No fk_product found on line : ' . $line->id, LOG_DEBUG);
+				}
 			}
 
 			if($task->id>0) {

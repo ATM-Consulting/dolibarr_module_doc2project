@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-
+- NEW : TK2504-3669 Link product to Task thanks to fk_product extrafield - *2025-04-04* - 3.8.0
 
 ## 3.7
 - FIX : DA025845 fk_parent_line missing on create  - *06/03/2025* - 3.7.1  

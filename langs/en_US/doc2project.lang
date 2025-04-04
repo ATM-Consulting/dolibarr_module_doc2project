@@ -34,4 +34,5 @@ Doc2ProjectAddUsageTaskOnProject = Check the box "track tasks and time spent" on
 Doc2ProjectProgressByPercentSituationInvoice=Enable tracking of the percentage of progress in associated tasks
 Doc2ProjectDisableProgressTasks=Block manual input of task progress.
 
-
+DOC2PROJECT_FK_PRODUCT_ADDED_SUCCESSFULLY=The product has been added to the tasks.
+DOC2PROJECT_FK_PRODUCT_ERROR_SQL=SQL error when adding product to tasks: %s
