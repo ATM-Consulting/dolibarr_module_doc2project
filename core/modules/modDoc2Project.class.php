@@ -336,10 +336,12 @@ class modDoc2Project extends DolibarrModules
 			$sqlUpdateTask .= " ELSE NULL END)";
 			$sqlUpdateTask .= " WHERE (pt.ref LIKE 'TA%' OR (pt.ref LIKE 'T%' AND NOT pt.ref LIKE 'TK%'));";
 
-			$resql = $this->db->query($sqlUpdate);
+			$resql = $this->db->query($sqlUpdateTask);
 			if ($resql < 0) {
 				$this->db->rollback();
 				setEventMessage('SQL Update Error : ' . $this->db->lasterror(), 'errors');
+				dol_syslog(__METHOD__ . '::query SQL Error : ' . $this->db->lasterror());
+				return 0;
 			} else {
 				$this->db->commit();
 				setEventMessage('Successfully added fk_product to task', 'mesgs');
