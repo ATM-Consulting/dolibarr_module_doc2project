@@ -25,6 +25,7 @@
  */
 include_once DOL_DOCUMENT_ROOT . '/core/modules/DolibarrModules.class.php';
 
+require_once __DIR__ . '/../../class/Doc2ProjectTools.php';
 
 /**
  *  Description and activation class for module Doc2Project
@@ -314,38 +315,13 @@ class modDoc2Project extends DolibarrModules
 		}
 
 		if ($this->needUpdate('3.8.0')) {
-			$this->db->begin();
-
-			$sqlUpdateTask = "UPDATE {$this->db->prefix()}projet_task_extrafields AS ptex";
-			$sqlUpdateTask .= " JOIN {$this->db->prefix()}projet_task AS pt ON pt.rowid = ptex.fk_object";
-			$sqlUpdateTask .= " SET ptex.fk_product = (";
-			$sqlUpdateTask .= " CASE";
-			// TA% = Propal line id
-			$sqlUpdateTask .= " WHEN pt.ref LIKE 'TA%' AND SUBSTRING(pt.ref, 3) REGEXP '^[0-9]+$' THEN (";
-			$sqlUpdateTask .= " SELECT pdet.fk_product";
-			$sqlUpdateTask .= " FROM {$this->db->prefix()}propaldet AS pdet";
-			$sqlUpdateTask .= " WHERE pdet.rowid = CAST(SUBSTRING(pt.ref, 3) AS UNSIGNED)";
-			$sqlUpdateTask .= " LIMIT 1)";
-			// T% = Order line Id
-			$sqlUpdateTask .= " WHEN pt.ref LIKE 'T%' AND NOT pt.ref LIKE 'TA%' AND NOT pt.ref LIKE 'TK%'";
-			$sqlUpdateTask .= " AND SUBSTRING(pt.ref, 2) REGEXP '^[0-9]+$' THEN (";
-			$sqlUpdateTask .= " SELECT cd.fk_product";
-			$sqlUpdateTask .= " FROM {$this->db->prefix()}commandedet AS cd";
-			$sqlUpdateTask .= " WHERE cd.rowid = CAST(SUBSTRING(pt.ref, 2) AS UNSIGNED)";
-			$sqlUpdateTask .= " LIMIT 1)";
-			$sqlUpdateTask .= " ELSE NULL END)";
-			$sqlUpdateTask .= " WHERE (pt.ref LIKE 'TA%' OR (pt.ref LIKE 'T%' AND NOT pt.ref LIKE 'TK%'));";
-
-			$resql = $this->db->query($sqlUpdateTask);
-			if ($resql < 0) {
-				$this->db->rollback();
+			$resAddProduct = Doc2ProjectTools::addProductIdOnTasks();
+			if (!$resAddProduct) {
 				setEventMessage($langs->trans('DOC2PROJECT_FK_PRODUCT_ERROR_SQL', $this->db->lasterror()), 'errors');
-				dol_syslog(__METHOD__ . '::query SQL Error : ' . $this->db->lasterror());
 				$this->error = $this->db->lasterror();
 				$this->errors[] = $this->db->lasterror();
 				return -1;
 			} else {
-				$this->db->commit();
 				setEventMessage('DOC2PROJECT_FK_PRODUCT_ADDED_SUCCESSFULLY', 'mesgs');
 			}
 		}
