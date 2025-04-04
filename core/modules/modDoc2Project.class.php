@@ -297,7 +297,7 @@ class modDoc2Project extends DolibarrModules
 		$res = $extrafields->addExtraField('categorie', 'Catégorie', 'select', 0, 0, 'projet', 0, '', '', $param);
 
 		// Extra fields for Task
-		$extrafields->addExtraField('fk_product', 'Product', 'link', 50, '', 'projet_task', 0, 0, '', ['options' => ['Product:product/class/product.class.php' => null]], 1, '', 1, 0, '', '', 'doc2project@doc2project', "isModEnabled('doc2project')");
+		$extrafields->addExtraField('fk_product', 'Product', 'link', 50, '', 'projet_task', 0, 0, '', ['options' => ['Product:product/class/product.class.php' => null]], 1, '', 5, 0, '', '', 'doc2project@doc2project', "isModEnabled('doc2project')");
 
 		//*********************************
 		// ******* MISE A JOUR BDD ********
@@ -339,14 +339,14 @@ class modDoc2Project extends DolibarrModules
 			$resql = $this->db->query($sqlUpdateTask);
 			if ($resql < 0) {
 				$this->db->rollback();
-				setEventMessage('SQL Update Error : ' . $this->db->lasterror(), 'errors');
+				setEventMessage($langs->trans('DOC2PROJECT_FK_PRODUCT_ERROR_SQL', $this->db->lasterror()), 'errors');
 				dol_syslog(__METHOD__ . '::query SQL Error : ' . $this->db->lasterror());
 				$this->error = $this->db->lasterror();
 				$this->errors[] = $this->db->lasterror();
 				return -1;
 			} else {
 				$this->db->commit();
-				setEventMessage('Successfully added fk_product to task', 'mesgs');
+				setEventMessage('DOC2PROJECT_FK_PRODUCT_ADDED_SUCCESSFULLY', 'mesgs');
 			}
 		}
 
