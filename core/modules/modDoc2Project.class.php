@@ -315,8 +315,7 @@ class modDoc2Project extends DolibarrModules
 		}
 
 		if ($this->needUpdate('3.8.0')) {
-			$resAddProduct = Doc2ProjectTools::addProductIdOnTasks();
-			if (!$resAddProduct) {
+			if (!Doc2ProjectTools::addProductIdOnTasks()) {
 				setEventMessage($langs->trans('DOC2PROJECT_FK_PRODUCT_ERROR_SQL', $this->db->lasterror()), 'errors');
 				$this->error = $this->db->lasterror();
 				$this->errors[] = $this->db->lasterror();
