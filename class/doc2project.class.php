@@ -766,6 +766,8 @@ class Doc2Project {
 				{
 					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
 				}
+
+				$task->array_options['options_fk_product'] = $line->fk_product;
 			}
 
 			if($task->id>0) {
