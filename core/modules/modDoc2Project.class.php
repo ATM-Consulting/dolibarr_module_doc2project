@@ -321,10 +321,10 @@ class modDoc2Project extends DolibarrModules
 			$sqlUpdateTask .= " SET ptex.fk_product = (";
 			$sqlUpdateTask .= " CASE";
 			// TA% = Propal line id
-			$sqlUpdateTask .= " WHEN pt.ref LIKE 'TA%' AND SUBSTRING(pt.ref, 4) REGEXP '^[0-9]+$' THEN (";
+			$sqlUpdateTask .= " WHEN pt.ref LIKE 'TA%' AND SUBSTRING(pt.ref, 3) REGEXP '^[0-9]+$' THEN (";
 			$sqlUpdateTask .= " SELECT pdet.fk_product";
 			$sqlUpdateTask .= " FROM {$this->db->prefix()}propaldet AS pdet";
-			$sqlUpdateTask .= " WHERE pdet.rowid = CAST(SUBSTRING(pt.ref, 4) AS UNSIGNED)";
+			$sqlUpdateTask .= " WHERE pdet.rowid = CAST(SUBSTRING(pt.ref, 3) AS UNSIGNED)";
 			$sqlUpdateTask .= " LIMIT 1)";
 			// T% = Order line Id
 			$sqlUpdateTask .= " WHEN pt.ref LIKE 'T%' AND NOT pt.ref LIKE 'TA%' AND NOT pt.ref LIKE 'TK%'";
