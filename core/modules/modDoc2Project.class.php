@@ -341,7 +341,9 @@ class modDoc2Project extends DolibarrModules
 				$this->db->rollback();
 				setEventMessage('SQL Update Error : ' . $this->db->lasterror(), 'errors');
 				dol_syslog(__METHOD__ . '::query SQL Error : ' . $this->db->lasterror());
-				return 0;
+				$this->error = $this->db->lasterror();
+				$this->errors[] = $this->db->lasterror();
+				return -1;
 			} else {
 				$this->db->commit();
 				setEventMessage('Successfully added fk_product to task', 'mesgs');
