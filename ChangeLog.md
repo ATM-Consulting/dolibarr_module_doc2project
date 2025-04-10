@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+## 3.8
 - NEW : TK2504-3669 Link product to Task thanks to fk_product extrafield - *2025-04-04* - 3.8.0
 
 ## 3.7
