@@ -152,7 +152,7 @@ function showLinesToParse(&$object)
                 if(!empty($TProdArbo)){
 
                     if(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_FOR_PARENT')){
-                        if(isModEnabled("workstationatm") && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')){
+                        if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')){
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
                             $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
@@ -333,7 +333,7 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
         }
 
         // RECUPERATION DES WORKSTATIONS
-        if(isModEnabled("workstationatm") && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') )
+        if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') )
         {
             dol_include_once('/workstationatm/class/workstation.class.php');
             if(!empty($nomenclature->TNomenclatureWorkstation))
