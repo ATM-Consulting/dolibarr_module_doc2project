@@ -3,10 +3,19 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 3.8
+- NEW : TK2504-3669 Link product to Task thanks to fk_product extrafield - *2025-04-04* - 3.8.0
+
+## 3.7
+- FIX : DA025845 fk_parent_line missing on create  - *06/03/2025* - 3.7.1  
+- NEW : ajout du fk_parent_line afin de conserver l'origine de la ligne - *30/01/2025* - 3.7.0
+
 ## 3.6
 - NEW : Automatisation de la progression sur les tâches depuis la validation/modification d'une facture - *28/11/2024* - 3.6.0
 
+
 ## 3.5
+- FIX : conf DOC2PROJECT_TASK_NAME for {product_ref} - *05/02/2025* - 3.5.4
 - FIX : Compatibility V21 - *12/12/2024* - 3.5.3
 - FIX : remove useless function, usage_task is standard behaviour - *07/08/2024* - 3.5.2
 - FIX : remove useless code for < 3.6 version - *07/08/2024* - 3.5.1

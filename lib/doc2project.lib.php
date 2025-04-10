@@ -64,7 +64,7 @@ function showLinesToParse(&$object)
     $Tlines = array();
 
     // LOAD subtotal class if needed
-    if(isModEnabled('subtotal')){
+    if(isModEnabled("subtotal")){
         dol_include_once('/subtotal/class/subtotal.class.php');
     }
 
@@ -102,7 +102,7 @@ function showLinesToParse(&$object)
         // Dans le cas de sous total
         if ( $line->product_type == 9)
         {
-            if (isModEnabled('subtotal')) $title = TSubtotal::getTitleLabel($line);
+            if (isModEnabled("subtotal")) $title = TSubtotal::getTitleLabel($line);
             else {
                 $title = $line->label;
                 if (empty($title)) $title = !empty($line->description) ? $line->description : $line->desc;

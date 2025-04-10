@@ -192,7 +192,7 @@ class Doc2Project {
 	 * @param string $story
 	 * @return int  0 on error and task rowid on success
 	 */
-	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_task_parent=0,$isParent=false,$fk_workstation=0,$story='') {
+	public static function lineToTask(&$object,&$line, &$project,&$start,&$end,$fk_task_parent=0,$isParent=false,$fk_workstation=0,$story='', $fk_parent_line = 0 ) {
 
 		global $conf,$langs,$db,$user;
 
@@ -289,8 +289,7 @@ class Doc2Project {
 //var_dump($defaultref, $label,  $project->id);exit;
 		// si $line est de type 'stdClass', $line représente une ligne de nomenclature
 		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->rowid;
-
-		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $rowid, $object->element);
+		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $rowid, $object->element, $fk_parent_line);
 
 
 	}
@@ -716,7 +715,7 @@ class Doc2Project {
 	/*
 	 * return 0 on error and task rowid on success
 	 */
-	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='', $fk_origin='', $origin_type='')
+	public static function createOneTask($fk_project, $ref, $label='', $desc='', $start='', $end='', $fk_task_parent=0, $planned_workload='', $total_ht='', $fk_workstation = 0,$line='',$story='', $fk_origin='', $origin_type='', $fk_parent_line = 0)
 	{
 		global $conf,$langs,$db,$user,$hookmanager;
 
@@ -767,6 +766,12 @@ class Doc2Project {
 				{
 					if (!empty($line->array_options['options_'.$key])) $task->array_options['options_'.$key] = $line->array_options['options_'.$key];
 				}
+
+				if (!empty($line->fk_product)) {
+					$task->array_options['options_fk_product'] = $line->fk_product;
+				} else {
+					dol_syslog('No fk_product found on line : ' . $line->id, LOG_DEBUG);
+				}
 			}
 
 			if($task->id>0) {
@@ -806,7 +811,7 @@ class Doc2Project {
 				$task->progress = (int)$task->progress;
 
 				$action = 'updateOneTask';
-				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line, 'fk_parent_line' => $fk_parent_line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 				$task->update($user);
 				if(getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && !is_null($story_k)){
@@ -837,7 +842,7 @@ class Doc2Project {
 				$task->array_options['options_soldprice'] = $total_ht;
 
 				$action = 'createOneTask';
-				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line);
+				$parameters = array('db' => &$db, 'fk_project' => $fk_project, 'ref' => $ref, 'label' => $label, 'desc' => $desc, 'start' => $start, 'end' => $end, 'fk_task_parent' => $fk_task_parent, 'planned_workload' => $planned_workload, 'total_ht' => $total_ht, 'fk_workstation' => $fk_workstation, 'line' => $line,'fk_parent_line' => $fk_parent_line);
 				$reshook = $hookmanager->executeHooks('addMoreParams', $parameters, $task, $action);
 
 				if ($origin_type === 'propal') $task->origin = 'propaldet';
@@ -1007,6 +1012,7 @@ class Doc2Project {
 			if (( $product->type == 1) && (TNomenclature::noProductOfThisType($lineNomen['childs'],1) || empty($lineNomenclature->childs)))
 			{
 				//Le calcul des quantités est déjà fait grâce à getDetails
+				$lineNomenclature->ref = $product->ref;
 				$lineNomenclature->product_label = $line->product_label.' - '.$product->label; //To difference tasks label
 
 				$lineNomenclature->desc = $product->description;
@@ -1027,7 +1033,7 @@ class Doc2Project {
 					$idWorkstation = 0;
 				}
 				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
-				$fk_ParentTask = self::lineToTask($object, $lineNomenclature, $project, $start, $end, 0, false, $idWorkstation, $stories);
+				$fk_ParentTask = self::lineToTask($object, $lineNomenclature, $project, $start, $end,  0, false, $idWorkstation, $stories, $line->fk_parent_line);
 
 			}elseif(!empty($lineNomenclature->childs)){
 			    $fk_ParentTask = self::nomenclatureToTask($lineNomenclature->childs, $line,$object, $project, $start, $end,$stories);

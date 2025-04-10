@@ -97,4 +97,5 @@ Doc2ProjectTaskCreationMessage_NoTasksCreated=Aucune ligne convertie en tâche.
 Doc2ProjectProgressByPercentSituationInvoice=Activer le suivis du pourcentage de progression dans les tâches associées
 Doc2ProjectDisableProgressTasks=Empêcher la saisie manuelle de l'avancement d'une tâche.
 
-
+DOC2PROJECT_FK_PRODUCT_ADDED_SUCCESSFULLY=Le produit sur les tâches a bien été ajouté
+DOC2PROJECT_FK_PRODUCT_ERROR_SQL=Erreur SQL lors de l'ajout du produit sur les tâches : %s
