@@ -586,7 +586,7 @@ class Doc2Project {
 	 */
 	static function getDeliveryDateWithVelocity(&$task, $velocity, $time=null) {
 
-		if( (float)DOL_VERSION <= 3.4 || $velocity==0) {
+		if($velocity==0) {
 			return 0;
 		}
 		else {
