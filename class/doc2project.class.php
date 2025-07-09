@@ -431,7 +431,7 @@ class Doc2Project {
                         if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
-                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $line->fk_product));
+                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, $db->prefix()."workstation_product", array('fk_product' => $line->fk_product));
                             if(count($Tids) == 1) {
                                 $task = new Task($db);
                                 $task->fetch($fk_parent);
@@ -485,7 +485,7 @@ class Doc2Project {
                                 if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')) {
                                     dol_include_once('/workstationatm/class/workstation.class.php');
 
-                                    $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product", array('fk_product' => $ss->id));
+                                    $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, $db->prefix()."workstation_product", array('fk_product' => $ss->id));
                                     if(! empty($Tids)) {
                                         foreach($Tids as $workstationProductid) {
                                             $TWorkstationProduct = new TWorkstationProduct;
@@ -611,13 +611,13 @@ class Doc2Project {
 	 * @return int                  <=0 if KO, >0 if OK
 	 */
 	static function resetDateTaskForProject($project, $velocity) {
-		global $user;
+		global $user, $db;
 
 		if($velocity==0) return false;
 
 		$TaskList = array();
 
-		$sql = "SELECT rowid FROM ".MAIN_DB_PREFIX."projet_task ";
+		$sql = "SELECT rowid FROM ".$db->prefix()."projet_task ";
 		$sql.= " WHERE fk_projet=".$project->id." AND progress < 100 ";
 		$sql.= " ORDER BY rang ";
 
@@ -675,7 +675,7 @@ class Doc2Project {
 
 	    $sql = "SELECT";
 	    $sql.= " t.rowid, t.ref";
-	    $sql.= " FROM ".MAIN_DB_PREFIX."projet_task as t";
+	    $sql.= " FROM ".$db->prefix()."projet_task as t";
 	    $sql.= " WHERE ";
 
 	    $filters=array();
@@ -909,7 +909,7 @@ class Doc2Project {
 	//Sprint scrumboard
 	public static function setStoryK($db,$id, $nbstory)
 	{
-	    $sql="UPDATE ".MAIN_DB_PREFIX."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
+	    $sql="UPDATE ".$db->prefix()."projet_task SET story_k=".$nbstory." WHERE rowid=".$id;
 	    $resql = $db->query($sql);
 	    if($resql) return 1;
 	    return 0;
@@ -920,7 +920,7 @@ class Doc2Project {
 	    global $db;
 	    if(!empty($task->id))
 	    {
-	        $sql="SELECT story_k FROM ".MAIN_DB_PREFIX."projet_task  WHERE rowid=".$task->id;
+	        $sql="SELECT story_k FROM ".$db->prefix()."projet_task  WHERE rowid=".$task->id;
 	        $resql = $db->query($sql);
 
 	        if($resql){

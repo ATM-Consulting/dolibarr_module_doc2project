@@ -7,6 +7,7 @@
 require('config.php');
 
 
+global $langs, $user, $db;
 
 if(!$user->hasRight('doc2project', 'read')) accessforbidden();
 
@@ -188,27 +189,27 @@ function _get_statistiques_projet(&$PDOdb){
 
     if (version_compare(DOL_VERSION, '18.0.0', '<'))
     {
-        $sql .= ", (SELECT SUM(tt.task_duration) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (";
-        $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
+        $sql .= ", (SELECT SUM(tt.task_duration) FROM ".$db->prefix()."projet_task_time as tt WHERE tt.fk_task IN (";
+        $sql .= " SELECT t.rowid FROM ".$db->prefix()."projet_task as t WHERE t.fk_projet = p.rowid)";
         $sql .= ($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_temps";
 
-        $sql .= ", (SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".MAIN_DB_PREFIX."projet_task_time as tt WHERE tt.fk_task IN (";
-        $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
+        $sql .= ", (SELECT SUM(tt.thm * tt.task_duration/3600) FROM ".$db->prefix()."projet_task_time as tt WHERE tt.fk_task IN (";
+        $sql .= " SELECT t.rowid FROM ".$db->prefix()."projet_task as t WHERE t.fk_projet = p.rowid)";
         $sql .= ($t_deb>0 && $t_fin>0 ? " AND task_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_cout_homme";
     }
     else
     {
-        $sql .= ", (SELECT SUM(tt.element_duration) FROM ".MAIN_DB_PREFIX."element_time as tt WHERE tt.elementtype = 'task' AND tt.fk_element IN (";
-        $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
+        $sql .= ", (SELECT SUM(tt.element_duration) FROM ".$db->prefix()."element_time as tt WHERE tt.elementtype = 'task' AND tt.fk_element IN (";
+        $sql .= " SELECT t.rowid FROM ".$db->prefix()."projet_task as t WHERE t.fk_projet = p.rowid)";
         $sql .= ($t_deb>0 && $t_fin>0 ? " AND element_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_temps";
 
-        $sql .= ", (SELECT SUM(tt.thm * tt.element_duration/3600) FROM ".MAIN_DB_PREFIX."element_time as tt WHERE tt.elementtype = 'task' AND tt.fk_element IN (";
-        $sql .= " SELECT t.rowid FROM ".MAIN_DB_PREFIX."projet_task as t WHERE t.fk_projet = p.rowid)";
+        $sql .= ", (SELECT SUM(tt.thm * tt.element_duration/3600) FROM ".$db->prefix()."element_time as tt WHERE tt.elementtype = 'task' AND tt.fk_element IN (";
+        $sql .= " SELECT t.rowid FROM ".$db->prefix()."projet_task as t WHERE t.fk_projet = p.rowid)";
         $sql .= ($t_deb>0 && $t_fin>0 ? " AND element_date BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  ).") as total_cout_homme";
     }
 
 
-    $sql .= " FROM ".MAIN_DB_PREFIX."projet as p LEFT JOIN ".MAIN_DB_PREFIX."projet_extrafields pe ON p.rowid = pe.fk_object WHERE p.entity IN (".getEntity('project').")";
+    $sql .= " FROM ".$db->prefix()."projet as p LEFT JOIN ".$db->prefix()."projet_extrafields pe ON p.rowid = pe.fk_object WHERE p.entity IN (".getEntity('project').")";
 
 	if($idprojet > 0) $sql.= " AND p.rowid = ".$idprojet;
 
@@ -483,10 +484,10 @@ function print_statistiques_categorie($PDOdb, &$TReport){
 
 function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 	global $db, $conf;
-	
+
 	 $sqlClient = "
 		SELECT DISTINCT(f.rowid), f.total_ht as total
-		FROM ".MAIN_DB_PREFIX."facture as f LEFT JOIN ".MAIN_DB_PREFIX."element_element el ON (el.fk_source=f.rowid)
+		FROM ".$db->prefix()."facture as f LEFT JOIN ".$db->prefix()."element_element el ON (el.fk_source=f.rowid)
 		WHERE (f.fk_projet = ".$fk_projet." OR (el.fk_target=".$fk_projet." AND el.sourcetype LIKE 'facture' AND el.targettype LIKE 'project'))
 		".($t_deb>0 && $t_fin>0 ? " AND f.datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  );
 
@@ -499,7 +500,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 	}
 
 	$sqlAchat='SELECT DISTINCT(f.rowid),f.total_ht AS total
-	FROM '.MAIN_DB_PREFIX.'facture_fourn f LEFT JOIN '.MAIN_DB_PREFIX.'element_element el ON (el.fk_source=f.rowid)
+	FROM '.$db->prefix().'facture_fourn f LEFT JOIN '.$db->prefix().'element_element el ON (el.fk_source=f.rowid)
 	WHERE 1
 	AND f.fk_projet = '.$fk_projet.' OR (el.fk_target='.$fk_projet.' AND el.sourcetype LIKE "facturefournisseur" AND el.targettype LIKE "project")
 	';
@@ -514,7 +515,7 @@ function _getTotauxProjet($PDOdb, $fk_projet, $t_deb=0,$t_fin=0){
 	$ndf = 0;
     if(isModEnabled('ndfp')){
 		$sqlNdf=" , (
-			SELECT SUM(DISTINCT(ndfp.total_ht)) AS totalNdf FROM ".MAIN_DB_PREFIX."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1
+			SELECT SUM(DISTINCT(ndfp.total_ht)) AS totalNdf FROM ".$db->prefix()."ndfp as ndfp WHERE ndfp.fk_project = p.rowid AND ndfp.statut >= 1
 			".($t_deb>0 && $t_fin>0 ? " AND datef BETWEEN '".date('Y-m-d', $t_deb)."' AND '".date('Y-m-d', $t_fin)."' " : ''  )."
 		) as total_ndf ";
 
