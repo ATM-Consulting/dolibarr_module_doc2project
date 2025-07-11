@@ -135,7 +135,7 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 
 			if (!empty(isModEnabled('ndfp')))
 			{
-				$sql = "SELECT total_ht FROM " . MAIN_DB_PREFIX . "ndfp WHERE fk_project=" . $object->id;
+				$sql = "SELECT total_ht FROM " . $db->prefix() . "ndfp WHERE fk_project=" . $object->id;
 				$res=$db->query($sql);
 
 				while($obj=$db->fetch_object($res)) {
@@ -147,12 +147,12 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 			if (version_compare(DOL_VERSION, '18.0.0' , '<'))
 			{
 				$sql = "SELECT SUM(tt.task_duration) as duration_effective, SUM(tt.thm * tt.task_duration/3600) as costprice";
-				$sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_task)";
+				$sql.= " FROM ".$db->prefix()."projet_task_time tt LEFT JOIN ".$db->prefix()."projet_task t ON (t.rowid=tt.fk_task)";
 			}
 			else
 			{
 				$sql = "SELECT SUM(tt.element_duration) as duration_effective, SUM(tt.thm * tt.element_duration/3600) as costprice";
-				$sql.= " FROM ".MAIN_DB_PREFIX."element_time tt LEFT JOIN ".MAIN_DB_PREFIX."projet_task t ON (t.rowid=tt.fk_element AND tt.elementtype = 'task')";
+				$sql.= " FROM ".$db->prefix()."element_time tt LEFT JOIN ".$db->prefix()."projet_task t ON (t.rowid=tt.fk_element AND tt.elementtype = 'task')";
 			}
 			$sql.= " WHERE t.fk_projet=".$object->id;
 
@@ -196,12 +196,12 @@ class ActionsDoc2Project extends doc2project\RetroCompatCommonHookActions
 				if (version_compare(DOL_VERSION, '18.0.0', '<'))
 				{
 					$sql = "SELECT SUM(task_duration) as duration_effective, SUM(thm * task_duration/3600) as costprice";
-					$sql.= " FROM ".MAIN_DB_PREFIX."projet_task_time WHERE fk_task=".$object->id;
+					$sql.= " FROM ".$db->prefix()."projet_task_time WHERE fk_task=".$object->id;
 				}
 				else
 				{
 					$sql = "SELECT SUM(element_duration) as duration_effective, SUM(thm * element_duration/3600) as costprice";
-					$sql.= " FROM ".MAIN_DB_PREFIX."element_time WHERE elementtype = 'task' AND fk_element = ".$object->id;
+					$sql.= " FROM ".$db->prefix()."element_time WHERE elementtype = 'task' AND fk_element = ".$object->id;
 				}
 
 				$resultset = $db->query($sql);
