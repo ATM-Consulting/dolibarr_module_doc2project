@@ -288,7 +288,7 @@ class Doc2Project {
 
 //var_dump($defaultref, $label,  $project->id);exit;
 		// si $line est de type 'stdClass', $line représente une ligne de nomenclature
-		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->rowid;
+		$rowid = get_class($line) === 'stdClass' ? $line->fk_object : $line->id;
 		return self::createOneTask( $project->id, $defaultref, $label, $line->desc, $start, $end, $fk_task_parent, $durationInSec, $line->total_ht,$fk_workstation,$line,$story, $rowid, $object->element, $fk_parent_line);
 
 
@@ -813,8 +813,10 @@ class Doc2Project {
 				}
 
 				if(! empty($fk_origin)) {
-					if($origin_type == 'propal') $task->add_object_linked('propaldet', $fk_origin);
-					elseif($origin_type == 'commande') $task->add_object_linked('orderline', $fk_origin);
+					if($origin_type == 'propal')
+						$task->add_object_linked('propaldet', $fk_origin);
+					elseif($origin_type == 'commande')
+						$task->add_object_linked('orderline', $fk_origin);
 				}
 
 				return $task->id;
@@ -1027,6 +1029,10 @@ class Doc2Project {
 					$idWorkstation = 0;
 				}
 				$lineNomenclature->rowid = $lineNomenclature->rowid.'-'.$lineNomenclature->fk_product.'-'.$line->rowid; //To difference tasks ref
+
+				$lineNomenclature->fk_object = $line->id;
+				// ici nous n'avons pas la fk_object passé dans lineNomenclature ce qui empèche linetotask de creer la liaison element_element
+				// sur orderline <-> project_task
 				$fk_ParentTask = self::lineToTask($object, $lineNomenclature, $project, $start, $end,  0, false, $idWorkstation, $stories, $line->fk_parent_line);
 
 			}elseif(!empty($lineNomenclature->childs)){
