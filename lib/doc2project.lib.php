@@ -152,10 +152,10 @@ function showLinesToParse(&$object)
                 if(!empty($TProdArbo)){
 
                     if(getDolGlobalInt('DOC2PROJECT_CREATE_TASK_FOR_PARENT')){
-                        if(isModEnabled("workstationatm") && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')){
+                        if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION')){
                             dol_include_once('/workstationatm/class/workstation.class.php');
 
-                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, MAIN_DB_PREFIX."workstation_product",array('fk_product'=>$line->fk_product));
+                            $Tids = TRequeteCore::get_id_from_what_you_want($PDOdb, $db->prefix()."workstation_product",array('fk_product'=>$line->fk_product));
 
                             foreach ($Tids as $workstationProductid) {
                                 $Tcrawl = nomenclatureProductDeepCrawl($workstationProductid,'product',$workstationProductid,1);
@@ -333,7 +333,7 @@ function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty =
         }
 
         // RECUPERATION DES WORKSTATIONS
-        if(isModEnabled("workstationatm") && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') )
+        if(isModEnabled('workstationatm') && getDolGlobalInt('DOC2PROJECT_WITH_WORKSTATION') )
         {
             dol_include_once('/workstationatm/class/workstation.class.php');
             if(!empty($nomenclature->TNomenclatureWorkstation))
@@ -479,7 +479,7 @@ function getTasksForLine($line)
 	if ($line->element == "commandedet") $elementToUse = 'orderline';
 
 	$sql = "SELECT rowid, fk_source, sourcetype, fk_target, targettype
-			FROM ".MAIN_DB_PREFIX."element_element
+			FROM ".$db->prefix()."element_element
 			WHERE (fk_source = ".$line->id." AND sourcetype = '".$elementToUse."')
 			OR (fk_target = ".$line->id." AND targettype = '".$elementToUse."')
 			ORDER BY sourcetype";

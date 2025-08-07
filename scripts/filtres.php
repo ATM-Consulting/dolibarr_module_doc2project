@@ -5,8 +5,9 @@
 */
 
 function _print_filtre_fournisseur(&$form,&$PDOdb){
-	
-	$PDOdb->Execute("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe WHERE fournisseur = 1 ORDER BY nom");
+	global $db;
+
+	$PDOdb->Execute("SELECT rowid, nom FROM ".$db->prefix()."societe WHERE fournisseur = 1 ORDER BY nom");
 
 	$TFourn = array();
 	while($PDOdb->Get_line()){
@@ -21,8 +22,8 @@ function _print_filtre_fournisseur(&$form,&$PDOdb){
 	<?php
 }
 function _print_filtre_societe(&$form,&$PDOdb){
-	
-	$PDOdb->Execute("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe WHERE 1 ORDER BY nom");
+	global $db;
+	$PDOdb->Execute("SELECT rowid, nom FROM ".$db->prefix()."societe WHERE 1 ORDER BY nom");
 
 	$TSoc = array(0=>'');
 	while($PDOdb->Get_line()){
@@ -50,15 +51,15 @@ function _print_filtre_plage_date(&$form){
 }
 
 function _print_filtre_annee(&$form,&$PDOdb,$table,$champ){
-	
-	$sql = "SELECT YEAR(".$champ.") as annee FROM ".MAIN_DB_PREFIX.$table." GROUP BY YEAR(".$champ.") ORDER BY YEAR(".$champ.") DESC";
+	global $db;
+	$sql = "SELECT YEAR(".$champ.") as annee FROM ".$db->prefix().$table." GROUP BY YEAR(".$champ.") ORDER BY YEAR(".$champ.") DESC";
 	$PDOdb->Execute($sql);
-	
+
 	$Tfiltre = array();
 	while($PDOdb->Get_line()){
 		$Tfiltre[$PDOdb->Get_field('annee')] = $PDOdb->Get_field('annee');
 	}
-	
+
 	?>
 		<tr>
 			<td>Année : </td>
@@ -68,16 +69,16 @@ function _print_filtre_annee(&$form,&$PDOdb,$table,$champ){
 }
 
 function _print_filtre_categorie_product($form,$PDOdb,$TData=array()){
-	
-	$sql = "SELECT c.label as libelle FROM ".MAIN_DB_PREFIX."categorie as c WHERE type = 0";
-	
+	global $db;
+	$sql = "SELECT c.label as libelle FROM ".$db->prefix()."categorie as c WHERE type = 0";
+
 	$PDOdb->Execute($sql);
 
 	$Tfiltre = array();
 	while($PDOdb->Get_line()){
 		$Tfiltre[$PDOdb->Get_field('libelle')] = $PDOdb->Get_field('libelle');
 	}
-	
+
 	?>
 		<tr>
 			<td>Catégorie : </td>
@@ -87,8 +88,8 @@ function _print_filtre_categorie_product($form,$PDOdb,$TData=array()){
 }
 
 function _print_filtre_categorie_produit(&$form,&$PDOdb){
-	
-	$PDOdb->Execute("SELECT c.rowid, c.label FROM ".MAIN_DB_PREFIX."categorie as c WHERE c.type = 0 "); //0 => produit
+	global $db;
+	$PDOdb->Execute("SELECT c.rowid, c.label FROM ".$db->prefix()."categorie as c WHERE c.type = 0 "); //0 => produit
 
 	$TCategorie = array();
 	$TCategorie[""] = "";
@@ -115,10 +116,10 @@ function _print_filtre_type_document(&$form,&$PDOdb){
 
 function _print_filtre_mois_annee(){
 	global $db;
-	
+
 	dol_include_once('/core/class/html.formother.class.php');
 	$form = new FormOther($db);
-	
+
 	?>
 		<tr>
 			<td>Mois : </td>
@@ -131,7 +132,7 @@ function _print_filtre_liste_projet(&$form,&$PDOdb) {
 	global $db;
 	dol_include_once('/core/class/html.formprojet.class.php');
 	$formproject = new FormProjets($db);
-	
+
 	?>
 		<tr>
 			<td>Projet : </td>
