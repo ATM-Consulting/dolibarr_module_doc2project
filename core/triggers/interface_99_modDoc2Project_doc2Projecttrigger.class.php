@@ -171,10 +171,11 @@ class InterfaceDoc2Projecttrigger
 
 			}
 
-		} elseif (($action == 'LINEBILL_INSERT' || $action == 'LINEBILL_CREATE') && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande'
-			|| ($action == 'LINEBILL_INSERT' || $action == 'LINEBILL_CREATE') && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'propal'
-			|| ($action == 'LINEBILL_INSERT' || $action == 'LINEBILL_CREATE') && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'facture'
-		)
+
+		}
+		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande'
+			|| $action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'propal'
+			|| $action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'facture')
 		{
 			//Récupération des %tages des tâches du projet pour les associer aux lignes de factures
 			$facture = new Facture($db);
@@ -234,7 +235,8 @@ class InterfaceDoc2Projecttrigger
 						setEventMessages($db->lasterror(), null, 'errors');
 					}
 			}
-		} elseif ($action == 'LINEBILL_MODIFY' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')){
+		}
+		elseif ($action == 'LINEBILL_MODIFY' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')){
 			$facture = new Facture($db);
 			$facture->fetch($object->fk_facture);
 
@@ -274,7 +276,8 @@ class InterfaceDoc2Projecttrigger
 				setEventMessages($db->lasterror(), null, 'errors');
 			}
 
-		} elseif ($action == 'BILL_VALIDATE' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')) {
+		}
+		elseif ($action == 'BILL_VALIDATE' && getDolGlobalString('DOC2PROJECT_TASK_PROGRESS_DEPOSIT_INVOICE')) {
 
 			dol_include_once('/projet/class/task.class.php');
 
