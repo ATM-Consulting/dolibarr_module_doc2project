@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - NEW : TK2504-3669 Link product to Task thanks to fk_product extrafield - *2025-04-04* - 3.8.0
 
 ## 3.7
+- FIX : fk_object missing on commandLine object in nomenclatureToTask function   - *06/08/2025* - 3.7.2  
 - FIX : DA025845 fk_parent_line missing on create  - *06/03/2025* - 3.7.1  
 - NEW : ajout du fk_parent_line afin de conserver l'origine de la ligne - *30/01/2025* - 3.7.0
 
