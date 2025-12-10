@@ -129,8 +129,8 @@ class modDoc2Project extends DolibarrModules
 		];
 
 		// Array to add new pages in new tabs
-		// Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@doc2project:$user->rights->doc2project->read:/doc2project/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
-		//                              'objecttype:+tabname2:Title2:mylangfile@doc2project:$user->rights->othermodule->read:/doc2project/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
+		// Example: $this->tabs = array('objecttype:+tabname1:Title1:mylangfile@doc2project:$user->hasRight('doc2project', 'read'):/doc2project/mynewtab1.php?id=__ID__',  	// To add a new tab identified by code tabname1
+		//                              'objecttype:+tabname2:Title2:mylangfile@doc2project:$user->hasRight('othermodule', 'read'):/doc2project/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2
 		//                              'objecttype:-tabname:NU:conditiontoremove');                                                     						// To remove an existing tab identified by code tabname
 		// where objecttype can be
 		// 'categories_x'	  to add a tab in category view (replace 'x' by type of category (0=product, 1=supplier, 2=customer, 3=member)
