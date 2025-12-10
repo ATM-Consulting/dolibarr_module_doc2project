@@ -7,9 +7,9 @@
 
 function reportPrepareHead($type='report') {
 	global $user,$langs;
-	
+
 	$langs->load('report@report');
-	
+
 	switch ($type) {
 		case 'report':
 				$tab = array(

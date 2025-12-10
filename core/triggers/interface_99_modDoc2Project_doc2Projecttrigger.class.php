@@ -102,18 +102,16 @@ class InterfaceDoc2Projecttrigger
     }
 
     /**
-     * Function called when a Dolibarrr business event is done.
-     * All functions "run_trigger" are triggered if file
-     * is inside directory core/triggers
+     * Execute a trigger action for supported business events.
      *
-     * 	@param		string		$action		Event action code
-     * 	@param		Object		$object		Object
-     * 	@param		User		$user		Object user
-     * 	@param		Translate	$langs		Object langs
-     * 	@param		conf		$conf		Object conf
-     * 	@return		int						<0 if KO, 0 if no triggered ran, >0 if OK
+     * @param string    $action Event action code
+     * @param Object    $object Current business object
+     * @param User      $user   Current user
+     * @param Translate $langs  Translation handler
+     * @param Conf      $conf   Global configuration
+     * @return int              <0 if KO, 0 if nothing done, >0 if OK
      */
-    public function run_trigger($action, $object, $user, $langs, $conf)
+    public function runTrigger($action, $object, $user, $langs, $conf)
     {
     	global $db;
 
