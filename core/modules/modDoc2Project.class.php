@@ -60,7 +60,7 @@ class modDoc2Project extends DolibarrModules
 		$this->description = "Convert a proposal or customer order to a project";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
 
-		$this->version = '3.8.1';
+		$this->version = '3.8.2';
 
 		// Url to the file with your last numberversion of this module
 		require_once __DIR__ . '/../../class/techatm.class.php';
@@ -110,7 +110,7 @@ class modDoc2Project extends DolibarrModules
 		$this->depends = [];        // List of modules id that must be enabled if this module is enabled
 		$this->requiredby = [];    // List of modules id to disable if this one is disabled
 		$this->conflictwith = [];    // List of modules id this module is in conflict with
-		$this->phpmin = [7, 0];                    // Minimum version of PHP required by module
+		$this->phpmin = [7, 4];                    // Minimum version of PHP required by module
 		$this->need_dolibarr_version = [16, 0];    // Minimum version of Dolibarr required by module
 		$this->langfiles = ["doc2project@doc2project"];
 
