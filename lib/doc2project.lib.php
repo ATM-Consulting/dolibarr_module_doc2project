@@ -110,12 +110,12 @@ function showLinesToParse(&$object)
 
             if ($line->qty >= 1 && $line->qty <= 10) // TITRE
             {
-                $backgroundColor = '#eeffee';
+                $backgroundColor = getDolGlobalString('SUBTOTAL_TITLE_BACKGROUNDCOLOR', '#adadcf');	// InfraS change
                 $lineType = 'title';
             }
             else // SOUS-TOTAL
             {
-                $backgroundColor = '#ddffdd';
+                $backgroundColor = getDolGlobalString('SUBTOTAL_SUBTOTAL_BACKGROUNDCOLOR', '#adadcf');	// InfraS change
                 $lineType = 'subtotal';
             }
         }
@@ -180,8 +180,8 @@ function showLinesToParse(&$object)
             }
         }
 
-        $backgroundColor = empty($backgroundColor)?'#f8f8f8':$backgroundColor;
-        print '<tr style="background: '.$backgroundColor.' !important;" >';
+        $backgroundColor = empty($backgroundColor) ? '' : 'style="background: '.$backgroundColor.' !important;"';	// InfraS change
+        print '<tr '.$backgroundColor.' >';	// InfraS change
         print '<td class="linecoldescription">';
 
         if(!empty($line->fk_product)){
@@ -285,7 +285,12 @@ function taskViewToHtml($Tlines)
 function  nomenclatureProductDeepCrawl($fk_element, $element, $fk_product,$qty = 1, $deep = 0, $maxDeep = 0){
     global $db,$conf;
 
-    $maxDeepConf = getDolGlobalInt('NOMENCLATURE_MAX_NESTED_LEVEL') ?? 50;
+	// InfraS add begin
+    if (!isModEnabled('nomenclature')) {
+		return array();
+	}
+	// InfraS add end
+	$maxDeepConf = getDolGlobalInt('NOMENCLATURE_MAX_NESTED_LEVEL') ?? 50;
     $maxDeep = !empty($maxDeep)?$maxDeep:$maxDeepConf ;
 
     if($deep>$maxDeep){ return array(); }
@@ -379,8 +384,8 @@ function getWorkdays($start, $end) {
 
     $defaultWorkingDays = explode('-',(getDolGlobalInt('MAIN_DEFAULT_WORKING_DAYS') ?? '1-5')); // yes, it's true dolibarr don't create a default '1-5' value so on fresh install of dolibarr this conf is empty. ENJOY!
 
-    $start = strtotime($date1);
-    $end   = strtotime($date2);
+    $start = strtotime($start);	// InfraS change
+    $end   = strtotime($end);	// InfraS change
     $workdays = 0;
     for ($i = $start; $i <= $end; $i = strtotime("+1 day", $i)) {
         $day = date("w", $i);  // 0=sun, 1=mon, ..., 6=sat

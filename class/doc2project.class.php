@@ -148,6 +148,7 @@ class Doc2Project {
 			$project->socid			= $object->socid;
 			$project->description	= '';
 			$project->public		= 1; // 0 = Contacts du projet  ||  1 = Tout le monde
+			$project->datec			= dol_now();	// InfraS add
 			$project->usage_task	= 1;
 			$project->date_start	= !empty($object->delivery_date) ? $object->delivery_date : dol_now();
 			$project->date_end		= null;
