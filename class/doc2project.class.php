@@ -309,7 +309,7 @@ class Doc2Project {
 	{
 		global $conf,$langs,$db,$user,$TStory;
 
-		if (empty($TStory)){
+		if (empty($TStory) && getDolGlobalInt('DOC2PROJECT_CREATE_SPRINT_FROM_TITLE') && isModEnabled('scrumboard')) {
 		    $TStory = self::getAllStoriesFromProject($project->id);
 		}
 		dol_include_once('/subtotal/class/subtotal.class.php');
