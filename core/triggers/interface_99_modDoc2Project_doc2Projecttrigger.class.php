@@ -169,7 +169,6 @@ class InterfaceDoc2Projecttrigger
 
 			}
 
-
 		}
 		elseif ($action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'commande'
 			|| $action == 'LINEBILL_INSERT' && $object->product_type != 9 && GETPOST('origin', 'alpha') == 'propal'
